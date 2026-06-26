@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OneCRM — Customer Management</title>
+<style>
+:root{--primary:#0268C5;--azure:#00ADEE;--navy:#1F2533;--bg-page:#F2F6FA;--bg-sidebar:#F1F5F9;--text-primary:#111827;--text-secondary:#636363;--border:#E5E5E5;--border-active:#0268C5;--red:#FB2C36;--amber:#F59E0B;--green:#10B981;--gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;--gray-400:#9CA3AF;--gray-600:#4B5563;--r-sm:8px;--r-md:12px;--r-lg:16px;--shadow-md:0 4px 12px rgba(0,0,0,.1);--shadow-lg:0 20px 40px rgba(0,0,0,.12);--sidebar-w:240px;--font:'Inter',ui-sans-serif,system-ui,-apple-system,sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg-page);color:var(--text-primary);font-size:14px;line-height:1.5}
+button{font-family:var(--font);cursor:pointer;border:none;outline:none}
+input,select,textarea{font-family:var(--font);outline:none}
+
+/* ── LOGIN ───────────────────────────────────────────── */
+.login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#EBF4FD 0%,#F2F6FA 50%,#F3EFFE 100%);z-index:1000;display:flex;align-items:center;justify-content:center;}
+.login-card{background:white;border-radius:20px;box-shadow:var(--shadow-lg);padding:40px;width:420px;max-width:92vw;}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
+.login-logo-icon{width:44px;height:44px;background:var(--primary);border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;}
+.login-brand{font-size:20px;font-weight:700;color:var(--navy);}
+.login-sub-text{font-size:12px;color:var(--text-secondary);}
+.login-title{font-size:18px;font-weight:600;color:var(--navy);margin-bottom:4px;}
+.login-subtitle{font-size:13px;color:var(--text-secondary);margin-bottom:24px;}
+.login-error{display:none;font-size:12px;color:var(--red);padding:8px 12px;background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;margin-bottom:12px;}
+
+
+/* ── APP ─────────────────────────────────────────────── */
+.app{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:var(--sidebar-w);background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.sidebar-logo{padding:20px 20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+.sidebar-logo .logo-icon{width:32px;height:32px;background:var(--primary);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;}
+.sidebar-logo .logo-text{font-size:16px;font-weight:700;color:var(--navy);}.sidebar-logo .logo-sub{font-size:10px;color:var(--text-secondary);}
+.sidebar-section{padding:12px 8px 4px;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r-sm);margin:1px 8px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text-secondary);transition:all .15s;}
+.nav-item:hover{background:var(--gray-100);color:var(--text-primary);}.nav-item.active{background:#EBF4FD;color:var(--primary);font-weight:600;}
+.nav-icon{font-size:16px;width:18px;text-align:center;}
+.sidebar-user-area{margin-top:auto;position:relative;}
+.sidebar-user{border-top:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+.sidebar-user:hover{background:var(--gray-100);}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:12px;flex-shrink:0;}
+.user-name{font-size:13px;font-weight:600;}.user-role{font-size:11px;color:var(--text-secondary);}
+.user-menu{display:none;position:absolute;bottom:58px;left:8px;right:8px;background:white;border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-md);overflow:hidden;z-index:50;}
+.user-menu-header{padding:12px 14px;border-bottom:1px solid var(--border);background:var(--gray-50);}
+.user-menu-name{font-size:13px;font-weight:600;color:var(--navy);}
+.user-menu-email{font-size:11px;color:var(--text-secondary);}
+.user-menu-btn{width:100%;text-align:left;padding:10px 14px;font-size:13px;color:var(--red);background:none;border:none;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:8px;}
+.user-menu-btn:hover{background:#FEF2F2;}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{background:white;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;height:56px;gap:12px;flex-shrink:0;}
+.breadcrumb{font-size:13px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;}
+.breadcrumb .current{color:var(--text-primary);font-weight:600;}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.content{flex:1;overflow-y:auto;padding:24px;}
+.view{display:none;}.view.active{display:block;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;}
+.page-title{font-size:20px;font-weight:700;color:var(--navy);}.page-subtitle{font-size:13px;color:var(--text-secondary);margin-top:2px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--r-sm);font-size:14px;font-weight:600;transition:all .15s;white-space:nowrap;}
+.btn-primary{background:var(--primary);color:white;}.btn-primary:hover{background:#0257A8;}
+.btn-secondary{background:#F2F7FD;color:var(--primary);border:1px solid var(--gray-200);}.btn-secondary:hover{background:#E8F0FB;}
+.btn-ghost{background:transparent;color:var(--text-secondary);border:1px solid var(--border);}.btn-ghost:hover{background:var(--gray-100);}
+.btn-danger{background:var(--red);color:white;}.btn-danger:hover{background:#d9242d;}
+.btn-sm{padding:6px 12px;font-size:13px;}
+.btn-icon{padding:8px;border-radius:var(--r-sm);background:transparent;color:var(--text-secondary);}.btn-icon:hover{background:var(--gray-100);color:var(--text-primary);}
+.card{background:white;border:1px solid var(--border);border-radius:var(--r-md);}
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gray-400);font-size:15px;pointer-events:none;}
+.search-input{width:100%;padding:9px 12px 9px 36px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:14px;background:white;transition:border .15s;}
+.search-input:focus{border-color:var(--border-active);box-shadow:0 0 0 3px rgba(2,104,197,.1);}.search-input::placeholder{color:var(--gray-400);}
+.filter-select{padding:9px 32px 9px 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:14px;background:white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;cursor:pointer;}
+.table-wrap{overflow-x:auto;border-radius:var(--r-md);border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;background:white;}
+thead th{padding:11px 16px;text-align:left;font-size:12px;font-weight:600;color:var(--text-secondary);background:rgba(39,39,42,.04);border-bottom:1px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:.02em;}
+tbody tr{transition:background .1s;cursor:pointer;}tbody tr:hover{background:rgba(2,104,197,.03);}tbody tr+tr{border-top:1px solid rgba(39,39,42,.15);}
+tbody td{padding:13px 16px;font-size:14px;}
+.col-name{font-weight:500;color:var(--navy);}
+.table-empty{padding:56px 24px;text-align:center;color:var(--text-secondary);}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;font-size:12px;font-weight:500;}
+.badge-b2b{background:#EBF4FD;color:var(--primary);}.badge-reseller{background:#F3EFFE;color:#7C3AED;}
+.badge-b2c{background:#ECFDF5;color:#059669;}.badge-other{background:#F3F4F6;color:var(--gray-600);}
+.badge-active{background:#ECFDF5;color:#059669;}.badge-deleted{background:#FEF2F2;color:var(--red);}
+.badge-pending{background:#FFFBEB;color:#D97706;}.badge-suspended{background:#FFF7ED;color:#EA580C;}.badge-grace{background:#FFFBEB;color:#D97706;}
+.profile-hero{background:white;border:1px solid var(--border);border-radius:var(--r-md);padding:24px;margin-bottom:16px;}
+.profile-header{display:flex;align-items:flex-start;justify-content:space-between;}
+.profile-id{display:flex;align-items:center;gap:14px;}
+.profile-avatar{width:52px;height:52px;border-radius:var(--r-sm);background:linear-gradient(135deg,var(--primary),var(--azure));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:20px;flex-shrink:0;}
+.profile-name{font-size:20px;font-weight:700;color:var(--navy);}.profile-meta{font-size:13px;color:var(--text-secondary);margin-top:4px;}
+.profile-actions{display:flex;gap:8px;flex-shrink:0;}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.tab{padding:10px 18px;font-size:14px;font-weight:500;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.tab:hover{color:var(--text-primary);}.tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600;}
+.tab-scroll{max-height:calc(100vh - 320px);overflow-y:auto;padding-right:2px;}
+.tab-scroll::-webkit-scrollbar{width:5px;}.tab-scroll::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:100px;}
+.timeline{padding:4px 0;}
+.timeline-item{display:flex;gap:12px;padding:10px 0;position:relative;}
+.timeline-item+.timeline-item::before{content:'';position:absolute;left:15px;top:0;bottom:0;width:1px;background:var(--border);}
+.tl-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;z-index:1;border:2px solid white;}
+.tl-dot-green{background:#ECFDF5;color:#059669;}.tl-dot-amber{background:#FFFBEB;color:#D97706;}
+.tl-dot-red{background:#FEF2F2;color:var(--red);}.tl-dot-blue{background:#EBF4FD;color:var(--primary);}.tl-dot-gray{background:var(--gray-100);color:var(--text-secondary);}
+.tl-body{flex:1;}.tl-title{font-size:13px;font-weight:500;}.tl-time{font-size:12px;color:var(--text-secondary);}
+.tl-detail{font-size:12px;color:var(--text-secondary);padding:6px 10px;background:var(--gray-50);border-radius:4px;margin-top:6px;}
+.contract-item{border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:10px;overflow:hidden;}
+.contract-header{padding:12px 16px;background:var(--gray-50);display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.contract-header:hover{background:var(--gray-100);}
+.contract-code{font-size:13px;font-weight:600;}.contract-meta{font-size:12px;color:var(--text-secondary);}
+.sub-item{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.sub-name{font-size:13px;font-weight:500;}.sub-dates{font-size:12px;color:var(--text-secondary);margin-top:2px;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.50);z-index:100;display:none;align-items:center;justify-content:center;padding:24px;}
+.overlay.open{display:flex;}
+.modal{background:white;border-radius:var(--r-lg);box-shadow:var(--shadow-lg);width:100%;max-width:560px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;animation:modal-in .2s ease;}
+.modal-lg{max-width:680px;}
+@keyframes modal-in{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-title{font-size:16px;font-weight:700;color:var(--navy);}
+.modal-body{padding:20px 24px;overflow-y:auto;flex:1;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;}
+.close-btn{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--gray-100);color:var(--text-secondary);font-size:16px;cursor:pointer;border:none;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}.form-row.full{grid-template-columns:1fr;}
+.field{display:flex;flex-direction:column;gap:6px;}.field-label{font-size:13px;font-weight:500;}.required{color:var(--red);margin-left:2px;}
+.field-input,.field-select,.field-textarea{padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:14px;background:white;transition:border .15s;width:100%;}
+.field-input:focus,.field-select:focus,.field-textarea:focus{border-color:var(--border-active);box-shadow:0 0 0 3px rgba(2,104,197,.1);}
+.field-input[readonly]{background:var(--gray-50);color:var(--text-secondary);cursor:not-allowed;}
+.field-error{font-size:12px;color:var(--red);display:none;}.field-error.show{display:block;}
+.field-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
+.field-textarea{resize:vertical;min-height:80px;}
+.immutable-note{font-size:11px;color:var(--text-secondary);margin-top:3px;}
+.type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;}
+.type-card{border:2px solid var(--border);border-radius:var(--r-sm);padding:12px 8px;text-align:center;cursor:pointer;transition:all .15s;}
+.type-card:hover{border-color:var(--azure);}.type-card.selected{border-color:var(--primary);background:#EBF4FD;}
+.type-card .type-icon{font-size:20px;margin-bottom:6px;}.type-card .type-name{font-size:13px;font-weight:600;}.type-card .type-desc{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+.type-card.selected .type-name{color:var(--primary);}
+.dedup-panel{border:1px solid var(--amber);border-radius:var(--r-sm);padding:14px 16px;margin-top:14px;background:#FFFBEB;display:none;}
+.dedup-panel.show{display:block;}
+.dedup-title{font-size:13px;font-weight:600;color:#D97706;margin-bottom:10px;}
+.dedup-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:4px;background:white;margin-bottom:6px;border:1px solid var(--border);}
+.dedup-item-info .name{font-size:13px;font-weight:500;}.dedup-item-info .sub{font-size:12px;color:var(--text-secondary);}
+.dedup-score{font-size:11px;font-weight:600;padding:2px 8px;border-radius:100px;}
+.score-100{background:#FEE2E2;color:var(--red);}.score-70{background:#FEF3C7;color:#D97706;}
+.alert{display:flex;gap:10px;padding:12px 14px;border-radius:var(--r-sm);margin-bottom:12px;border:1px solid;}
+.alert-icon{font-size:16px;flex-shrink:0;margin-top:1px;}.alert-body .alert-title{font-size:13px;font-weight:600;}.alert-body .alert-text{font-size:13px;margin-top:2px;}
+.alert-warn{background:#FFFBEB;border-color:#FDE68A;color:#92400E;}.alert-info{background:#EFF6FF;border-color:#BFDBFE;color:#1D4ED8;}
+.alert-error{background:#FEF2F2;border-color:#FECACA;color:#991B1B;}.alert-success{background:#ECFDF5;border-color:#A7F3D0;color:#065F46;}
+.section-hdr{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.section-hdr::after{content:'';flex:1;height:1px;background:var(--border);}
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border);background:white;}
+.page-info{font-size:13px;color:var(--text-secondary);}
+.page-btns{display:flex;gap:4px;}
+.page-btn{width:30px;height:30px;border-radius:4px;border:1px solid var(--border);background:white;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.page-btn.active{background:var(--primary);border-color:var(--primary);color:white;font-weight:600;}
+.toast-wrap{position:fixed;top:20px;right:20px;z-index:300;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border-radius:var(--r-sm);box-shadow:var(--shadow-md);min-width:280px;max-width:360px;animation:toast-in .25s ease;pointer-events:auto;}
+.toast-success{background:#065F46;color:white;}.toast-error{background:#991B1B;color:white;}.toast-info{background:var(--navy);color:white;}
+.toast-icon{font-size:16px;flex-shrink:0;}.toast-text{font-size:13px;font-weight:500;}.toast-sub{font-size:12px;opacity:.8;margin-top:2px;}
+@keyframes toast-in{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+.delete-reason-wrap{display:none;}.delete-reason-wrap.show{display:block;}
+.delete-icon-wrap{text-align:center;margin-bottom:16px;}
+.delete-icon{width:52px;height:52px;background:#FEF2F2;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:24px;}
+.delete-name{font-size:15px;font-weight:700;color:var(--navy);text-align:center;margin-bottom:16px;}
+.hidden{display:none!important;}
+mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ──────────────────────────────────── -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div style="text-align:center;margin-bottom:24px;">
+      <img src="https://cloud-edr.cmcuat.cloud/public/img/logo_CMC_CS.svg" alt="CMC Cyber Security" style="height:56px;width:auto;display:block;margin:0 auto 16px;" onerror="this.style.display='none';document.getElementById('loginLogoFallback').style.display='flex';">
+      <div id="loginLogoFallback" style="display:none;width:52px;height:52px;background:var(--primary);border-radius:12px;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px;margin:0 auto 16px;">CM</div>
+      <div style="font-size:22px;font-weight:700;color:var(--navy);margin-bottom:6px;">Chào mừng đến OneCRM</div>
+      <div style="font-size:13px;color:var(--text-secondary);">Nền tảng quản lý khách hàng · CMC Cyber Security</div>
+    </div>
+    <div style="height:1px;background:var(--border);margin-bottom:24px;"></div>
+    <div class="field" style="margin-bottom:14px;">
+      <label class="field-label">Email</label>
+      <input class="field-input" id="loginEmail" type="email" placeholder="Nhập email của bạn" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label class="field-label">Mật khẩu</label>
+      <div style="position:relative;">
+        <input class="field-input" id="loginPass" type="password" placeholder="Nhập mật khẩu" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:42px;">
+        <button type="button" id="togglePass" onclick="togglePassView()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gray-400);padding:0;display:flex;align-items:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="doLogin()">Đăng nhập</button>
+  </div>
+</div>
+
+<!-- ── TOAST ─────────────────────────────────────────── -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ── APP ───────────────────────────────────────────── -->
+<div class="app" id="mainApp" style="display:none;">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">CM</div>
+      <div><div class="logo-text">OneCRM</div><div class="logo-sub">CMC Cyber Security</div></div>
+    </div>
+    <div style="padding:8px;">
+      <div class="sidebar-section">Thương mại</div>
+      <div class="nav-item active" onclick="showView('list')"><span class="nav-icon">👥</span> Khách hàng</div>
+      <div class="nav-item"><span class="nav-icon">📄</span> Hợp đồng</div>
+      <div class="nav-item"><span class="nav-icon">🔑</span> Subscription</div>
+      <div class="sidebar-section">Danh mục</div>
+      <div class="nav-item"><span class="nav-icon">📦</span> Sản phẩm</div>
+      <div class="nav-item"><span class="nav-icon">🎁</span> Gói sản phẩm</div>
+      <div class="sidebar-section">Tích hợp</div>
+      <div class="nav-item"><span class="nav-icon">📤</span> Outbox Events</div>
+      <div class="nav-item"><span class="nav-icon">📥</span> Webhook Inbox</div>
+      <div class="sidebar-section">Hệ thống</div>
+      <div class="nav-item"><span class="nav-icon">👤</span> Người dùng</div>
+      <div class="nav-item"><span class="nav-icon">📋</span> Audit log</div>
+      <div class="nav-item"><span class="nav-icon">⚙️</span> Cấu hình</div>
+    </div>
+    <!-- User area + logout menu -->
+    <div class="sidebar-user-area" id="sidebarUserArea">
+      <div class="user-menu" id="userMenu">
+        <div class="user-menu-header">
+          <div class="user-menu-name" id="userMenuName">Sales A</div>
+          <div class="user-menu-email" id="userMenuEmail">sales.a@cmc.vn</div>
+        </div>
+        <button class="user-menu-btn" onclick="doLogout()">🚪 Đăng xuất</button>
+      </div>
+      <div class="sidebar-user" onclick="toggleUserMenu()">
+        <div class="avatar" id="sidebarAvatar">SA</div>
+        <div><div class="user-name" id="sidebarName">Sales A</div><div class="user-role" id="sidebarRole">Sales</div></div>
+        <span style="margin-left:auto;color:var(--text-secondary);font-size:16px;">⋯</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="breadcrumb"><span>OneCRM</span><span>›</span><span class="current" id="breadcrumbCurrent">Khách hàng</span></div>
+      <div class="topbar-actions">
+        <button class="btn-icon">🔔</button><button class="btn-icon">❓</button>
+        <div class="avatar" id="topbarAvatar" style="width:32px;height:32px;font-size:12px;">SA</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="view active" id="view-list">
+        <div class="page-header">
+          <div><div class="page-title">Danh sách Khách hàng</div><div class="page-subtitle">Quản lý toàn bộ hồ sơ khách hàng — B2B, Reseller, B2C, Other</div></div>
+          <button class="btn btn-primary" onclick="openModal('modalCreate')">＋ Thêm Khách hàng</button>
+        </div>
+        <div class="toolbar">
+          <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="searchInput" type="text" placeholder="Tìm theo tên, email, MST, SĐT..." oninput="filterTable()"></div>
+          <select class="filter-select" id="filterType" onchange="filterTable()"><option value="">Tất cả loại</option><option>B2B</option><option>Reseller</option><option>B2C</option><option>Other</option></select>
+          <button class="btn btn-ghost btn-sm" onclick="clearFilter()">Xoá bộ lọc</button>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Tên khách hàng</th><th>Loại</th><th>MST</th><th>Email</th><th>Subscription</th><th>Thao tác</th></tr></thead>
+          <tbody id="customerTable"></tbody></table>
+          <div id="tableEmpty" class="table-empty hidden"><div style="font-size:40px;margin-bottom:12px;">🔍</div><div style="font-size:16px;font-weight:600;">Không tìm thấy kết quả</div></div>
+          <div class="pagination"><div class="page-info" id="pageInfo"></div><div class="page-btns"></div></div>
+        </div>
+      </div>
+
+      <div class="view" id="view-360">
+        <div class="profile-hero" id="profileHero"></div>
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this,'tab-overview')">📊 Tổng quan</div>
+          <div class="tab" onclick="switchTab(this,'tab-contracts')">📄 Hợp đồng & Sub</div>
+          <div class="tab" onclick="switchTab(this,'tab-timeline')">📅 Timeline</div>
+          <div class="tab" onclick="switchTab(this,'tab-audit')">📋 Audit Log</div>
+        </div>
+        <div id="tab-overview"></div>
+        <div id="tab-contracts" class="hidden"></div>
+        <div id="tab-timeline" class="hidden"></div>
+        <div id="tab-audit" class="hidden"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL CREATE -->
+<div class="overlay" id="modalCreate">
+  <div class="modal modal-lg">
+    <div class="modal-header"><div class="modal-title">➕ Thêm Khách hàng mới</div><button class="close-btn" onclick="closeModal('modalCreate')">✕</button></div>
+    <div class="modal-body">
+      <div style="margin-bottom:6px;font-size:13px;font-weight:600;">Loại khách hàng <span class="required">*</span></div>
+      <div class="type-grid">
+        <div class="type-card" onclick="selectType('B2B',this)"><div class="type-icon">🏢</div><div class="type-name">B2B</div><div class="type-desc">Doanh nghiệp</div></div>
+        <div class="type-card" onclick="selectType('Reseller',this)"><div class="type-icon">🤝</div><div class="type-name">Reseller</div><div class="type-desc">Đại lý</div></div>
+        <div class="type-card" onclick="selectType('B2C',this)"><div class="type-icon">👤</div><div class="type-name">B2C</div><div class="type-desc">Cá nhân</div></div>
+        <div class="type-card" onclick="selectType('Other',this)"><div class="type-icon">🔗</div><div class="type-name">Other</div><div class="type-desc">Khác</div></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label class="field-label" id="nameLabel">Tên <span class="required">*</span></label><input class="field-input" id="createName" type="text" oninput="checkDedup()"><div class="field-error" id="errName">Tên là bắt buộc</div></div>
+        <div class="field" id="taxField"><label class="field-label">MST <span class="required" id="taxReq">*</span></label><input class="field-input" id="createTax" type="text"><div class="field-error" id="errTax">MST bắt buộc / Đã tồn tại</div></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label class="field-label">Email <span class="required" id="emailReq">*</span></label><input class="field-input" id="createEmail" type="email"><div class="field-error" id="errEmail">Email bắt buộc</div></div>
+        <div class="field"><label class="field-label">Số điện thoại</label><input class="field-input" id="createPhone" type="text"></div>
+      </div>
+      <div class="form-row">
+        <div class="field" id="createIndustryField"><label class="field-label">Lĩnh vực</label><select class="field-select" id="createIndustry"><option value="">▾ Chọn ngành...</option><option>Công nghệ thông tin</option><option>Tài chính - Ngân hàng</option><option>Viễn thông</option><option>Sản xuất</option><option>Bán lẻ</option><option>Giáo dục</option><option>Y tế</option></select></div>
+        <div class="field" id="parentField"><label class="field-label">Thuộc tập đoàn</label><select class="field-select" id="createParent"><option value="">▾ Chọn...</option></select></div>
+      </div>
+      <div class="form-row full"><div class="field"><label class="field-label">Địa chỉ</label><input class="field-input" id="createAddress" type="text"></div></div>
+      <div class="dedup-panel" id="dedupPanel"><div class="dedup-title">⚠️ Tìm thấy KH tương tự</div><div id="dedupList"></div><div style="display:flex;gap:8px;margin-top:10px;"><button class="btn btn-secondary btn-sm" onclick="hideDedupAndCreate()">Không phải, tạo mới</button><button class="btn btn-ghost btn-sm" onclick="document.getElementById('dedupPanel').classList.remove('show')">Xem lại</button></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modalCreate')">Hủy</button><button class="btn btn-primary" onclick="submitCreate()">💾 Lưu</button></div>
+  </div>
+</div>
+
+<!-- MODAL EDIT -->
+<div class="overlay" id="modalEdit">
+  <div class="modal modal-lg">
+    <div class="modal-header"><div class="modal-title">✏️ Cập nhật Khách hàng</div><button class="close-btn" onclick="closeModal('modalEdit')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="field"><label class="field-label">Tên <span class="required">*</span></label><input class="field-input" id="editName" type="text"></div>
+        <div class="field"><label class="field-label">Loại</label><input class="field-input" id="editType" readonly><div class="immutable-note">🔒 Không thể thay đổi</div></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label class="field-label">MST</label><input class="field-input" id="editTax" readonly><div class="immutable-note">🔒 Không thể thay đổi</div></div>
+        <div class="field"><label class="field-label">Email <span class="required">*</span></label><input class="field-input" id="editEmail" type="email"></div>
+      </div>
+      <div class="form-row" id="editIndustryRow">
+        <div class="field"><label class="field-label">Số điện thoại</label><input class="field-input" id="editPhone" type="text"></div>
+        <div class="field"><label class="field-label">Lĩnh vực</label><select class="field-select" id="editIndustry"><option value="">▾ Chọn...</option><option>Công nghệ thông tin</option><option>Tài chính - Ngân hàng</option><option>Viễn thông</option><option>Sản xuất</option><option>Bán lẻ</option></select></div>
+      </div>
+      <div class="form-row" id="editPhoneOnlyRow" style="display:none;"><div class="field"><label class="field-label">Số điện thoại</label><input class="field-input" id="editPhoneB2C" type="text"></div></div>
+      <div class="form-row full"><div class="field"><label class="field-label">Địa chỉ</label><input class="field-input" id="editAddress" type="text"></div></div>
+      <div class="form-row full" id="editParentRow"><div class="field"><label class="field-label">Thuộc tập đoàn</label><select class="field-select" id="editParent"><option value="">-- Không có --</option></select></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modalEdit')">Hủy</button><button class="btn btn-primary" onclick="submitEdit()">💾 Lưu</button></div>
+  </div>
+</div>
+
+<!-- MODAL DELETE -->
+<div class="overlay" id="modalDelete">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header"><div class="modal-title">Xóa Khách hàng</div><button class="close-btn" onclick="closeModal('modalDelete')">✕</button></div>
+    <div class="modal-body">
+      <div class="delete-icon-wrap"><div class="delete-icon">🗑️</div></div>
+      <div class="delete-name" id="deleteCustomerName"></div>
+      <div id="deleteWarnings"></div>
+      <div class="delete-reason-wrap" id="deleteReasonWrap">
+        <div class="field"><label class="field-label">Lý do xóa <span class="required">*</span></label><textarea class="field-textarea" id="deleteReason" rows="3" oninput="toggleDeleteBtn()"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modalDelete')">Hủy</button><button class="btn btn-danger" id="btnConfirmDelete" disabled onclick="confirmDelete()">Xác nhận Xóa</button></div>
+  </div>
+</div>
+
+<script>
+/* ── AUTH ─────────────────────────────────────────────── */
+const DEMO_USERS=[
+  {email:'sales.a@cmc.vn',password:'demo123',name:'Sales A',role:'Sales',initials:'SA',avatarBg:'#0268C5'},
+  {email:'sales.b@cmc.vn',password:'demo123',name:'Sales B',role:'Sales',initials:'SB',avatarBg:'#0268C5'},
+  {email:'manager@cmc.vn',password:'demo123',name:'Nguyễn Manager',role:'Manager',initials:'MG',avatarBg:'#7C3AED'},
+];
+let currentUser=null;
+
+const EYE_OPEN=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const EYE_OFF=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+function togglePassView(){
+  const inp=document.getElementById('loginPass'),btn=document.getElementById('togglePass');
+  if(!inp||!btn)return;
+  inp.type=inp.type==='password'?'text':'password';
+  btn.innerHTML=inp.type==='password'?EYE_OPEN:EYE_OFF;
+}
+
+function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pass=document.getElementById('loginPass').value;
+  const errEl=document.getElementById('loginError');
+  const user=DEMO_USERS.find(u=>u.email===email&&u.password===pass);
+  if(!user){
+    errEl.textContent='Email hoặc mật khẩu không đúng.';
+    errEl.style.display='block';
+    document.getElementById('loginPass').value='';
+  const lp=document.getElementById('loginPass');if(lp)lp.type='password';
+  const tp=document.getElementById('togglePass');if(tp)tp.innerHTML=EYE_OPEN;
+    document.getElementById('loginPass').focus();
+    return;
+  }
+  errEl.style.display='none';
+  currentUser=user;
+  // Update sidebar & topbar
+  const av=document.getElementById('sidebarAvatar');
+  av.textContent=user.initials;av.style.background=user.avatarBg;
+  document.getElementById('sidebarName').textContent=user.name;
+  document.getElementById('sidebarRole').textContent=user.role;
+  document.getElementById('userMenuName').textContent=user.name;
+  document.getElementById('userMenuEmail').textContent=user.email;
+  const tav=document.getElementById('topbarAvatar');
+  tav.textContent=user.initials;tav.style.background=user.avatarBg;
+  // Show app
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('mainApp').style.display='flex';
+  toast('success',`Xin chào, ${user.name}!`,user.role+' · CMC Cybersecurity');
+}
+
+function doLogout(){
+  currentUser=null;
+  document.getElementById('userMenu').style.display='none';
+  document.getElementById('mainApp').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginEmail').value='';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginError').style.display='none';
+  // Reset app state
+  showView('list');
+  document.getElementById('breadcrumbCurrent').textContent='Khách hàng';
+  document.getElementById('searchInput').value='';
+  document.getElementById('filterType').value='';
+}
+
+function toggleUserMenu(){
+  const m=document.getElementById('userMenu');
+  m.style.display=m.style.display==='block'?'none':'block';
+}
+document.addEventListener('click',e=>{
+  const menu=document.getElementById('userMenu');
+  const area=document.getElementById('sidebarUserArea');
+  if(menu&&area&&!area.contains(e.target))menu.style.display='none';
+},{capture:true});
+
+/* ── DATA ─────────────────────────────────────────────── */
+const customers=[
+  {id:'cust-001',name:'FPT Software',type:'B2B',tax:'0101247332',email:'contact@fpt.com.vn',phone:'024 7300 7300',industry:'Công nghệ thông tin',address:'Số 17 Duy Tân, Quận Cầu Giấy, Hà Nội',parentId:null,deletedAt:null,createdAt:'15/05/2026',createdBy:'Sales A',
+    subs:[{name:'EDR Enterprise 200 seat',status:'ACTIVE',end:'14/06/2027',usage:72}],
+    contracts:[{code:'HD-2026-FPT-001',type:'DIRECT',status:'ACTIVE',date:'21/05/2026',subs:['EDR Enterprise 200 seat · ACTIVE'],pools:null}],
+    timeline:[
+      {icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'WEBHOOK',actor:'System',title:'License đã active',time:'15/06/2026 09:30',detail:'Hiệu lực → 14/06/2027'},
+      {icon:'📧',cls:'tl-dot-blue',severity:'INFO',source:'UI',actor:'Sales A',title:'Đã gửi credentials Tenant Admin',time:'12/06/2026 14:20',detail:'Email: it.admin@fpt.com.vn'},
+      {icon:'📤',cls:'tl-dot-gray',severity:'PENDING',source:'UI',actor:'Sales A',title:'Đã gửi yêu cầu xuống EDR',time:'21/05/2026 11:00'},
+    ],
+    audit:[
+      {time:'22/06/2026 08:30',source:'WEBHOOK',actor:'System',action:'Cập nhật usage snapshot',detail:'usage: 145/200 seat',result:'SUCCESS'},
+      {time:'15/06/2026 09:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · EDR Enterprise 200 seat',result:'SUCCESS'},
+      {time:'15/05/2026 09:20',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: B2B · tax: 0101247332',result:'SUCCESS'},
+    ]},
+  {id:'cust-002',name:'CMC Telecom',type:'Reseller',tax:'0301234567',email:'partner@cmctelecom.vn',phone:'024 3866 1234',industry:'Viễn thông',address:'Số 99 Phổ Quang, Phường 2, Quận Phú Nhuận, TP HCM',parentId:'cust-026',deletedAt:null,createdAt:'01/05/2026',createdBy:'Sales A',
+    subs:[{name:'EDR Enterprise 50 seat (nội bộ)',status:'ACTIVE',end:'30/04/2027',usage:44}],
+    contracts:[
+      {code:'HD-2026-CMCT-INT-001',type:'DIRECT',status:'ACTIVE',date:'01/05/2026',subs:['EDR Enterprise 50 seat (nội bộ) · ACTIVE'],pools:null},
+      {code:'HD-2026-CMCT-RSL-001',type:'RESELLER',status:'ACTIVE',date:'01/05/2026',subs:[],
+        pools:[
+          {product:'EDR Enterprise',total:2000,used:580,allocations:[
+            {name:'VietAI Corporation',seats:200,status:'ACTIVE'},
+            {name:'TechViet JSC',seats:300,status:'ACTIVE'},
+            {name:'Startup X Vietnam',seats:80,status:'GRACE'},
+          ]},
+          {product:'AV Business',total:5000,used:1240,allocations:[
+            {name:'Trường ĐH Bách Khoa HN',seats:500,status:'ACTIVE'},
+            {name:'Freelancer Group VN',seats:200,status:'ACTIVE'},
+            {name:'Lê Văn Tâm',seats:50,status:'ACTIVE'},
+            {name:'Công ty ABC Trading',seats:300,status:'SUSPENDED'},
+            {name:'HTX Sản xuất Minh Anh',seats:90,status:'GRACE'},
+          ]},
+        ]},
+    ],
+    timeline:[
+      {icon:'⚠️',cls:'tl-dot-amber',severity:'WARNING',source:'WEBHOOK',actor:'System',title:'Sub GRACE: Startup X Vietnam — EDR 80 seat',time:'15/06/2026 00:00',detail:'Grace period 15 ngày · cần renew trước 30/06/2026'},
+      {icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'WEBHOOK',actor:'System',title:'Pool AV Business 5000 seat ACTIVE',time:'05/05/2026 10:00',detail:'HD-2026-CMCT-RSL-001 chính thức hiệu lực'},
+      {icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'WEBHOOK',actor:'System',title:'Pool EDR Enterprise 2000 seat ACTIVE',time:'01/05/2026 10:00',detail:'HD-2026-CMCT-RSL-001 chính thức hiệu lực'},
+      {icon:'📋',cls:'tl-dot-blue',severity:'INFO',source:'UI',actor:'Sales A',title:'Ký hợp đồng HD-2026-CMCT-INT-001',time:'01/05/2026 09:00',detail:'DIRECT · EDR nội bộ 50 seat'},
+    ],
+    audit:[
+      {time:'15/06/2026 00:01',source:'WEBHOOK',actor:'System',action:'license.grace event từ EDR',detail:'sub: Startup X Vietnam EDR 80 seat → GRACE',result:'SUCCESS'},
+      {time:'05/05/2026 10:05',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'[FAILED] Timeout kết nối EDR sau 30s · retry: 3/3',result:'FAILED'},
+      {time:'05/05/2026 10:00',source:'UI',actor:'Sales A',action:'Tạo HD-2026-CMCT-RSL-001',detail:'RESELLER · EDR + AV pool',result:'SUCCESS'},
+      {time:'01/05/2026 09:20',source:'UI',actor:'Sales A',action:'Cập nhật thông tin',detail:'email: old@cmc.vn → partner@cmctelecom.vn',result:'SUCCESS'},
+      {time:'01/05/2026 09:00',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: Reseller · tax: 0301234567 · parent: Tập đoàn CMC',result:'SUCCESS'},
+    ]},
+  {id:'cust-003',name:'Nguyễn Văn A',type:'B2C',tax:null,email:'nguyenvana@gmail.com',phone:'0901 234 567',industry:null,address:'Số 123 Lê Lợi, Quận 1, TP HCM',parentId:null,deletedAt:null,createdAt:'10/06/2026',createdBy:'Sales A',subs:[{name:'AV Home 3 thiết bị',status:'ACTIVE',end:'10/06/2027',usage:33}],contracts:[{code:'HD-2026-NVA-AV-001',type:'DIRECT',status:'ACTIVE',date:'10/06/2026',subs:['AV Home 3 thiết bị · ACTIVE'],pools:null}],timeline:[{icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'UI',actor:'Sales A',title:'Đã cấp 3 activation key',time:'10/06/2026 14:00'}],audit:[{time:'10/06/2026 13:45',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: B2C',result:'SUCCESS'}]},
+  {id:'cust-004',name:'Freelancer Trần B',type:'Other',tax:null,email:'tran.b@freelance.vn',phone:'0912 345 678',industry:null,address:'Số 45 Hàng Bài, Quận Hoàn Kiếm, Hà Nội',parentId:'cust-001',deletedAt:null,createdAt:'20/06/2026',createdBy:'Sales A',subs:[],contracts:[],timeline:[],audit:[{time:'20/06/2026 11:00',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: Other · parent: FPT Software',result:'SUCCESS'}]},
+  {id:'cust-005',name:'VietinBank',type:'B2B',tax:'0100112437',email:'it@vietinbank.vn',phone:'024 3941 5050',industry:'Tài chính - Ngân hàng',address:'Số 108 Trần Hưng Đạo, Quận Hoàn Kiếm, Hà Nội',parentId:null,deletedAt:null,createdAt:'01/06/2026',createdBy:'Sales A',subs:[{name:'EDR Standard 50 seat',status:'PENDING_PROVISION',end:'01/06/2027',usage:0}],contracts:[{code:'HD-2026-VTB-001',type:'DIRECT',status:'ACTIVE',date:'01/06/2026',subs:['EDR Standard 50 seat · PENDING_PROVISION'],pools:null}],timeline:[{icon:'⏳',cls:'tl-dot-amber',severity:'PENDING',source:'UI',actor:'Sales A',title:'License đang triển khai',time:'05/06/2026 09:00'}],audit:[{time:'01/06/2026 13:30',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: B2B · tax: 0100112437',result:'SUCCESS'}]},
+  {id:'cust-006',name:'Lê Thị C',type:'B2C',tax:null,email:'lethic@email.com',phone:'0908 111 222',industry:null,address:'Số 22 Đinh Tiên Hoàng, Quận 1, TP HCM',parentId:null,deletedAt:null,createdAt:'22/06/2026',createdBy:'Sales A',subs:[],contracts:[],timeline:[],audit:[{time:'22/06/2026 09:15',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: B2C',result:'SUCCESS'}]},
+  {id:'cust-007',name:'VNPT Technology',type:'B2B',tax:'0100684378',email:'security@vnpt.vn',phone:'024 3936 1006',industry:'Viễn thông',address:'Số 57 Huỳnh Thúc Kháng, Quận Đống Đa, Hà Nội',parentId:null,deletedAt:null,createdAt:'03/04/2026',createdBy:'Sales B',subs:[{name:'EDR Enterprise 500 seat',status:'ACTIVE',end:'02/04/2027',usage:61},{name:'C-Shield Gateway 10 node',status:'ACTIVE',end:'02/04/2027',usage:40}],contracts:[{code:'HD-2026-VNPT-001',type:'DIRECT',status:'ACTIVE',date:'03/04/2026',subs:['EDR Enterprise 500 seat · ACTIVE','C-Shield Gateway 10 node · ACTIVE'],pools:null}],timeline:[{icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'WEBHOOK',actor:'System',title:'License đã active',time:'10/04/2026 08:00'}],audit:[{time:'03/04/2026 10:00',source:'UI',actor:'Sales B',action:'Tạo Customer',detail:'type: B2B · tax: 0100684378',result:'SUCCESS'}]},
+  {id:'cust-008',name:'Viettel Cyber Security',type:'Reseller',tax:'0100109106',email:'vcs-partner@viettel.com.vn',phone:'024 6260 2222',industry:'Công nghệ thông tin',address:'Số 285 Cách Mạng Tháng 8, Quận 10, TP HCM',parentId:null,deletedAt:null,createdAt:'15/03/2026',createdBy:'Sales B',subs:[{name:'SMB Pool EDR 1000 seat',status:'ACTIVE',end:'14/03/2027',usage:53}],contracts:[{code:'HD-2026-VCS-RSL-001',type:'RESELLER',status:'ACTIVE',date:'15/03/2026',subs:[],pools:[{product:'EDR SMB',total:1000,used:530,allocations:[{name:'KH A',seats:150,status:'ACTIVE'},{name:'KH B',seats:200,status:'ACTIVE'},{name:'KH C',seats:180,status:'ACTIVE'},{name:'KH D',seats:80,status:'GRACE'},{name:'KH E',seats:100,status:'SUSPENDED'}]}]}],timeline:[{icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'WEBHOOK',actor:'System',title:'Pool license active',time:'20/03/2026 09:30'}],audit:[{time:'15/03/2026 14:00',source:'UI',actor:'Sales B',action:'Tạo Customer',detail:'type: Reseller · tax: 0100109106',result:'SUCCESS'}]},
+  {id:'cust-009',name:'Phạm Minh Đức',type:'B2C',tax:null,email:'pmduc.dev@gmail.com',phone:'0933 456 789',industry:null,address:'Số 8 Nguyễn Đình Chiểu, Quận 1, TP HCM',parentId:null,deletedAt:null,createdAt:'18/06/2026',createdBy:'Sales A',subs:[{name:'AV Pro 5 thiết bị',status:'ACTIVE',end:'18/06/2027',usage:60}],contracts:[{code:'HD-2026-PMD-AV-001',type:'DIRECT',status:'ACTIVE',date:'18/06/2026',subs:['AV Pro 5 thiết bị · ACTIVE'],pools:null}],timeline:[{icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'UI',actor:'Sales A',title:'Đã cấp 5 activation key',time:'18/06/2026 15:10'}],audit:[{time:'18/06/2026 15:00',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: B2C',result:'SUCCESS'}]},
+  {id:'cust-010',name:'Bộ Tài chính',type:'B2B',tax:'0100111948',email:'cntt@mof.gov.vn',phone:'024 2220 2828',industry:'Chính phủ',address:'Số 28 Trần Hưng Đạo, Quận Hoàn Kiếm, Hà Nội',parentId:null,deletedAt:null,createdAt:'10/02/2026',createdBy:'Sales B',subs:[{name:'EDR Gov 1000 seat',status:'ACTIVE',end:'09/02/2027',usage:88},{name:'C-Shield Datacenter 5 node',status:'ACTIVE',end:'09/02/2027',usage:100}],contracts:[{code:'HD-2026-MOF-001',type:'DIRECT',status:'ACTIVE',date:'10/02/2026',subs:['EDR Gov 1000 seat · ACTIVE','C-Shield Datacenter 5 node · ACTIVE'],pools:null}],timeline:[{icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'WEBHOOK',actor:'System',title:'License Gov đã active',time:'20/02/2026 08:00'}],audit:[{time:'10/02/2026 09:00',source:'UI',actor:'Sales B',action:'Tạo Customer',detail:'type: B2B · GOV segment',result:'SUCCESS'}]},
+  {id:'cust-011',name:'Tập đoàn Vingroup',type:'B2B',tax:'0101245486',email:'it-security@vingroup.net',phone:'024 3974 9999',industry:'Bất động sản',address:'Số 29 Liễu Giai, Quận Ba Đình, Hà Nội',parentId:null,deletedAt:null,createdAt:'05/01/2026',createdBy:'Sales B',subs:[{name:'EDR Enterprise 2000 seat',status:'ACTIVE',end:'04/01/2027',usage:45}],contracts:[{code:'HD-2026-VNG-001',type:'DIRECT',status:'ACTIVE',date:'05/01/2026',subs:['EDR Enterprise 2000 seat · ACTIVE'],pools:null}],timeline:[{icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'WEBHOOK',actor:'System',title:'License đã active',time:'15/01/2026 09:00'}],audit:[{time:'05/01/2026 10:00',source:'UI',actor:'Sales B',action:'Tạo Customer',detail:'type: B2B · tax: 0101245486',result:'SUCCESS'}]},
+  {id:'cust-012',name:'Trung Nguyên Legend',type:'B2B',tax:'3300101234',email:'it@trungnguyen.com.vn',phone:'0261 3855 888',industry:'Sản xuất',address:'Số 82 Bùi Thị Xuân, Quận 1, TP HCM',parentId:null,deletedAt:null,createdAt:'12/04/2026',createdBy:'Sales A',subs:[{name:'EDR Standard 100 seat',status:'SUSPENDED',end:'11/04/2027',usage:0}],contracts:[{code:'HD-2026-TNL-001',type:'DIRECT',status:'ACTIVE',date:'12/04/2026',subs:['EDR Standard 100 seat · SUSPENDED'],pools:null}],timeline:[{icon:'🚫',cls:'tl-dot-red',severity:'ERROR',source:'WEBHOOK',actor:'System',title:'License bị suspend',time:'12/06/2026 00:00',detail:'Payment overdue 30d'}],audit:[{time:'12/06/2026 00:00',source:'WEBHOOK',actor:'System',action:'License.suspended event',detail:'Payment overdue 30d',result:'SUCCESS'},{time:'12/04/2026 11:00',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: B2B · tax: 3300101234',result:'SUCCESS'}]},
+  {id:'cust-013',name:'Hoàng Long Group',type:'Reseller',tax:'0800345678',email:'it@hoanglong.vn',phone:'0236 3888 999',industry:'Bán lẻ',address:'Khu CNC Đà Nẵng',parentId:null,deletedAt:null,createdAt:'20/02/2026',createdBy:'Sales A',subs:[{name:'SMB Pool AV 500 seat',status:'ACTIVE',end:'19/02/2027',usage:78}],contracts:[{code:'HD-2026-HLG-RSL-001',type:'RESELLER',status:'ACTIVE',date:'20/02/2026',subs:[],pools:[{product:'AV Business',total:500,used:390,allocations:[{name:'Cty A ĐN',seats:150,status:'ACTIVE'},{name:'Cty B ĐN',seats:100,status:'ACTIVE'},{name:'Cty C ĐN',seats:80,status:'ACTIVE'},{name:'Cty D ĐN',seats:60,status:'GRACE'}]}]}],timeline:[{icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'WEBHOOK',actor:'System',title:'Pool license active',time:'01/03/2026 09:00'}],audit:[{time:'20/02/2026 14:00',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: Reseller',result:'SUCCESS'}]},
+  {id:'cust-014',name:'Đỗ Thị Hương',type:'B2C',tax:null,email:'huong.do@yahoo.com',phone:'0977 654 321',industry:null,address:'Số 15 Ngô Quyền, Quận Hải Châu, Đà Nẵng',parentId:null,deletedAt:null,createdAt:'05/06/2026',createdBy:'Sales A',subs:[{name:'AV Home 1 thiết bị',status:'ACTIVE',end:'05/06/2027',usage:100}],contracts:[{code:'HD-2026-DTH-AV-001',type:'DIRECT',status:'ACTIVE',date:'05/06/2026',subs:['AV Home 1 thiết bị · ACTIVE'],pools:null}],timeline:[{icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'UI',actor:'Sales A',title:'Đã cấp activation key',time:'05/06/2026 10:30'}],audit:[{time:'05/06/2026 10:20',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: B2C',result:'SUCCESS'}]},
+  {id:'cust-015',name:'Sacombank',type:'B2B',tax:'0301103908',email:'infotech@sacombank.com',phone:'028 3846 0013',industry:'Tài chính - Ngân hàng',address:'Số 266-268 Nam Kỳ Khởi Nghĩa, Quận 3, TP HCM',parentId:null,deletedAt:null,createdAt:'14/03/2026',createdBy:'Sales B',subs:[{name:'EDR Enterprise 300 seat',status:'ACTIVE',end:'13/03/2027',usage:91}],contracts:[{code:'HD-2026-SCB-001',type:'DIRECT',status:'ACTIVE',date:'14/03/2026',subs:['EDR Enterprise 300 seat · ACTIVE'],pools:null}],timeline:[{icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'WEBHOOK',actor:'System',title:'License đã active',time:'21/03/2026 08:30'}],audit:[{time:'14/03/2026 09:30',source:'UI',actor:'Sales B',action:'Tạo Customer',detail:'type: B2B · tax: 0301103908',result:'SUCCESS'}]},
+  {id:'cust-016',name:'Tống Văn Bình',type:'Other',tax:null,email:'tvbinh@consultant.vn',phone:'0869 123 456',industry:null,address:'Tòa nhà Keangnam, Quận Nam Từ Liêm, Hà Nội',parentId:'cust-002',deletedAt:null,createdAt:'10/05/2026',createdBy:'Sales A',subs:[],contracts:[],timeline:[],audit:[{time:'10/05/2026 14:30',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: Other · parent: CMC Telecom',result:'SUCCESS'}]},
+  {id:'cust-017',name:'Kinh Bắc City',type:'B2B',tax:'0200374675',email:'it@kbc.com.vn',phone:'0222 3828 079',industry:'Bất động sản',address:'Khu CN VSIP Bắc Ninh',parentId:null,deletedAt:null,createdAt:'08/05/2026',createdBy:'Sales B',subs:[{name:'EDR Standard 150 seat',status:'ACTIVE',end:'07/05/2027',usage:34}],contracts:[{code:'HD-2026-KBC-001',type:'DIRECT',status:'ACTIVE',date:'08/05/2026',subs:['EDR Standard 150 seat · ACTIVE'],pools:null}],timeline:[{icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'WEBHOOK',actor:'System',title:'License đã active',time:'15/05/2026 09:00'}],audit:[{time:'08/05/2026 10:00',source:'UI',actor:'Sales B',action:'Tạo Customer',detail:'type: B2B · tax: 0200374675',result:'SUCCESS'}]},
+  {id:'cust-018',name:'Nguyễn Thị Mai Linh',type:'B2C',tax:null,email:'mailinh.nguyen@hotmail.com',phone:'0343 789 012',industry:null,address:'Số 5 Đinh Tiên Hoàng, Quận 1, TP HCM',parentId:null,deletedAt:null,createdAt:'19/06/2026',createdBy:'Sales A',subs:[{name:'AV Home 3 thiết bị',status:'PENDING_PROVISION',end:'19/06/2027',usage:0}],contracts:[{code:'HD-2026-NML-AV-001',type:'DIRECT',status:'ACTIVE',date:'19/06/2026',subs:['AV Home 3 thiết bị · PENDING_PROVISION'],pools:null}],timeline:[{icon:'⏳',cls:'tl-dot-amber',severity:'PENDING',source:'UI',actor:'Sales A',title:'Đang xử lý cấp key',time:'19/06/2026 16:00'}],audit:[{time:'19/06/2026 15:45',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: B2C',result:'SUCCESS'}]},
+  {id:'cust-019',name:'Học viện KT Quân sự',type:'B2B',tax:'0100109556',email:'cntt@mta.edu.vn',phone:'024 3833 6284',industry:'Giáo dục',address:'Số 236 Hoàng Quốc Việt, Quận Bắc Từ Liêm, Hà Nội',parentId:null,deletedAt:null,createdAt:'28/04/2026',createdBy:'Sales B',subs:[{name:'EDR Gov 200 seat',status:'ACTIVE',end:'27/04/2027',usage:55}],contracts:[{code:'HD-2026-MTA-001',type:'DIRECT',status:'ACTIVE',date:'28/04/2026',subs:['EDR Gov 200 seat · ACTIVE'],pools:null}],timeline:[{icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'WEBHOOK',actor:'System',title:'License Gov đã active',time:'05/05/2026 08:00'}],audit:[{time:'28/04/2026 09:00',source:'UI',actor:'Sales B',action:'Tạo Customer',detail:'type: B2B · GOV/EDU segment',result:'SUCCESS'}]},
+  {id:'cust-020',name:'An Phát Holdings',type:'B2B',tax:'0900456123',email:'security@anphat.vn',phone:'0221 3843 111',industry:'Sản xuất',address:'Khu CN An Phát 1, Hải Dương',parentId:null,deletedAt:null,createdAt:'17/06/2026',createdBy:'Sales A',subs:[],contracts:[],timeline:[],audit:[{time:'17/06/2026 11:30',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: B2B · tax: 0900456123',result:'SUCCESS'}]},
+  {id:'cust-021',name:'NetNam ISP',type:'Reseller',tax:'0101245123',email:'reseller@netnam.vn',phone:'024 3974 3904',industry:'Viễn thông',address:'Số 34 Trần Phú, Quận Hà Đông, Hà Nội',parentId:null,deletedAt:null,createdAt:'01/03/2026',createdBy:'Sales A',subs:[{name:'SMB Pool EDR 500 seat',status:'ACTIVE',end:'28/02/2027',usage:66}],contracts:[{code:'HD-2026-NTN-RSL-001',type:'RESELLER',status:'ACTIVE',date:'01/03/2026',subs:[],pools:[{product:'EDR SMB',total:500,used:330,allocations:[{name:'Startup Alpha',seats:100,status:'ACTIVE'},{name:'Startup Beta',seats:80,status:'ACTIVE'},{name:'SME Gamma',seats:60,status:'ACTIVE'},{name:'SME Delta',seats:90,status:'GRACE'}]}]}],timeline:[{icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'WEBHOOK',actor:'System',title:'Pool license active',time:'10/03/2026 09:30'}],audit:[{time:'01/03/2026 10:00',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: Reseller · tax: 0101245123',result:'SUCCESS'}]},
+  {id:'cust-022',name:'Vũ Thanh Tùng',type:'B2C',tax:null,email:'tungthanh.vu@gmail.com',phone:'0912 000 111',industry:null,address:'Số 77 Trần Đại Nghĩa, Quận Hai Bà Trưng, Hà Nội',parentId:null,deletedAt:null,createdAt:'20/06/2026',createdBy:'Sales A',subs:[{name:'AV Pro 5 thiết bị',status:'ACTIVE',end:'20/06/2027',usage:20}],contracts:[{code:'HD-2026-VTT-AV-001',type:'DIRECT',status:'ACTIVE',date:'20/06/2026',subs:['AV Pro 5 thiết bị · ACTIVE'],pools:null}],timeline:[{icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'UI',actor:'Sales A',title:'Đã cấp activation key',time:'20/06/2026 11:00'}],audit:[{time:'20/06/2026 10:45',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: B2C',result:'SUCCESS'}]},
+  {id:'cust-023',name:'Bệnh viện Bạch Mai',type:'B2B',tax:'0100108770',email:'cntt@bachmai.gov.vn',phone:'024 3869 3731',industry:'Y tế',address:'Số 78 Giải Phóng, Quận Đống Đa, Hà Nội',parentId:null,deletedAt:null,createdAt:'22/05/2026',createdBy:'Sales B',subs:[{name:'EDR Standard 80 seat',status:'ACTIVE',end:'21/05/2027',usage:96}],contracts:[{code:'HD-2026-BVM-001',type:'DIRECT',status:'ACTIVE',date:'22/05/2026',subs:['EDR Standard 80 seat · ACTIVE'],pools:null}],timeline:[{icon:'⚠️',cls:'tl-dot-amber',severity:'WARNING',source:'SYSTEM',actor:'System',title:'Cảnh báo: 96% quota',time:'21/06/2026 09:00',detail:'77/80 seat đang dùng · cần tư vấn nâng gói'}],audit:[{time:'21/06/2026 09:00',source:'SYSTEM',actor:'System',action:'Usage alert 90%+',detail:'77/80 seat đang dùng',result:'SUCCESS'},{time:'22/05/2026 10:00',source:'UI',actor:'Sales B',action:'Tạo Customer',detail:'type: B2B · GOV/Health segment',result:'SUCCESS'}]},
+  {id:'cust-024',name:'Trần Phương Linh',type:'Other',tax:null,email:'phuonglinh.tran@outlook.com',phone:null,industry:null,address:'Số 10 Cộng Hòa, Quận Tân Bình, TP HCM',parentId:'cust-008',deletedAt:null,createdAt:'21/06/2026',createdBy:'Sales A',subs:[],contracts:[],timeline:[],audit:[{time:'21/06/2026 16:00',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: Other · parent: VCS',result:'SUCCESS'}]},
+  {id:'cust-025',name:'Bamboo Airways',type:'B2B',tax:'0109916329',email:'itsec@bambooairways.com',phone:'028 3888 8888',industry:'Hàng không',address:'Số 265 Cầu Giấy, Quận Cầu Giấy, Hà Nội',parentId:null,deletedAt:null,createdAt:'23/06/2026',createdBy:'Sales B',subs:[{name:'EDR Enterprise 400 seat',status:'PENDING_PROVISION',end:'22/06/2027',usage:0}],contracts:[{code:'HD-2026-BBA-001',type:'DIRECT',status:'ACTIVE',date:'23/06/2026',subs:['EDR Enterprise 400 seat · PENDING_PROVISION'],pools:null}],timeline:[{icon:'⏳',cls:'tl-dot-amber',severity:'PENDING',source:'UI',actor:'Sales B',title:'Đang provision, chờ xác nhận hạ tầng',time:'23/06/2026 14:30'}],audit:[{time:'23/06/2026 14:00',source:'UI',actor:'Sales B',action:'Tạo Customer',detail:'type: B2B · tax: 0109916329',result:'SUCCESS'}]},
+  {id:'cust-026',name:'Tập đoàn CMC',type:'Reseller',tax:'0100109530',email:'contact@cmc.com.vn',phone:'024 3843 5678',industry:'Công nghệ thông tin',address:'Số 11 Duy Tân, Quận Cầu Giấy, Hà Nội',parentId:null,deletedAt:null,createdAt:'01/01/2026',createdBy:'Admin',subs:[],contracts:[],timeline:[],audit:[{time:'01/01/2026 08:00',source:'UI',actor:'Admin',action:'Tạo Customer (Holding)',detail:'top-level · tax: 0100109530',result:'SUCCESS'}]},
+  {id:'cust-027',name:'CMC Telecom HCM',type:'B2B',tax:'0314567890',email:'hcm@cmctelecom.vn',phone:'028 3456 7890',industry:'Viễn thông',address:'Tầng 5, Số 9 Phổ Quang, Quận Phú Nhuận, TP HCM',parentId:'cust-002',deletedAt:null,createdAt:'15/01/2026',createdBy:'Sales B',subs:[{name:'EDR Standard 30 seat (nội bộ HCM)',status:'ACTIVE',end:'14/01/2027',usage:67}],contracts:[{code:'HD-2026-CMCT-HCM-001',type:'DIRECT',status:'ACTIVE',date:'15/01/2026',subs:['EDR Standard 30 seat (nội bộ HCM) · ACTIVE'],pools:null}],timeline:[{icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'WEBHOOK',actor:'System',title:'License EDR HCM active',time:'20/01/2026 09:00'}],audit:[{time:'15/01/2026 10:00',source:'UI',actor:'Sales B',action:'Tạo Customer',detail:'type: B2B · parent: CMC Telecom',result:'SUCCESS'}]},
+  {id:'cust-028',name:'CMC Telecom Đà Nẵng',type:'B2B',tax:'0401234567',email:'danang@cmctelecom.vn',phone:'0236 3456 789',industry:'Viễn thông',address:'Tầng 3, Số 135 Nguyễn Văn Linh, Quận Thanh Khê, Đà Nẵng',parentId:'cust-002',deletedAt:null,createdAt:'01/03/2026',createdBy:'Sales B',subs:[{name:'EDR Standard 20 seat (nội bộ ĐN)',status:'ACTIVE',end:'28/02/2027',usage:50}],contracts:[{code:'HD-2026-CMCT-DN-001',type:'DIRECT',status:'ACTIVE',date:'01/03/2026',subs:['EDR Standard 20 seat (nội bộ ĐN) · ACTIVE'],pools:null}],timeline:[{icon:'✅',cls:'tl-dot-green',severity:'SUCCESS',source:'WEBHOOK',actor:'System',title:'License EDR Đà Nẵng active',time:'05/03/2026 09:00'}],audit:[{time:'01/03/2026 10:00',source:'UI',actor:'Sales B',action:'Tạo Customer',detail:'type: B2B · parent: CMC Telecom',result:'SUCCESS'}]},
+];
+
+/* ── CORE STATE ───────────────────────────────────────── */
+const PAGE_SIZE=20;
+let listPage=1,lastFilteredActive=[],currentCustomerId=null,currentType=null,editingCustomerId=null,deletingCustomerId=null,dedupBypassed=false;
+const ctExpand={},poolShowMore={},poolSortBy={};
+function isExpanded(k){return ctExpand[k]!==false;}
+function toggleCt(k,cid){ctExpand[k]=!isExpanded(k);renderContractsTab(customers.find(x=>x.id===cid));}
+function togglePoolSort(k,cid,s){poolSortBy[k]=poolSortBy[k]===s?null:s;renderContractsTab(customers.find(x=>x.id===cid));}
+function toggleShowMore(k,cid){poolShowMore[k]=!poolShowMore[k];renderContractsTab(customers.find(x=>x.id===cid));}
+
+/* ── SOURCE / SEVERITY HELPERS ────────────────────────── */
+const SRC_META={UI:{label:'UI',bg:'#EBF4FD',color:'#185FA5'},WEBHOOK:{label:'Webhook',bg:'#F3EFFE',color:'#6D28D9'},SYSTEM:{label:'System',bg:'var(--gray-100)',color:'var(--text-secondary)'},API:{label:'API',bg:'#ECFDF5',color:'#059669'}};
+function deriveSrc(e){if(e.source)return e.source;const a=(e.actor||'').toLowerCase(),ac=(e.action||'').toLowerCase();if(a==='system'||a===''){if(ac.includes('webhook')||ac.includes('event từ')||ac.includes('license.'))return'WEBHOOK';return'SYSTEM';}return'UI';}
+function srcBadge(src,sm){const m=SRC_META[src]||SRC_META.SYSTEM;const p=sm?'1px 5px':'2px 7px',fs=sm?'10px':'11px';return`<span style="font-size:${fs};padding:${p};border-radius:4px;background:${m.bg};color:${m.color};font-weight:500;flex-shrink:0;">${m.label}</span>`;}
+const SEV_DOT={SUCCESS:'tl-dot-green',WARNING:'tl-dot-amber',ERROR:'tl-dot-red',INFO:'tl-dot-blue',PENDING:'tl-dot-gray'};
+function deriveSev(t){if(t.severity)return t.severity;const r={'tl-dot-green':'SUCCESS','tl-dot-amber':'WARNING','tl-dot-red':'ERROR','tl-dot-blue':'INFO','tl-dot-gray':'PENDING'};return r[t.cls]||'INFO';}
+
+/* ── LAZY LOAD ────────────────────────────────────────── */
+const _lazy={};
+function lazyInit(id,data){_lazy[id]={data,page:1,done:data.length<=20};}
+function lazyNext(id){const s=_lazy[id];if(!s||s.done)return null;const items=s.data.slice(s.page*20,(s.page+1)*20);s.page++;s.done=((s.page)*20>=s.data.length);return items;}
+function attachScroll(id,fn){const el=document.getElementById(id);if(el)el.onscroll=()=>{if(el.scrollTop+el.clientHeight>=el.scrollHeight-80)fn();};}
+
+/* ── TIMELINE TAB ─────────────────────────────────────── */
+function renderTimelineTab(c){
+  const el=document.getElementById('tab-timeline');if(!el||!c)return;
+  const sorted=[...c.timeline].sort((a,b)=>b.time.localeCompare(a.time));
+  lazyInit('tl',sorted);
+  if(!sorted.length){el.innerHTML=`<div class="card" style="padding:48px;text-align:center;color:var(--text-secondary);"><div style="font-size:36px;margin-bottom:12px;">📅</div><div style="font-size:15px;font-weight:600;color:var(--text-primary);">Chưa có sự kiện</div></div>`;return;}
+  el.innerHTML=`<div class="card" style="padding:20px;"><div class="section-hdr">Timeline Provisioning</div><div class="timeline" id="tlContainer" style="max-height:calc(100vh - 320px);overflow-y:auto;padding-right:4px;"></div></div>`;
+  appendTlItems(sorted.slice(0,20));
+  if(!_lazy['tl'].done)appendTlFooter();else appendTlEnd(sorted.length);
+  attachScroll('tlContainer',()=>{const items=lazyNext('tl');if(!items)return;const f=document.getElementById('tlContainer')?.querySelector('.tl-footer');if(f)f.remove();appendTlItems(items);if(!_lazy['tl'].done)appendTlFooter();else appendTlEnd(sorted.length);});
+}
+function appendTlItems(items){
+  const c=document.getElementById('tlContainer');if(!c)return;
+  items.forEach(t=>{const sev=deriveSev(t),dotCls=SEV_DOT[sev]||'tl-dot-gray',src=deriveSrc(t);const d=document.createElement('div');d.className='timeline-item';d.innerHTML=`<div class="tl-dot ${dotCls}">${t.icon}</div><div class="tl-body"><div class="tl-title">${t.title}</div><div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap;"><span class="tl-time">🕐 ${t.time}</span>${srcBadge(src,true)}<span style="font-size:11px;color:var(--text-secondary);">${t.actor||'System'}</span></div>${t.detail?`<div class="tl-detail">${t.detail}</div>`:''}</div>`;c.appendChild(d);});
+}
+function appendTlFooter(){const c=document.getElementById('tlContainer');if(!c)return;const f=document.createElement('div');f.className='tl-footer';f.style.cssText='text-align:center;padding:10px;font-size:12px;color:var(--text-secondary);';f.textContent='Cuộn để xem thêm...';c.appendChild(f);}
+function appendTlEnd(n){const c=document.getElementById('tlContainer');if(!c)return;const f=document.createElement('div');f.className='tl-footer';f.style.cssText='text-align:center;padding:10px 0 2px;font-size:11px;color:var(--gray-400);';f.textContent=`── ${n} sự kiện ──`;c.appendChild(f);}
+
+/* ── AUDIT LOG TAB ────────────────────────────────────── */
+let _auditData=[],_auditTimer=null;
+function renderAuditTab(c){
+  const el=document.getElementById('tab-audit');if(!el||!c)return;
+  _auditData=[...c.audit].sort((a,b)=>b.time.localeCompare(a.time));
+  lazyInit('audit',_auditData);
+  el.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><div class="search-wrap" style="flex:1;"><span class="search-icon">🔍</span><input class="search-input" id="auditSearch" type="text" placeholder="Tìm theo actor, hành động, chi tiết..." oninput="onAuditSearch()"></div><span id="auditCount" style="font-size:12px;color:var(--text-secondary);white-space:nowrap;"></span></div>
+    <div id="auditScroll" style="max-height:calc(100vh - 370px);overflow-y:auto;">
+      <div class="table-wrap"><table><thead><tr><th>Thời gian</th><th>Nguồn</th><th>Actor</th><th>Hành động</th><th>Chi tiết</th><th>Kết quả</th></tr></thead><tbody id="auditBody"></tbody></table></div>
+      <div id="auditEmpty" style="display:none;padding:48px;text-align:center;color:var(--text-secondary);"><div style="font-size:36px;margin-bottom:12px;">🔍</div><div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Không tìm thấy kết quả</div><div>Thử từ khoá khác</div></div>
+    </div>`;
+  appendAuditRows(_auditData.slice(0,20),'');updateAuditCount();
+  if(_lazy['audit'].done)appendAuditEnd(_auditData.length);
+  attachScroll('auditScroll',()=>{const q=(document.getElementById('auditSearch')?.value||'').trim().toLowerCase();if(q)return;const items=lazyNext('audit');if(!items)return;removeAuditFooter();appendAuditRows(items,'');updateAuditCount();if(_lazy['audit'].done)appendAuditEnd(_auditData.length);});
+}
+function appendAuditRows(items,q){const tbody=document.getElementById('auditBody');if(!tbody)return;items.forEach((a,i)=>tbody.appendChild(mkAuditRow(a,i,q)));}
+function mkAuditRow(a,i,q){
+  const src=deriveSrc(a),result=(a.result==='FAILED')?'FAILED':'SUCCESS';
+  const rBadge=result==='SUCCESS'?`<span style="font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500;background:#ECFDF5;color:#059669;white-space:nowrap;">✓ Thành công</span>`:`<span style="font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500;background:#FEF2F2;color:var(--red);white-space:nowrap;">✗ Thất bại</span>`;
+  const dColor=result==='FAILED'?'color:#991B1B;':'color:var(--text-secondary);';
+  const actBg=a.actor==='System'?'var(--gray-100)':'#EBF4FD',actColor=a.actor==='System'?'var(--text-secondary)':'var(--primary)';
+  const tr=document.createElement('tr');tr.style.borderTop='1px solid rgba(39,39,42,.12)';if(i%2)tr.style.background='var(--gray-50)';
+  tr.innerHTML=`<td style="font-size:12px;color:var(--text-secondary);white-space:nowrap;padding:11px 14px;">${a.time}</td><td style="padding:11px 14px;">${srcBadge(src,false)}</td><td style="padding:11px 14px;"><span style="font-size:12px;font-weight:500;padding:2px 8px;border-radius:100px;background:${actBg};color:${actColor};">${hl(a.actor||'System',q)}</span></td><td style="font-size:13px;font-weight:500;padding:11px 14px;">${hl(a.action,q)}</td><td style="font-size:12px;${dColor}padding:11px 14px;max-width:220px;">${hl(a.detail,q)}</td><td style="padding:11px 14px;">${rBadge}</td>`;
+  return tr;
+}
+function hl(text,q){if(!q||!text)return text||'';const re=new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');return text.replace(re,'<mark>$1</mark>');}
+function updateAuditCount(){const el=document.getElementById('auditCount');if(!el)return;const total=_lazy['audit']?.data?.length||_auditData.length;const loaded=Math.min((_lazy['audit']?.page||1)*20,total);el.textContent=`${loaded} / ${total} bản ghi`;}
+function removeAuditFooter(){document.getElementById('auditBody')?.querySelector('.audit-footer-row')?.remove();}
+function appendAuditEnd(n){const tbody=document.getElementById('auditBody');if(!tbody)return;const tr=document.createElement('tr');tr.className='audit-footer-row';tr.innerHTML=`<td colspan="6" style="text-align:center;padding:10px;font-size:11px;color:var(--gray-400);border-top:1px solid var(--border);">── ${n} bản ghi ──</td>`;tbody.appendChild(tr);}
+function onAuditSearch(){
+  clearTimeout(_auditTimer);
+  _auditTimer=setTimeout(()=>{
+    const q=(document.getElementById('auditSearch')?.value||'').trim().toLowerCase();
+    const tbody=document.getElementById('auditBody'),empty=document.getElementById('auditEmpty'),cnt=document.getElementById('auditCount');
+    if(!tbody)return;tbody.innerHTML='';
+    const filtered=q?_auditData.filter(a=>(a.actor||'').toLowerCase().includes(q)||(a.action||'').toLowerCase().includes(q)||(a.detail||'').toLowerCase().includes(q)):_auditData;
+    if(!filtered.length){if(empty)empty.style.display='block';if(cnt)cnt.textContent='0 kết quả';return;}
+    if(empty)empty.style.display='none';
+    filtered.forEach((a,i)=>tbody.appendChild(mkAuditRow(a,i,q)));
+    if(cnt)cnt.textContent=q?`${filtered.length} kết quả`:`${filtered.length} / ${_auditData.length} bản ghi`;
+    if(!q)lazyInit('audit',_auditData);
+  },300);
+}
+
+/* ── CONTRACTS TAB ────────────────────────────────────── */
+function renderContractsTab(c){
+  const el=document.getElementById('tab-contracts');if(!el||!c)return;
+  const stMap={ACTIVE:'badge-active',PENDING_PROVISION:'badge-pending',GRACE:'badge-grace',SUSPENDED:'badge-suspended',REVOKED:'badge-deleted',EXPIRED:'badge-deleted'};
+  const stLbl={ACTIVE:'Đang hoạt động',PENDING_PROVISION:'Đang triển khai',GRACE:'Trong gia hạn',SUSPENDED:'Tạm dừng',REVOKED:'Đã thu hồi',EXPIRED:'Hết hạn'};
+  const activeCtCount=c.contracts.filter(ct=>(ct.status||'ACTIVE')==='ACTIVE').length;
+  const activeSubCount=c.subs.filter(s=>s.status==='ACTIVE').length;
+  let graceTotal=c.subs.filter(s=>s.status==='GRACE').length,susTotal=0;
+  c.contracts.forEach(ct=>(ct.pools||[]).forEach(p=>p.allocations.forEach(al=>{if(al.status==='GRACE')graceTotal++;if(al.status==='SUSPENDED')susTotal++;})));
+  const mkCard=(label,val,sub,color='neutral')=>{const bg={neutral:'',warn:val>0?'background:#FFFBEB;border-color:#FDE68A;':'',red:val>0?'background:#FEF2F2;border-color:#FECACA;':''}[color];const vc={neutral:'var(--navy)',warn:val>0?'#D97706':'var(--navy)',red:val>0?'var(--red)':'var(--navy)'}[color];const lc={neutral:'var(--text-secondary)',warn:val>0?'#D97706':'var(--text-secondary)',red:val>0?'var(--red)':'var(--text-secondary)'}[color];return`<div style="background:white;border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;${bg}"><div style="font-size:11px;font-weight:600;color:${lc};text-transform:uppercase;letter-spacing:.04em;">${label}</div><div style="font-size:22px;font-weight:700;color:${vc};margin-top:4px;">${val}</div><div style="font-size:12px;color:var(--text-secondary);">${sub}</div></div>`;};
+  const summaryStrip=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">${mkCard('Hợp đồng',activeCtCount,'đang hiệu lực')}${mkCard('Subscription',activeSubCount,'đang active')}${mkCard('Gia hạn',graceTotal,'cần gia hạn sớm','warn')}${mkCard('Tạm dừng',susTotal,'đang bị suspend','red')}</div>`;
+  const sortBar=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="font-size:12px;color:var(--text-secondary);">Sắp xếp:</span><span style="font-size:12px;padding:3px 10px;border-radius:6px;background:#EBF4FD;color:var(--primary);font-weight:500;">Status ↑</span><span style="font-size:12px;padding:3px 10px;border-radius:6px;background:#EBF4FD;color:var(--primary);font-weight:500;">Ngày ký ↓</span><button class="btn btn-primary btn-sm" style="margin-left:auto;">+ Tạo HĐ</button></div>`;
+  const soMap={ACTIVE:0,GRACE:1,SUSPENDED:2,EXPIRED:3};
+  const sorted=[...c.contracts].sort((a,b)=>{const sa=soMap[a.status||'ACTIVE']??4,sb=soMap[b.status||'ACTIVE']??4;return sa!==sb?sa-sb:(b.date||'').localeCompare(a.date||'');});
+  const LIMIT=3;
+  const STATUS_ORDER=[{k:'ACTIVE',l:'active'},{k:'PENDING_PROVISION',l:'pending'},{k:'GRACE',l:'grace'},{k:'SUSPENDED',l:'sus'},{k:'REVOKED',l:'revoked'},{k:'EXPIRED',l:'expired'}];
+  const ctHtml=sorted.map(ct=>{
+    const ek=c.id+'::'+ct.code,expanded=isExpanded(ek),ctSt=ct.status||'ACTIVE';
+    let aTotal=0,aActive=0,aGrace=0,aSus=0;
+    (ct.pools||[]).forEach(p=>p.allocations.forEach(al=>{aTotal++;if(al.status==='ACTIVE')aActive++;else if(al.status==='GRACE')aGrace++;else if(al.status==='SUSPENDED'||al.status==='REVOKED')aSus++;}));
+    const allocMap=(ct.pools||[]).flatMap(p=>p.allocations).reduce((a,al)=>{a[al.status]=(a[al.status]||0)+1;return a;},{});
+    const allocParts=STATUS_ORDER.filter(s=>allocMap[s.k]>0).map(s=>`${allocMap[s.k]} ${s.l}`).join(' · ');
+    const metaRight=ct.type==='RESELLER'?`${(ct.pools||[]).length} pool · ${aTotal} end-customer${allocParts?' · '+allocParts:''}`:`${ct.subs.length} subscription`;
+    let bodyHtml='';
+    if(ct.type==='DIRECT'){
+      bodyHtml=ct.subs.map(s=>{const sub=c.subs.find(x=>s.startsWith(x.name));if(!sub)return'';return`<div class="sub-item" style="flex-direction:column;align-items:flex-start;gap:10px;"><div style="display:flex;align-items:center;justify-content:space-between;width:100%;"><div><div class="sub-name">📦 ${sub.name}</div><div class="sub-dates">Kết thúc: ${sub.end}</div></div><span class="badge ${stMap[sub.status]||'badge-other'}">${stLbl[sub.status]||sub.status}</span></div>${sub.usage>0?`<div style="width:100%;background:var(--gray-100);border:1px solid var(--border);border-radius:8px;padding:10px;"><div style="display:flex;align-items:center;gap:10px;"><div style="flex:1;height:6px;background:var(--gray-200);border-radius:100px;overflow:hidden;"><div style="height:100%;width:${sub.usage}%;background:${sub.usage>80?'var(--amber)':'var(--primary)'};border-radius:100px;"></div></div><span style="font-size:13px;font-weight:600;">${sub.usage}%</span></div></div>`:''}</div>`;}).join('');
+    }
+    if(ct.type==='RESELLER'&&ct.pools){
+      bodyHtml=ct.pools.map((pool,pi)=>{
+        const pk=c.id+'::'+ct.code+'::'+pi,curSort=poolSortBy[pk]||'seats',showAll=!!poolShowMore[pk];
+        const pct=Math.round(pool.used/pool.total*100),warn=pct>80;
+        let allocs=[...pool.allocations];
+        if(curSort==='seats')allocs.sort((a,b)=>b.seats-a.seats);else{const o={ACTIVE:0,GRACE:1,SUSPENDED:2,REVOKED:3,EXPIRED:4};allocs.sort((a,b)=>(o[a.status]??5)-(o[b.status]??5));}
+        const vis=showAll?allocs:allocs.slice(0,LIMIT),hidden=showAll?[]:allocs.slice(LIMIT);
+        const hidSum=Object.entries(hidden.reduce((a,al)=>{a[al.status]=(a[al.status]||0)+1;return a;},{})).map(([s,n])=>`${n} ${stLbl[s]||s}`).join(' · ');
+        const allocRows=vis.map(al=>`<div style="padding:9px 16px;border-top:1px dashed var(--border);display:flex;align-items:center;gap:10px;background:rgba(249,250,251,.6);"><span style="color:var(--gray-400);font-size:14px;margin-left:4px;">└</span><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${al.name}</div><div style="font-size:12px;color:var(--text-secondary);">${al.seats.toLocaleString()} seat${al.seats>1?'s':''}</div></div><span class="badge ${stMap[al.status]||'badge-other'}" style="font-size:11px;flex-shrink:0;">${stLbl[al.status]||al.status}</span></div>`).join('');
+        const bottomRow=!showAll&&hidden.length>0?`<div style="padding:8px 16px;border-top:1px dashed var(--border);background:rgba(249,250,251,.6);display:flex;align-items:center;justify-content:space-between;"><span style="font-size:12px;color:var(--text-secondary);">+${hidden.length} chưa hiện: ${hidSum}</span><button onclick="toggleShowMore('${pk}','${c.id}')" style="font-size:12px;color:var(--primary);background:none;border:none;cursor:pointer;font-weight:500;padding:0;font-family:var(--font);">Xem tất cả ${pool.allocations.length} ↓</button></div>`:showAll&&pool.allocations.length>LIMIT?`<div style="padding:6px 16px;border-top:1px dashed var(--border);background:rgba(249,250,251,.4);text-align:center;"><button onclick="toggleShowMore('${pk}','${c.id}')" style="font-size:12px;color:var(--text-secondary);background:none;border:none;cursor:pointer;font-family:var(--font);">Thu gọn ↑</button></div>`:`<div style="padding:5px 16px;border-top:1px dashed var(--border);background:rgba(249,250,251,.4);text-align:center;"><span style="font-size:11px;color:var(--gray-400);">── ${pool.allocations.length} / ${pool.allocations.length} end-customer ──</span></div>`;
+        return`<div style="${pi>0?'border-top:2px solid var(--gray-200);':''}"><div style="padding:12px 16px;background:#F8F9FC;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;">🏊 Pool · ${pool.product}</div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:var(--text-secondary);">Sort:</span><button onclick="togglePoolSort('${pk}','${c.id}','seats')" style="font-size:11px;padding:2px 7px;border-radius:4px;border:1px solid ${curSort==='seats'?'var(--primary)':'var(--border)'};background:${curSort==='seats'?'#EBF4FD':'white'};color:${curSort==='seats'?'var(--primary)':'var(--text-secondary)'};cursor:pointer;font-family:var(--font);">Seat ↓</button><button onclick="togglePoolSort('${pk}','${c.id}','status')" style="font-size:11px;padding:2px 7px;border-radius:4px;border:1px solid ${curSort==='status'?'var(--primary)':'var(--border)'};background:${curSort==='status'?'#EBF4FD':'white'};color:${curSort==='status'?'var(--primary)':'var(--text-secondary)'};cursor:pointer;font-family:var(--font);">Status ↕</button></div></div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div style="font-size:13px;"><span style="font-weight:600;">${pool.used.toLocaleString()}</span><span style="color:var(--text-secondary);"> / ${pool.total.toLocaleString()} đã cấp · còn </span><span style="font-weight:600;color:${warn?'var(--amber)':'#059669'};">${(pool.total-pool.used).toLocaleString()}</span></div><span style="font-size:12px;color:var(--text-secondary);">${pct}% phân bổ</span></div><div style="background:var(--gray-200);border-radius:100px;height:7px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${warn?'var(--amber)':'var(--primary)'};border-radius:100px;"></div></div></div>${allocRows}${bottomRow}</div>`;
+      }).join('');
+    }
+    const ctStCls=stMap[ctSt]||'badge-other',ctStLbl=stLbl[ctSt]||ctSt;
+    return`<div class="contract-item" style="margin-bottom:12px;"><div class="contract-header" onclick="toggleCt('${ek}','${c.id}')"><div style="min-width:0;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><span style="font-size:11px;color:var(--text-secondary);width:10px;">${expanded?'▼':'▶'}</span><div class="contract-code">${ct.code}</div><span class="badge ${ct.type==='RESELLER'?'badge-reseller':'badge-b2b'}">${ct.type}</span><span class="badge ${ctStCls}" style="font-size:11px;">${ctStLbl}</span></div><div class="contract-meta" style="margin-left:18px;margin-top:3px;">📅 ${ct.date||'—'} &nbsp;·&nbsp; ${metaRight}</div></div></div>${expanded?`<div>${bodyHtml}</div>`:''}</div>`;
+  }).join('')||`<div class="card" style="padding:48px;text-align:center;"><div style="font-size:36px;margin-bottom:12px;">📄</div><div style="font-size:15px;font-weight:600;">Chưa có hợp đồng</div></div>`;
+  el.innerHTML=summaryStrip+sortBar+`<div id="contractsScroll" style="max-height:calc(100vh - 370px);overflow-y:auto;">${ctHtml}</div>`;
+}
+
+/* ── INIT & VIEW ROUTING ──────────────────────────────── */
+function init(){renderTable(customers);populateParentDropdowns();}
+function showView(v){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById('view-'+v).classList.add('active');}
+function showCustomer360(id){const c=customers.find(x=>x.id===id);if(!c)return;currentCustomerId=id;document.getElementById('breadcrumbCurrent').textContent=c.name;render360(c);showView('360');}
+
+/* ── TABLE ────────────────────────────────────────────── */
+function renderTable(data,page){
+  const tbody=document.getElementById('customerTable'),empty=document.getElementById('tableEmpty');
+  const active=data.filter(c=>!c.deletedAt);lastFilteredActive=active;listPage=page||1;
+  if(!active.length){tbody.innerHTML='';empty.classList.remove('hidden');document.getElementById('pageInfo').textContent='0 kết quả';document.querySelector('.page-btns').innerHTML='';return;}
+  empty.classList.add('hidden');
+  const tp=Math.max(1,Math.ceil(active.length/PAGE_SIZE));if(listPage>tp)listPage=tp;
+  const s=(listPage-1)*PAGE_SIZE,rows=active.slice(s,s+PAGE_SIZE);
+  tbody.innerHTML=rows.map(c=>{const sa=c.subs.filter(x=>x.status==='ACTIVE').length;
+    return`<tr onclick="showCustomer360('${c.id}')"><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:8px;background:${typeColor(c.type)};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;flex-shrink:0;">${c.name.charAt(0)}</div><div><div class="col-name">${c.name}</div><div style="font-size:12px;color:var(--text-secondary);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.address||'—'}</div></div></div></td><td><span class="badge badge-${c.type.toLowerCase()}">${c.type}</span></td><td style="font-family:monospace;font-size:13px;">${c.tax||'—'}</td><td style="font-size:13px;">${c.email||'—'}</td><td>${c.subs.length>0?`<div style="font-size:13px;font-weight:500;">${c.subs.length} sub</div><div style="font-size:12px;color:var(--text-secondary);">${sa} active</div>`:'<span style="color:var(--text-secondary);font-size:13px;">Chưa có</span>'}</td><td onclick="event.stopPropagation()"><div style="display:flex;gap:4px;"><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openEdit('${c.id}')">✏️ Sửa</button><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openDelete('${c.id}')" style="color:var(--red);border-color:var(--red);">🗑️</button></div></td></tr>`;
+  }).join('');
+  const from=s+1,to=Math.min(s+PAGE_SIZE,active.length);document.getElementById('pageInfo').textContent=`Hiển thị ${from}–${to} / ${active.length} kết quả`;
+  const bw=document.querySelector('.page-btns');bw.innerHTML='';
+  if(tp>1)for(let p=1;p<=tp;p++){const b=document.createElement('button');b.className='page-btn'+(p===listPage?' active':'');b.textContent=p;b.onclick=()=>renderTable(active,p);bw.appendChild(b);}
+}
+function typeColor(t){return{B2B:'#0268C5',Reseller:'#7C3AED',B2C:'#10B981',Other:'#6B7280'}[t]||'#6B7280';}
+function filterTable(){const q=document.getElementById('searchInput').value.toLowerCase(),t=document.getElementById('filterType').value;renderTable(customers.filter(c=>{if(c.deletedAt)return false;return(!q||c.name.toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q)||(c.tax||'').includes(q)||(c.phone||'').includes(q))&&(!t||c.type===t);}));}
+function clearFilter(){document.getElementById('searchInput').value='';document.getElementById('filterType').value='';renderTable(customers);}
+
+/* ── RENDER 360° ──────────────────────────────────────── */
+function render360(c){
+  const parent=c.parentId?customers.find(x=>x.id===c.parentId):null;
+  const children=customers.filter(x=>x.parentId===c.id&&!x.deletedAt);
+  const statusTxt=c.deletedAt?'Đã xóa':'Đang hoạt động',statusCls=c.deletedAt?'color:var(--red)':'color:#059669';
+  document.getElementById('profileHero').innerHTML=`<div class="profile-header"><div class="profile-id"><div class="profile-avatar">${c.name.charAt(0)}</div><div><div class="profile-name">${c.name}</div><div class="profile-meta"><span class="badge badge-${c.type.toLowerCase()}" style="margin-right:8px;">${c.type}</span><span style="${statusCls};font-size:12px;font-weight:500;">● ${statusTxt}</span></div></div></div><div class="profile-actions">${!c.deletedAt?`<button class="btn btn-secondary" onclick="openEdit('${c.id}')">✏️ Chỉnh sửa</button><button class="btn btn-ghost" onclick="openDelete('${c.id}')" style="color:var(--red);border-color:var(--red);">🗑️ Xóa</button>`:''}<button class="btn btn-ghost" onclick="showView('list');document.getElementById('breadcrumbCurrent').textContent='Khách hàng'">← Quay lại</button></div></div>`;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelector('.tab').classList.add('active');
+  ['tab-overview','tab-contracts','tab-timeline','tab-audit'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  document.getElementById('tab-overview').classList.remove('hidden');
+
+  // OVERVIEW
+  const basicInfo=`<div class="card" style="padding:20px;margin-bottom:16px;"><div class="section-hdr">1. Thông tin cơ bản</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;"><div><div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;margin-bottom:4px;">Loại</div><span class="badge badge-${c.type.toLowerCase()}">${c.type}</span></div><div><div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;margin-bottom:4px;">MST</div><div style="font-family:monospace;">${c.tax||'—'}</div></div><div><div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;margin-bottom:4px;">Trạng thái</div><div style="${statusCls};font-weight:500;">● ${statusTxt}</div></div><div><div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;margin-bottom:4px;">Email</div>${c.email||'—'}</div><div><div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;margin-bottom:4px;">SĐT</div>${c.phone||'—'}</div><div><div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;margin-bottom:4px;">Lĩnh vực</div>${c.industry||'—'}</div><div style="grid-column:1/-1;"><div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;margin-bottom:4px;">Địa chỉ</div>${c.address||'—'}</div><div><div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;margin-bottom:4px;">Ngày tạo</div>${c.createdAt}</div><div><div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;margin-bottom:4px;">Người tạo</div>${c.createdBy}</div></div></div>`;
+  let hierarchySection='';
+  if(c.type==='B2B'||c.type==='Reseller'||parent||children.length>0){
+    const grandparent=parent?customers.find(x=>x.id===parent.parentId&&!x.deletedAt):null;
+    const siblings=parent?customers.filter(x=>x.parentId===parent.id&&!x.deletedAt&&x.id!==c.id):[];
+    const mkNode=(entity,variant)=>{const s={current:'background:#EEEDFE;border:2px solid #AFA9EC;color:#3C3489;',parent:'background:#EBF4FD;border:1px solid #B5D4F4;color:#0C447C;cursor:pointer;',grand:'background:var(--gray-50);border:1px dashed var(--border);color:var(--text-secondary);cursor:pointer;',sibling:'background:var(--gray-50);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;',child:'background:var(--gray-50);border:1px solid var(--border);color:var(--navy);cursor:pointer;'}[variant]||'';const d={current:'#534AB7',parent:'#185FA5',grand:'#9CA3AF',sibling:'#9CA3AF',child:'#9CA3AF'}[variant]||'#9CA3AF';const cl=variant!=='current'?`onclick="showCustomer360('${entity.id}')"` :'';const hv=variant!=='current'?`onmouseenter="this.style.opacity='.7'" onmouseleave="this.style.opacity='1'"` :'';return`<div ${cl} ${hv} style="display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;white-space:nowrap;${s}transition:opacity .15s;"><span style="width:7px;height:7px;border-radius:50%;flex-shrink:0;background:${d};"></span><span style="max-width:160px;overflow:hidden;text-overflow:ellipsis;">${entity.name}</span><span style="font-size:10px;padding:1px 5px;border-radius:4px;background:rgba(0,0,0,.07);flex-shrink:0;">${entity.type}</span>${variant==='current'?'<span style="font-size:10px;opacity:.55;margin-left:2px;">← đang xem</span>':''}</div>`;};
+    const vl=`<div style="width:1px;height:18px;background:var(--border);margin:0 auto;"></div>`;
+    let tree=`<div style="display:flex;flex-direction:column;align-items:center;padding:8px 0;overflow-x:auto;">`;
+    if(grandparent)tree+=`<div>${mkNode(grandparent,'grand')}</div>${vl}`;
+    if(parent)tree+=`<div>${mkNode(parent,'parent')}</div>${vl}`;
+    tree+=`<div>${mkNode(c,'current')}</div>`;
+    if(children.length>0){tree+=vl;if(children.length===1)tree+=`<div>${mkNode(children[0],'child')}</div>`;else tree+=`<div style="display:flex;gap:10px;align-items:flex-start;position:relative;"><div style="position:absolute;top:0;left:28px;right:28px;height:1px;background:var(--border);"></div>${children.map(ch=>`<div style="display:flex;flex-direction:column;align-items:center;"><div style="width:1px;height:16px;background:var(--border);"></div>${mkNode(ch,'child')}</div>`).join('')}</div>`;}
+    tree+=`</div>`;
+    const siblingsHtml=siblings.length>0?`<div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border);"><div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;margin-bottom:9px;">Cùng cấp (${siblings.length})</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${siblings.map(s=>mkNode(s,'sibling')).join('')}</div></div>`:'';
+    hierarchySection=`<div class="card" style="padding:20px;margin-bottom:16px;"><div class="section-hdr">2. Phân cấp tập đoàn</div>${tree}${siblingsHtml}</div>`;
+  }
+  document.getElementById('tab-overview').innerHTML=basicInfo+hierarchySection;
+  renderContractsTab(c);renderTimelineTab(c);renderAuditTab(c);
+}
+
+function switchTab(el,tabId){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  ['tab-overview','tab-contracts','tab-timeline','tab-audit'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  document.getElementById(tabId).classList.remove('hidden');
+  const c=customers.find(x=>x.id===currentCustomerId);
+  if(tabId==='tab-contracts')renderContractsTab(c);
+  if(tabId==='tab-timeline')renderTimelineTab(c);
+  if(tabId==='tab-audit')renderAuditTab(c);
+}
+
+/* ── CREATE ───────────────────────────────────────────── */
+function selectType(type,el){document.querySelectorAll('.type-card').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');currentType=type;updateCreateForm(type);}
+function updateCreateForm(type){const labels={B2B:'Tên doanh nghiệp',Reseller:'Tên đại lý',B2C:'Họ và tên',Other:'Tên liên hệ'};document.getElementById('nameLabel').innerHTML=`${labels[type]||'Tên'} <span class="required">*</span>`;document.getElementById('createIndustryField').style.display=(type==='B2B'||type==='Reseller')?'':'none';document.getElementById('taxField').style.display=(type==='B2B'||type==='Reseller')?'':'none';document.getElementById('emailReq').style.display=(type==='Other')?'none':'';document.getElementById('parentField').style.display=(type==='B2C')?'none':'';if(type==='B2C'||type==='Other'){document.getElementById('createTax').value='';document.getElementById('createIndustry').value='';}document.getElementById('dedupPanel').classList.remove('show');document.getElementById('createName').value='';document.getElementById('createEmail').value='';}
+function checkDedup(){const name=document.getElementById('createName').value.toLowerCase();if(name.length<3||dedupBypassed){document.getElementById('dedupPanel').classList.remove('show');return;}const m=customers.filter(c=>!c.deletedAt&&c.name.toLowerCase().includes(name.substring(0,4)));if(!m.length){document.getElementById('dedupPanel').classList.remove('show');return;}document.getElementById('dedupList').innerHTML=m.map(c=>`<div class="dedup-item"><div class="dedup-item-info"><div class="name">${c.name}</div><div class="sub">${c.email} · ${c.type}</div></div><div style="display:flex;align-items:center;gap:8px;"><span class="dedup-score ${c.name.toLowerCase().includes(name)?'score-100':'score-70'}">${c.name.toLowerCase().includes(name)?'100%':'70%'}</span><button class="btn btn-secondary btn-sm" onclick="showCustomer360('${c.id}');closeModal('modalCreate')">Xem →</button></div></div>`).join('');document.getElementById('dedupPanel').classList.add('show');}
+function hideDedupAndCreate(){dedupBypassed=true;document.getElementById('dedupPanel').classList.remove('show');}
+function submitCreate(){
+  const name=document.getElementById('createName').value.trim(),email=document.getElementById('createEmail').value.trim(),tax=document.getElementById('createTax').value.trim(),type=currentType;
+  let ok=true;if(!name){showErr('errName');ok=false;}else hideErr('errName');if(!type){toast('error','Vui lòng chọn loại KH','');return;}if((type==='B2B'||type==='Reseller')&&!tax){showErr('errTax');ok=false;}else hideErr('errTax');if(type!=='Other'&&!email){showErr('errEmail');ok=false;}else hideErr('errEmail');if(tax&&customers.find(c=>c.tax===tax&&!c.deletedAt)){showErr('errTax','MST đã tồn tại');ok=false;}if(!ok)return;
+  const nc={id:'cust-'+Date.now(),name,type,tax:tax||null,email:email||null,phone:document.getElementById('createPhone').value.trim()||null,industry:document.getElementById('createIndustry').value||null,address:document.getElementById('createAddress').value.trim()||null,parentId:document.getElementById('createParent').value||null,deletedAt:null,createdAt:new Date().toLocaleDateString('vi-VN'),createdBy:currentUser?.name||'Sales A',subs:[],contracts:[],timeline:[],audit:[{time:new Date().toLocaleString('vi-VN'),source:'UI',actor:currentUser?.name||'Sales A',action:'Tạo Customer',detail:`type: ${type}`,result:'SUCCESS'}]};
+  customers.push(nc);renderTable(customers);populateParentDropdowns();closeModal('modalCreate');resetCreateForm();toast('success','Tạo thành công',`${name} đã được thêm`);setTimeout(()=>showCustomer360(nc.id),600);
+}
+function resetCreateForm(){currentType=null;dedupBypassed=false;document.querySelectorAll('.type-card').forEach(c=>c.classList.remove('selected'));['createName','createTax','createEmail','createPhone','createAddress'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('createIndustry').value='';document.getElementById('createParent').value='';document.getElementById('dedupPanel').classList.remove('show');['errName','errTax','errEmail'].forEach(hideErr);}
+
+/* ── EDIT ─────────────────────────────────────────────── */
+function openEdit(id){const c=customers.find(x=>x.id===id);if(!c)return;editingCustomerId=id;document.getElementById('editName').value=c.name;document.getElementById('editType').value=c.type;document.getElementById('editTax').value=c.tax||'';document.getElementById('editEmail').value=c.email||'';document.getElementById('editPhone').value=c.phone||'';document.getElementById('editPhoneB2C').value=c.phone||'';document.getElementById('editAddress').value=c.address||'';const si=(c.type==='B2B'||c.type==='Reseller');document.getElementById('editIndustryRow').style.display=si?'':'none';document.getElementById('editPhoneOnlyRow').style.display=si?'none':'';if(si&&c.industry){const sel=document.getElementById('editIndustry');for(let i=0;i<sel.options.length;i++)if(sel.options[i].text===c.industry){sel.selectedIndex=i;break;}}document.getElementById('editParentRow').style.display=c.type==='B2C'?'none':'';const sel=document.getElementById('editParent');sel.innerHTML='<option value="">-- Không có --</option>'+customers.filter(x=>!x.deletedAt&&(x.type==='B2B'||x.type==='Reseller')&&x.id!==id).map(x=>`<option value="${x.id}"${c.parentId===x.id?' selected':''}>${x.name}</option>`).join('');openModal('modalEdit');}
+function submitEdit(){const c=customers.find(x=>x.id===editingCustomerId);if(!c)return;const old=c.name,si=(c.type==='B2B'||c.type==='Reseller');c.name=document.getElementById('editName').value.trim()||c.name;c.email=document.getElementById('editEmail').value.trim()||c.email;c.phone=si?document.getElementById('editPhone').value.trim()||c.phone:document.getElementById('editPhoneB2C').value.trim()||c.phone;c.address=document.getElementById('editAddress').value.trim()||c.address;if(si)c.industry=document.getElementById('editIndustry').value||c.industry;c.parentId=document.getElementById('editParent').value||null;c.audit.unshift({time:new Date().toLocaleString('vi-VN'),source:'UI',actor:currentUser?.name||'Sales A',action:'Cập nhật thông tin',detail:`name: "${old}" → "${c.name}"`,result:'SUCCESS'});renderTable(customers);closeModal('modalEdit');toast('success','Đã lưu',`Hồ sơ ${c.name} cập nhật`);if(currentCustomerId===editingCustomerId)render360(c);}
+
+/* ── DELETE ───────────────────────────────────────────── */
+function openDelete(id){const c=customers.find(x=>x.id===id);if(!c)return;const hc=c.contracts.length>0,as=c.subs.filter(s=>s.status==='ACTIVE'),cc=customers.filter(x=>x.parentId===c.id&&!x.deletedAt).length;deletingCustomerId=id;document.getElementById('deleteCustomerName').textContent='Bạn sắp xóa: '+c.name;document.getElementById('deleteReason').value='';const rw=document.getElementById('deleteReasonWrap');if(hc){rw.classList.add('show');document.getElementById('btnConfirmDelete').disabled=true;}else{rw.classList.remove('show');document.getElementById('btnConfirmDelete').disabled=false;}let w='';if(!hc)w+=`<div class="alert alert-success" style="margin-bottom:10px;"><div class="alert-icon">✅</div><div class="alert-body"><div class="alert-title">Chưa có HĐ — xóa ngay không cần lý do</div></div></div>`;if(as.length>0)w+=`<div class="alert alert-warn" style="margin-bottom:10px;"><div class="alert-icon">⚠️</div><div class="alert-body"><div class="alert-title">${as.length} subscription đang ACTIVE</div><div class="alert-text">Xóa sẽ không tự dừng dịch vụ.</div></div></div>`;if(cc>0)w+=`<div class="alert alert-info" style="margin-bottom:10px;"><div class="alert-icon">ℹ️</div><div class="alert-body"><div class="alert-title">KH là công ty mẹ của ${cc} chi nhánh</div></div></div>`;document.getElementById('deleteWarnings').innerHTML=w;openModal('modalDelete');}
+function toggleDeleteBtn(){const w=document.getElementById('deleteReasonWrap');if(w.classList.contains('show'))document.getElementById('btnConfirmDelete').disabled=!document.getElementById('deleteReason').value.trim();}
+function confirmDelete(){const c=customers.find(x=>x.id===deletingCustomerId);if(!c)return;c.deletedAt=new Date().toISOString();c.audit.unshift({time:new Date().toLocaleString('vi-VN'),source:'UI',actor:currentUser?.name||'Manager',action:'Soft delete Customer',detail:`reason: ${document.getElementById('deleteReason').value.trim()||'—'}`,result:'SUCCESS'});renderTable(customers);closeModal('modalDelete');toast('success','Đã xóa',`${c.name} đã bị ẩn`);if(currentCustomerId===deletingCustomerId){showView('list');document.getElementById('breadcrumbCurrent').textContent='Khách hàng';}}
+
+/* ── MODALS / TOAST / HELPERS ─────────────────────────── */
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+function toast(type,title,sub){const icons={success:'✅',error:'❌',info:'ℹ️'};const el=document.createElement('div');el.className=`toast toast-${type}`;el.innerHTML=`<div class="toast-icon">${icons[type]||'ℹ️'}</div><div><div class="toast-text">${title}</div>${sub?`<div class="toast-sub">${sub}</div>`:''}</div>`;document.getElementById('toastWrap').appendChild(el);setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(12px)';el.style.transition='.3s';setTimeout(()=>el.remove(),300);},3000);}
+function showErr(id,msg){const el=document.getElementById(id);if(!el)return;if(msg)el.textContent=msg;el.style.display='block';}
+function hideErr(id){const el=document.getElementById(id);if(el)el.style.display='none';}
+function populateParentDropdowns(){const o=customers.filter(c=>!c.deletedAt&&(c.type==='B2B'||c.type==='Reseller')).map(c=>`<option value="${c.id}">${c.name}</option>`).join('');document.getElementById('createParent').innerHTML=`<option value="">-- Chọn --</option>${o}`;}
+
+init();
+</script>
+</body>
+</html>
