@@ -1,6 +1,6 @@
 # UC-CON-03 — Xem Chi tiết Hợp đồng
 
-> Module: M-02 Contract Management | Phiên bản: 1.0 | Ngày: 06/07/2026
+> Module: M-02 Contract Management | Phiên bản: 1.1 | Ngày: 06/07/2026
 > Trạng thái: Draft for Review
 
 ---
@@ -23,9 +23,9 @@
 |---|---|
 | BR-01 | Section **Subscription** (DIRECT) chỉ hiển thị với HĐ loại DIRECT. Section **License Pool** chỉ hiển thị với HĐ loại RESELLER. Không trộn lẫn. |
 | BR-02 | `activated_at` và `expires_at` trong Date Block lấy từ `license_mirror`. CRM không tự tính — nếu chưa nhận event webhook → hiển thị placeholder "—". |
-| BR-03 | Timeline sắp xếp DESC theo `occurred_at` (mới nhất trên cùng). Chỉ hiển thị event có `internal_only = false`. Lazy load, không search/filter ở Sprint 0. |
-| BR-04 | Audit Log sắp xếp DESC theo `created_at`. Scope: `entity_type = 'CONTRACT' AND entity_id = {id}`. Search client-side, debounce 300ms. |
-| BR-05 | Trạng thái sub được phản ánh qua webhook — trang detail chỉ đọc, không tự thay đổi trạng thái. |
+| BR-03 | Audit Log sắp xếp DESC theo `created_at`. Scope: `entity_type = 'CONTRACT' AND entity_id = {id}`. Search client-side, debounce 300ms. |
+| BR-04 | Trạng thái sub được phản ánh qua webhook — trang detail chỉ đọc, không tự thay đổi trạng thái. |
+| BR-05 | Provisioning events (webhook/lifecycle của sub) **không** hiển thị tại đây — chúng thuộc về Chi tiết Subscription, không thuộc Contract. |
 
 ---
 
@@ -37,7 +37,7 @@
 |---|---|---|
 | **1** | Sales | Nhấn vào row hợp đồng trong Danh sách (UC-CON-01) hoặc nhấn mã HĐ trong tab Hợp đồng & Sub của Customer 360° (UC-CUS-03). |
 | **2** | System | Navigate sang trang Chi tiết. Hiển thị **Contract Header**: icon 📄, mã HĐ (font monospace, navy, bold), tên KH (link → Customer 360°), badge Loại HĐ, ngày ký (nếu có). |
-| **3** | System | Hiển thị **Action bar**: **✏️ Chỉnh sửa** → UC-CON-04; **+ Thêm Subscription** (chỉ DIRECT); **🗑️ Xóa** → UC-CON-06 (disabled nếu subs.length > 0). |
+| **3** | System | Hiển thị **Action bar**: **✏️ Chỉnh sửa** → UC-CON-04; **+ Thêm Subscription** (luôn hiển thị với HĐ loại DIRECT, bất kể đã có sub hay chưa); **🗑️ Xóa** → UC-CON-06 (disabled nếu subs.length > 0). |
 | **4** | System | Hiển thị **panel Thông tin chung**: grid 4 cột — Mã HĐ (readonly), Khách hàng (link), Loại HĐ (badge), Ngày ký, Mô tả. |
 | **5** | System | Hiển thị phần nội dung theo loại HĐ: DIRECT → panel Subscriptions; RESELLER → panel License Pool. |
 | **6** | System | Hiển thị **panel Đính kèm** (accordion collapsible, xem chi tiết tại UC-CON-05). |
@@ -57,7 +57,7 @@
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **3a** | Sales | Nhấn **"+ Thêm Subscription"** trong action bar (chỉ hiển thị với DIRECT). |
+| **3a** | Sales | Nhấn **"+ Thêm Subscription"** trong action bar (luôn hiển thị với DIRECT — kể cả khi đã có sub). |
 | → | — | Điều hướng sang UC-SUB (tạo sub mới, pre-fill contract_id). |
 
 **[AF-03: Thêm Pool License (RESELLER)]** — kích hoạt tại panel License Pool.
@@ -289,7 +289,9 @@ Search bar cố định ở đầu panel (ngoài scroll container).
 - ✅ Audit Log với search, lazy load, counter đã mô tả
 - ✅ Trạng thái nút 🗑️ (disabled/active) theo BR-01 của UC-CON-01
 
-### Open Questions
-- ❓ **OQ-01**: Nút "+ Thêm Subscription" có hiển thị khi HĐ không có sub nào không (empty state)? Hay luôn hiển thị trong action bar?
-- ❓ **OQ-02**: Panel Audit Log trong Chi tiết HĐ có scope riêng (CONTRACT only) hay merge chung với Timeline của HĐ?
-- ❓ **OQ-03**: Timeline của HĐ (provisioning events của các sub gắn với HĐ này) — có được hiển thị ở đây không, hay chỉ ở Chi tiết Sub?
+### Quyết định đã chốt
+
+| # | Nội dung | Quyết định |
+|---|---|---|
+| OQ-01 | Nút "+ Thêm Subscription" hiển thị khi nào? | **Luôn hiển thị** trong action bar với mọi HĐ DIRECT, bất kể đã có sub hay chưa. |
+| OQ-03 | Provisioning events (webhook) có hiển thị tại Chi tiết HĐ không? | **Không.** Provisioning events gắn với Subscription, không gắn với Contract. Chúng sẽ hiển thị trong form Chi tiết Subscription (UC-SUB). |
