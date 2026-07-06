@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Microsoft Word temp files
+~$*.docx
+~$*.doc
+~$*.xlsx
+*.tmp
