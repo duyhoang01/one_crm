@@ -1,4 +1,4 @@
-# UC-CUS-05 — Xóa Khách hàng
+﻿# UC-CUS-05 — Xóa Khách hàng
 
 > Module: M-01 Customer Management | Phiên bản: 1.0 | Ngày: 06/07/2026
 > Trạng thái: Draft for Review
@@ -30,6 +30,8 @@
 ---
 
 ## 2. Luồng nghiệp vụ
+
+![BPMN — Luồng xóa Khách hàng](../../assets/M-01_customers/UC-CUS-05_bpmn.png)
 
 ### 2.1 Luồng chính (Happy Path)
 
@@ -91,6 +93,8 @@
 ---
 
 ### 3.2 Modal "Xóa Khách hàng"
+
+![Wireframe — Modal xác nhận xóa KH](../../assets/M-01_customers/UC-CUS-05_wireframe.png)
 
 Modal xuất hiện giữa màn hình, overlay mờ phía sau. Title: **"Xóa Khách hàng"** (đỏ hoặc xám đậm tùy design system).
 

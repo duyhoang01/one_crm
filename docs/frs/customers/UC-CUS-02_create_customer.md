@@ -1,4 +1,4 @@
-# UC-CUS-02 — Tạo mới Khách hàng
+﻿# UC-CUS-02 — Tạo mới Khách hàng
 
 > Module: M-01 Customer Management | Phiên bản: 1.0 | Ngày: 23/06/2026
 > Trạng thái: Draft for Review
@@ -21,6 +21,8 @@
 ---
 
 ## 2. Luồng nghiệp vụ
+
+![BPMN — Luồng tạo mới Khách hàng](../../assets/M-01_customers/UC-CUS-02_bpmn.png)
 
 ### 2.1 Luồng chính
 
@@ -86,6 +88,9 @@
 
 ### 3.1 Wireframe
 
+![Wireframe 01 — Form tạo KH (B2B)](../../assets/M-01_customers/UC-CUS-02_wireframe_01.png)
+![Wireframe 02 — Trường conditional B2B](../../assets/M-01_customers/UC-CUS-02_wireframe_02.png)
+![Wireframe 03 — Validation lỗi](../../assets/M-01_customers/UC-CUS-02_wireframe_03.png)
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  + Thêm khách hàng mới                     [X] Đóng    │

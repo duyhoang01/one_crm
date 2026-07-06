@@ -1,4 +1,4 @@
-# UC-CON-01 — Danh sách Hợp đồng
+﻿# UC-CON-01 — Danh sách Hợp đồng
 
 > Module: M-02 Contract Management | Phiên bản: 1.0 | Ngày: 06/07/2026
 > Trạng thái: Draft for Review
@@ -28,6 +28,8 @@
 ---
 
 ## 2. Luồng nghiệp vụ
+
+![BPMN — Luồng xem danh sách Hợp đồng](../../assets/M-02_contracts/UC-CON-01_bpmn.png)
 
 ### 2.1 Luồng chính
 
@@ -67,6 +69,8 @@
 ## 3. Mô tả giao diện
 
 ### 3.1 Tổng quan màn hình
+
+![Wireframe — Danh sách Hợp đồng](../../assets/M-02_contracts/UC-CON-01_wireframe.png)
 
 Màn hình Danh sách Hợp đồng bao gồm 3 khu vực chính:
 1. **Thanh công cụ (Toolbar):** Ô tìm kiếm, dropdown Loại HĐ, nút "Xóa bộ lọc", nút "+ Thêm Hợp đồng".

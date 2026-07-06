@@ -1,4 +1,4 @@
-# UC-CON-05 — Upload / Xóa File đính kèm Hợp đồng
+﻿# UC-CON-05 — Upload / Xóa File đính kèm Hợp đồng
 
 > Module: M-02 Contract Management | Phiên bản: 1.1 | Ngày: 06/07/2026
 > Trạng thái: Draft for Review
@@ -42,6 +42,8 @@
 ---
 
 ## 2. Luồng nghiệp vụ
+
+![BPMN — Luồng upload / xóa file đính kèm](../../assets/M-02_contracts/UC-CON-05_bpmn.png)
 
 ### 2.1 Luồng chính — Upload file tại Chi tiết HĐ
 
@@ -121,6 +123,8 @@
 
 ### 3.1 Tổng quan
 
+![Wireframe 01 — Panel Đính kèm tại Chi tiết HĐ](../../assets/M-02_contracts/UC-CON-05_wireframe_01.png)
+![Wireframe 02 — Upload trong Form Tạo HĐ](../../assets/M-02_contracts/UC-CON-05_wireframe_02.png)
 UC-CON-05 tương tác qua 2 bề mặt:
 1. **Panel "📎 Đính kèm"** tại màn hình Chi tiết HĐ (UC-CON-03): upload và xóa tức thời.
 2. **Dropzone trong modal Tạo HĐ** (UC-CON-02): staged upload, ghi storage sau khi HĐ tạo thành công.

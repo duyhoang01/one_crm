@@ -1,4 +1,4 @@
-# UC-CUS-04 — Cập nhật Thông tin Khách hàng
+﻿# UC-CUS-04 — Cập nhật Thông tin Khách hàng
 
 > Module: M-01 Customer Management | Phiên bản: 1.0 | Ngày: 06/07/2026
 > Trạng thái: Draft for Review
@@ -31,6 +31,8 @@
 ---
 
 ## 2. Luồng nghiệp vụ
+
+![BPMN — Luồng cập nhật Khách hàng](../../assets/M-01_customers/UC-CUS-04_bpmn.png)
 
 ### 2.1 Luồng chính (Happy Path)
 
@@ -94,6 +96,8 @@
 
 ### 3.1 Modal "Cập nhật Khách hàng"
 
+![Wireframe 01 — Modal cập nhật KH](../../assets/M-01_customers/UC-CUS-04_wireframe_01.png)
+![Wireframe 02 — Trạng thái validation](../../assets/M-01_customers/UC-CUS-04_wireframe_02.png)
 Modal xuất hiện giữa màn hình, overlay mờ phía sau. Title: **"Cập nhật Khách hàng"**.
 
 ---

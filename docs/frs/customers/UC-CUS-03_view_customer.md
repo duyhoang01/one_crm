@@ -1,4 +1,4 @@
-# UC-CUS-03 — Xem Chi tiết Khách hàng (Customer 360°)
+﻿# UC-CUS-03 — Xem Chi tiết Khách hàng (Customer 360°)
 
 > Module: M-01 Customer Management | Phiên bản: 1.0 | Ngày: 06/07/2026
 > Trạng thái: Draft for Review
@@ -31,6 +31,8 @@
 ---
 
 ## 2. Luồng nghiệp vụ
+
+![BPMN — Luồng xem chi tiết Khách hàng](../../assets/M-01_customers/UC-CUS-03_bpmn.png)
 
 ### 2.1 Luồng chính (Happy Path)
 
@@ -74,6 +76,8 @@
 
 ### 3.1 Header trang
 
+![Wireframe — Tổng quan trang Chi tiết KH](../../assets/M-01_customers/UC-CUS-03_wireframe_overview.png)
+
 - **Breadcrumb**: `Khách hàng > [Tên KH]`
 - **Nút "← Quay lại"**: Điều hướng về Danh sách, giữ nguyên filter (AF-01)
 - **Tab navigation**: `Tổng quan | Hợp đồng & Sub | Timeline | Audit Log`
@@ -81,6 +85,8 @@
 ---
 
 ### 3.2 Tab 1 — Tổng quan
+
+![Wireframe — Tab 1: Tổng quan](../../assets/M-01_customers/UC-CUS-03_wireframe_tab1_tong_quan.png)
 
 #### Profile Header
 
@@ -120,6 +126,8 @@
 
 ### 3.3 Tab 2 — Hợp đồng & Sub
 
+![Wireframe — Tab 2: Hợp đồng & Sub (phần 1)](../../assets/M-01_customers/UC-CUS-03_wireframe_tab2_hop_dong_01.png)
+![Wireframe — Tab 2: Hợp đồng & Sub (phần 2)](../../assets/M-01_customers/UC-CUS-03_wireframe_tab2_hop_dong_02.png)
 #### Summary Strip (4 cards cố định, căn đầu tab)
 
 | Card             | Nguồn dữ liệu                                        |
@@ -229,6 +237,8 @@ Mỗi subscription hiển thị:
 ---
 
 ### 3.5 Tab 4 — Audit Log
+
+![Wireframe — Tab 4: Audit Log](../../assets/M-01_customers/UC-CUS-03_wireframe_tab4_audit_log.png)
 
 #### Layout
 

@@ -1,4 +1,4 @@
-# UC-CON-04 — Cập nhật Hợp đồng
+﻿# UC-CON-04 — Cập nhật Hợp đồng
 
 > Module: M-02 Contract Management | Phiên bản: 1.0 | Ngày: 06/07/2026
 > Trạng thái: Draft for Review
@@ -35,6 +35,8 @@
 ---
 
 ## 2. Luồng nghiệp vụ
+
+![BPMN — Luồng cập nhật Hợp đồng](../../assets/M-02_contracts/UC-CON-04_bpmn.png)
 
 ### 2.1 Luồng chính — Cập nhật thông tin cơ bản
 
@@ -89,6 +91,8 @@
 
 ### 3.1 Tổng quan
 
+![Wireframe 01 — Form cập nhật HĐ](../../assets/M-02_contracts/UC-CON-04_wireframe_01.png)
+![Wireframe 02 — Thêm Pool License (RESELLER)](../../assets/M-02_contracts/UC-CON-04_wireframe_02.png)
 UC-CON-04 tương tác qua 2 modal:
 1. **Modal "Cập nhật Hợp đồng":** Cập nhật Ngày ký và Mô tả. Các trường cố định hiển thị readonly.
 2. **Modal "🏊 Thêm Pool License":** Thêm pool item mới vào HĐ RESELLER.

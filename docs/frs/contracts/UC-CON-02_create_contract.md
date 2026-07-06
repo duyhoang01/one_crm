@@ -1,4 +1,4 @@
-# UC-CON-02 — Thêm mới Hợp đồng
+﻿# UC-CON-02 — Thêm mới Hợp đồng
 
 > Module: M-02 Contract Management | Phiên bản: 1.0 | Ngày: 06/07/2026
 > Trạng thái: Draft for Review
@@ -33,6 +33,8 @@
 ---
 
 ## 2. Luồng nghiệp vụ
+
+![BPMN — Luồng tạo mới Hợp đồng](../../assets/M-02_contracts/UC-CON-02_bpmn.png)
 
 ### 2.1 Luồng chính
 
@@ -101,6 +103,9 @@
 
 ### 3.1 Tổng quan
 
+![Wireframe 01 — Form tạo HĐ (phần 1)](../../assets/M-02_contracts/UC-CON-02_wireframe_01.png)
+![Wireframe 02 — Form tạo HĐ — section Pool License (RESELLER)](../../assets/M-02_contracts/UC-CON-02_wireframe_02.png)
+![Wireframe 03 — Form tạo HĐ — section Đính kèm](../../assets/M-02_contracts/UC-CON-02_wireframe_03.png)
 Modal "Thêm Hợp đồng mới" gồm các khu vực:
 1. **Thông tin cơ bản:** Mã HĐ, Khách hàng, Loại HĐ, Ngày ký, Mô tả.
 2. **Section License Pool (RESELLER only):** Hiển thị điều kiện — chỉ khi chọn `RESELLER`.
