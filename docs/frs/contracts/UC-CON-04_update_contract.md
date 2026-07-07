@@ -93,6 +93,11 @@
 
 ![Wireframe 01 — Form cập nhật HĐ](../../assets/M-02_contracts/UC-CON-04_wireframe_01.png)
 ![Wireframe 02 — Thêm Pool License (RESELLER)](../../assets/M-02_contracts/UC-CON-04_wireframe_02.png)
+
+![Demo — Modal Cập nhật HĐ (DIRECT)](../../assets/M-02_contracts/UC-CON-04_screen_form_direct.png)
+
+![Demo — Modal Cập nhật HĐ (RESELLER)](../../assets/M-02_contracts/UC-CON-04_screen_form_reseller.png)
+
 UC-CON-04 tương tác qua 2 modal:
 1. **Modal "Cập nhật Hợp đồng":** Cập nhật Ngày ký và Mô tả. Các trường cố định hiển thị readonly.
 2. **Modal "🏊 Thêm Pool License":** Thêm pool item mới vào HĐ RESELLER.

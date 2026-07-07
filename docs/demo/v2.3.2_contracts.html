@@ -1641,7 +1641,7 @@ function conRenderInfoPanel(c){
                       <span style="background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;margin-left:6px">Immutable</span>
                     </div>
                   </div>
-                  <div class="con-progress-bar-bg"><div class="con-progress-bar-fill ${pct>90?'danger':pct>75?'warn':''}" style="width:${pct}%"></div></div>
+                  <div class="con-progress-bar-bg"><div class="con-progress-bar-fill ${pct>80?'warn':''}" style="width:${pct}%"></div></div>
                   <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:5px;color:var(--text-secondary)">
                     <span>Available: <strong style="color:#059669">${(p.poolTotal-p.allocatedQty).toLocaleString('vi-VN')} seats</strong></span>
                     <span>${pct}% đã dùng</span>
@@ -1791,7 +1791,7 @@ function conRenderPoolPanel(){
           <div><div style="font-weight:700;font-size:15px;color:var(--navy)">${p.productName}</div><div style="font-size:11px;color:var(--text-secondary);margin-top:2px">id: ${p.id}</div></div>
           <div style="text-align:right"><div style="font-size:13px;font-weight:600">${p.allocatedQty.toLocaleString('vi-VN')} / ${p.poolTotal.toLocaleString('vi-VN')} seats</div><div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Used / Total <span style="background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;margin-left:4px">Immutable</span></div></div>
         </div>
-        <div class="con-progress-bar-bg"><div class="con-progress-bar-fill ${pct>90?'danger':pct>75?'warn':''}" style="width:${pct}%"></div></div>
+        <div class="con-progress-bar-bg"><div class="con-progress-bar-fill ${pct>80?'warn':''}" style="width:${pct}%"></div></div>
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:6px;color:var(--text-secondary)"><span>Available: <strong style="color:#059669">${(p.poolTotal-p.allocatedQty).toLocaleString('vi-VN')} seats</strong></span><span>${pct}% đã dùng</span></div>
         ${subsForProduct.length?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-secondary);margin-bottom:6px">Subscriptions thuộc pool này</div>${subsForProduct.map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0;border-bottom:1px solid var(--gray-100)"><span style="font-weight:500">${s.beneficiaryName||s.id}</span><span>${s.licenseQty?s.licenseQty.toLocaleString('vi-VN')+' seats':'—'}</span></div>`).join('')}</div>`:''}
       </div>`;}).join('')}`;

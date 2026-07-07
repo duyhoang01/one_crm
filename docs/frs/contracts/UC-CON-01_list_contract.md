@@ -72,6 +72,8 @@
 
 ![Wireframe — Danh sách Hợp đồng](../../assets/M-02_contracts/UC-CON-01_wireframe.png)
 
+![Demo — Danh sách Hợp đồng](../../assets/M-02_contracts/UC-CON-01_screen_list.png)
+
 Màn hình Danh sách Hợp đồng bao gồm 3 khu vực chính:
 1. **Thanh công cụ (Toolbar):** Ô tìm kiếm, dropdown Loại HĐ, nút "Xóa bộ lọc", nút "+ Thêm Hợp đồng".
 2. **Bảng danh sách:** Hiển thị các hợp đồng theo bộ lọc và sort hiện tại.

@@ -88,6 +88,8 @@
 
 ![Wireframe — Tab 1: Tổng quan](../../assets/M-01_customers/UC-CUS-03_wireframe_tab1_tong_quan.png)
 
+![Demo — Tab 1: Tổng quan (B2B, có Org Chart)](../../assets/M-01_customers/UC-CUS-03_screen_tab1_tong_quan.png)
+
 #### Profile Header
 
 | Element          | Nội dung                                                                   |
@@ -128,6 +130,11 @@
 
 ![Wireframe — Tab 2: Hợp đồng & Sub (phần 1)](../../assets/M-01_customers/UC-CUS-03_wireframe_tab2_hop_dong_01.png)
 ![Wireframe — Tab 2: Hợp đồng & Sub (phần 2)](../../assets/M-01_customers/UC-CUS-03_wireframe_tab2_hop_dong_02.png)
+
+![Demo — Tab 2: Hợp đồng & Sub — DIRECT (FPT Software)](../../assets/M-01_customers/UC-CUS-03_screen_tab2_hop_dong_direct.png)
+
+![Demo — Tab 2: Hợp đồng & Sub — RESELLER (Viettel Cyber Security)](../../assets/M-01_customers/UC-CUS-03_screen_tab2_hop_dong_reseller.png)
+
 #### Summary Strip (4 cards cố định, căn đầu tab)
 
 | Card             | Nguồn dữ liệu                                        |
@@ -200,6 +207,8 @@ Mỗi subscription hiển thị:
 
 ### 3.4 Tab 3 — Timeline
 
+![Demo — Tab 3: Timeline (FPT Software)](../../assets/M-01_customers/UC-CUS-03_screen_tab3_timeline.png)
+
 #### Template event
 
 ```
@@ -239,6 +248,8 @@ Mỗi subscription hiển thị:
 ### 3.5 Tab 4 — Audit Log
 
 ![Wireframe — Tab 4: Audit Log](../../assets/M-01_customers/UC-CUS-03_wireframe_tab4_audit_log.png)
+
+![Demo — Tab 4: Audit Log (FPT Software)](../../assets/M-01_customers/UC-CUS-03_screen_tab4_audit.png)
 
 #### Layout
 

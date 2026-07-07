@@ -106,6 +106,11 @@
 ![Wireframe 01 — Form tạo HĐ (phần 1)](../../assets/M-02_contracts/UC-CON-02_wireframe_01.png)
 ![Wireframe 02 — Form tạo HĐ — section Pool License (RESELLER)](../../assets/M-02_contracts/UC-CON-02_wireframe_02.png)
 ![Wireframe 03 — Form tạo HĐ — section Đính kèm](../../assets/M-02_contracts/UC-CON-02_wireframe_03.png)
+
+![Demo — Form tạo HĐ (DIRECT)](../../assets/M-02_contracts/UC-CON-02_screen_form_direct.png)
+
+![Demo — Form tạo HĐ (RESELLER — section Pool License mở rộng)](../../assets/M-02_contracts/UC-CON-02_screen_form_reseller.png)
+
 Modal "Thêm Hợp đồng mới" gồm các khu vực:
 1. **Thông tin cơ bản:** Mã HĐ, Khách hàng, Loại HĐ, Ngày ký, Mô tả.
 2. **Section License Pool (RESELLER only):** Hiển thị điều kiện — chỉ khi chọn `RESELLER`.

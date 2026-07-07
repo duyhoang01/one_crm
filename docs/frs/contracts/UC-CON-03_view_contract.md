@@ -1,6 +1,6 @@
 # UC-CON-03 — Xem Chi tiết Hợp đồng
 
-> Module: M-02 Contract Management | Phiên bản: 1.2 | Ngày: 06/07/2026
+> Module: M-02 Contract Management | Phiên bản: 1.3 | Ngày: 07/07/2026
 > Trạng thái: Draft for Review
 
 ---
@@ -11,21 +11,21 @@
 |---|---|
 | **Tên chức năng** | Xem Chi tiết Hợp đồng |
 | **UC ID** | UC-CON-03 |
-| **Mô tả** | Sales xem toàn bộ thông tin của một hợp đồng: thông tin cơ bản, danh sách Subscription (DIRECT) hoặc License Pool (RESELLER), file đính kèm, và audit log. Màn hình chỉ đọc — không thay đổi dữ liệu. |
+| **Mô tả** | Sales xem toàn bộ thông tin của một hợp đồng qua 4 tab: **Thông tin HĐ**, **Subscriptions**, **Timeline**, **Audit Log**. Màn hình chỉ đọc — không thay đổi dữ liệu. |
 | **Tác nhân** | Sales, Manager |
 | **Tiền điều kiện** | Đã đăng nhập và có quyền `contract:view`. Hợp đồng tồn tại trong hệ thống (chưa bị xóa). |
-| **Hậu điều kiện** | (Success) Trang chi tiết hiển thị đúng và đầy đủ thông tin hợp đồng. Không thay đổi dữ liệu. (Failure) Hợp đồng không tìm thấy → toast lỗi, redirect về Danh sách. |
-| **Điểm vào** | (1) Nhấn vào dòng hợp đồng trong Danh sách UC-CON-01 (Danh sách Hợp đồng).<br>(2) Nhấn mã HĐ trong Tab Hợp đồng & Sub của UC-CUS-03 (Customer 360°). |
+| **Hậu điều kiện** | (Success) Trang chi tiết hiển thị đúng và đầy đủ thông tin hợp đồng. Không thay đổi dữ liệu. (Failure) Hợp đồng không tìm thấy → thông báo lỗi, redirect về Danh sách. |
+| **Điểm vào** | (1) Nhấn vào dòng hợp đồng trong Danh sách UC-CON-01.<br>(2) Nhấn mã HĐ trong Tab Hợp đồng & Sub của UC-CUS-03 (Customer 360°). |
 
 ### Quy tắc nghiệp vụ
 
 | BR ID | Nội dung |
 |---|---|
-| BR-01 | Panel **Subscription** chỉ hiển thị khi `contract.type = DIRECT`.<br>Panel **License Pool** chỉ hiển thị khi `contract.type = RESELLER`.<br>Không hiển thị cả hai cùng lúc. |
-| BR-02 | `activated_at` và `expires_at` trong Date Block lấy từ `license_mirror`. CRM không tự tính — nếu chưa nhận event webhook → hiển thị placeholder "—". |
-| BR-03 | Audit Log sắp xếp DESC theo `created_at`. Scope: `entity_type = 'CONTRACT' AND entity_id = {id}`. Search client-side, debounce 300ms. |
+| BR-01 | Tab **Subscriptions** hiển thị với **cả DIRECT và RESELLER**. Với DIRECT: hiển thị danh sách sub của chính KH đó. Với RESELLER: hiển thị danh sách sub của các end-customer (beneficiary) — mỗi sub mới được tạo khi một khách hàng thật ký hợp đồng với reseller và được provisioning. |
+| BR-02 | `activated_at` và `expires_at` trong License Mirror lấy từ `license_mirror`. CRM không tự tính — nếu chưa nhận event webhook → hiển thị placeholder "—". |
+| BR-03 | Audit Log sắp xếp DESC theo `created_at`. Scope: `entity_type = 'CONTRACT' AND entity_id = {id}`. Batch đầu 20, lazy load trigger `scrollHeight - 80px`, batch size 20. Search client-side, debounce 300ms. |
 | BR-04 | Trạng thái sub được phản ánh qua webhook — trang detail chỉ đọc, không tự thay đổi trạng thái. |
-| BR-05 | Provisioning events (webhook/lifecycle của sub) **không** hiển thị tại đây — chúng thuộc về Chi tiết Subscription, không thuộc Contract. |
+| BR-05 | Pool progress bar hiển thị màu cam khi `allocated / total > 80%`. |
 
 ---
 
@@ -36,13 +36,15 @@
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
 | **1** | Sales | Nhấn vào dòng hợp đồng trong Danh sách (UC-CON-01) hoặc nhấn mã HĐ trong tab Hợp đồng & Sub của Customer 360° (UC-CUS-03). |
-| **2** | System | Điều hướng sang trang Chi tiết. Hiển thị **Contract Header**: icon 📄, mã HĐ (font monospace, navy, bold), tên KH (liên kết → Customer 360°), badge Loại HĐ, ngày ký (nếu có). |
-| **3** | System | Hiển thị **Action bar**: **✏️ Chỉnh sửa** → UC-CON-04; **+ Thêm Subscription** (luôn hiển thị với HĐ loại DIRECT, bất kể đã có sub hay chưa); **🗑️ Xóa** → UC-CON-06 (disabled nếu subs.length > 0). |
-| **4** | System | Hiển thị **panel Thông tin chung**: grid 4 cột — Mã HĐ (readonly), Khách hàng (link), Loại HĐ (badge), Ngày ký, Mô tả. |
-| **5** | System | [Điểm quyết định — Loại HĐ?]<br>→ [DIRECT]: Hiển thị **panel Subscriptions** (xem mục 3.3).<br>→ [RESELLER]: Hiển thị **panel License Pool** (xem mục 3.4). |
-| **6** | System | Hiển thị **panel Đính kèm** (accordion, xem chi tiết tại UC-CON-05 Quản lý đính kèm). |
-| **7** | System | Hiển thị **panel Audit Log** (cuộn lazy load + tìm kiếm, xem mục 3.6). |
-| **8** | Sales | (Tuỳ chọn) Tương tác với các panel: mở rộng/thu gọn, cuộn lazy load, tìm kiếm audit log. |
+| **2** | System | Điều hướng sang trang Chi tiết. Hiển thị **Contract Header** (mã HĐ, tên KH, badge Loại HĐ) và **Action bar**. Tab **Thông tin HĐ** active mặc định. |
+| **3** | System | Render tab **Thông tin HĐ**: info grid (mã HĐ, KH, loại, ngày ký, ngày tạo, người tạo, mô tả) + accordion **Pool License** (RESELLER only) + accordion **Đính kèm**. |
+| **4** | Sales | (Tuỳ chọn) Nhấn tab **Subscriptions**. |
+| **5** | System | Render bảng subscriptions. DIRECT: cột Seats, không có Đơn vị thụ hưởng. RESELLER: thêm cột Đơn vị thụ hưởng, cột License dùng thay Seats. Nút **＋ Thêm Subscription** ở đầu panel. |
+| **6** | Sales | (Tuỳ chọn) Nhấn tab **Timeline**. |
+| **7** | System | Render danh sách sự kiện của hợp đồng: tạo HĐ, ghi nhận ngày ký, tạo sub, thêm pool — sort DESC theo thời gian. |
+| **8** | Sales | (Tuỳ chọn) Nhấn tab **Audit Log**. |
+| **9** | System | Load batch 20 audit entries đầu tiên, sort DESC `created_at`. Hiển thị search bar. |
+| **10** | Sales | (Tuỳ chọn) Tương tác: mở rộng accordion, tìm kiếm audit log, lazy load thêm entries. |
 | → | — | **End (Success)** — Trang chi tiết hiển thị đầy đủ. Không thay đổi dữ liệu. |
 
 ### 2.2 Luồng phụ
@@ -55,156 +57,213 @@
 | **1b** | System | Điều hướng sang trang Chi tiết Hợp đồng. |
 | → | — | Quay lại luồng chính tại bước 2. |
 
-**[AF-02: Thêm Subscription (DIRECT)]** — kích hoạt tại bước 3 khi Sales nhấn "+ Thêm Subscription".
+**[AF-02: Thêm Subscription]** — kích hoạt tại bước 5 khi Sales nhấn "＋ Thêm Subscription".
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **3a** | Sales | Nhấn **"+ Thêm Subscription"** trong action bar (luôn hiển thị với DIRECT — kể cả khi đã có sub). |
-| **3b** | System | Điều hướng sang UC-SUB (tạo sub mới, pre-fill `contract_id`). |
+| **5a** | Sales | Nhấn **"＋ Thêm Subscription"** trong tab Subscriptions. |
+| **5b** | System | Điều hướng sang UC-SUB (tạo sub mới, pre-fill `contract_id`). |
 | → | — | **End (Điều hướng ra ngoài)** — Sales tiếp tục tại UC-SUB. |
 
-**[AF-03: Thêm Pool License (RESELLER)]** — kích hoạt tại panel License Pool.
+**[AF-03: Thêm Pool License (RESELLER)]** — kích hoạt từ accordion Pool trong tab Thông tin HĐ.
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **5a** | Sales | Nhấn **"➕ Thêm Pool"** hoặc **"➕ Thêm sản phẩm vào Pool"** trong panel License Pool. |
-| **5b** | System | Điều hướng sang luồng AF-01 của UC-CON-04 (Cập nhật Hợp đồng — Thêm Pool). |
+| **3a** | Sales | Nhấn **"＋ Thêm Pool"** hoặc **"＋ Thêm sản phẩm vào Pool"** trong accordion Pool License. |
+| **3b** | System | Điều hướng sang AF-01 của UC-CON-04 (Cập nhật Hợp đồng — Thêm Pool). |
 | → | — | **End (Điều hướng ra ngoài)** — Sales tiếp tục tại UC-CON-04. |
 
 ### 2.3 Luồng ngoại lệ
 
-**[EF-01: Hợp đồng không tìm thấy]** — kích hoạt tại bước 2 khi API trả về 404 (ID không hợp lệ hoặc HĐ đã bị xóa).
+**[EF-01: Hợp đồng không tìm thấy]** — kích hoạt tại bước 2 khi API trả về 404.
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **2a** | System | Hiển thị thông báo ngắn lỗi: *"Không tìm thấy hợp đồng."* Điều hướng về Danh sách Hợp đồng (UC-CON-01). |
+| **2a** | System | Hiển thị thông báo lỗi: *"Không tìm thấy hợp đồng."* Điều hướng về Danh sách Hợp đồng (UC-CON-01). |
 | → | — | **End (Failure)** |
 
 ---
 
 ## 3. Mô tả giao diện
 
-### 3.1 Contract Header
+Tab navigation cố định: `📋 Thông tin HĐ | 🔑 Subscriptions | 📅 Timeline | 📋 Audit Log`
+
+### 3.1 Contract Header & Action Bar
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  OneCRM › Hợp đồng › HD-CMC-2026-001                        │  ← Breadcrumb
-├─────────────────────────────────────────────────────────────┤
-│  📄  HD-CMC-2026-001        [Direct]                        │
-│      FPT Software · Ký: 01/07/2026                         │
-│                                                             │
-│              [ ✏️ Chỉnh sửa ]  [ + Thêm Sub ]  [ 🗑 Xóa ] │
+│  [icon] HD-CMC-2025-001                                     │
+│         FPT Software · [DIRECT]                             │
+│                              [✏️ Chỉnh sửa] [🗑️ Xóa] [← Quay lại] │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Badge Loại HĐ:**
+**Contract Header:**
 
-| Loại | Màu nền | Màu chữ |
+| Element | Nguồn dữ liệu | Ghi chú |
 |---|---|---|
-| DIRECT | `#EFF6FF` | `#1D4ED8` |
-| RESELLER | `#F5F3FF` | `#7C3AED` |
+| Icon placeholder | 3 ký tự cuối `contract.code` | Font nhỏ, bold, nền xám |
+| Mã HĐ | `contract.code` | Font monospace, in đậm |
+| Tên KH | `contract.customerName` | Dòng phụ dưới mã HĐ |
+| Badge Loại HĐ | `contract.type` | Badge DIRECT (xanh dương) / RESELLER (tím) |
 
-**Nút "🗑️ Xóa"**: disabled (opacity 0.5, cursor not-allowed, tooltip "Đã có Subscription, không thể xóa") khi `subs.length > 0`. Active khi `subs.length = 0`.
+**Action Bar:**
+
+| Nút | Điều kiện | Hành động |
+|---|---|---|
+| ✏️ Chỉnh sửa | Luôn hiển thị | Điều hướng → UC-CON-04 |
+| 🗑️ Xóa | Active nếu `subs.length = 0`; Disabled nếu `subs.length > 0` | Điều hướng → UC-CON-06. Tooltip khi disabled: *"Đã có Subscription, không thể xóa"* |
+| ← Quay lại | Luôn hiển thị | Điều hướng → Danh sách (UC-CON-01) |
 
 ---
 
-### 3.2 Panel Thông tin chung
+### 3.2 Tab 1 — Thông tin HĐ
 
-Grid 4 cột, hiển thị dưới Contract Header:
+![Demo — Chi tiết HĐ DIRECT (Tab Thông tin)](../../assets/M-02_contracts/UC-CON-03_screen_detail_direct_info.png)
 
-| # | Field | Nguồn dữ liệu | Ghi chú |
+![Demo — Chi tiết HĐ RESELLER (Tab Thông tin)](../../assets/M-02_contracts/UC-CON-03_screen_detail_reseller_info.png)
+
+#### Info Grid
+
+Layout 2 cột (label — value), font-size 14px:
+
+| # | Label | Nguồn dữ liệu | Ghi chú |
 |---|---|---|---|
-| 1 | Mã HĐ | `contract.code` | Font monospace, readonly. |
-| 2 | Khách hàng | `contract.customerName` | Text-link → UC-CUS-03 (Customer 360°). |
-| 3 | Loại HĐ | `contract.type` | Badge DIRECT/RESELLER. |
-| 4 | Ngày ký | `contract.signedDate` | Format dd/MM/yyyy. "—" nếu null. |
-| 5 | Mô tả | `contract.description` | Full width, dạng text thuần. "—" nếu null. |
-| 6 | Ngày tạo | `contract.createdAt` | dd/MM/yyyy HH:mm. |
-| 7 | Người tạo | `contract.createdBy` | Display name. |
+| 1 | Mã hợp đồng | `contract.code` | Monospace, font-weight 600 |
+| 2 | Khách hàng | `contract.customerName` | Text-link → UC-CUS-03 (Customer 360°) |
+| 3 | Loại hợp đồng | `contract.type` | "**Direct** — KH mua dùng trực tiếp" / "**Reseller** — Hợp đồng khung đại lý" |
+| 4 | Ngày ký | `contract.signedDate` | Format dd/MM/yyyy. Hiển thị *"Chưa có"* (italic, màu nhạt) nếu null |
+| 5 | Ngày tạo | `contract.createdAt` | Format dd/MM/yyyy |
+| 6 | Tạo bởi | `contract.createdBy` | Display name |
+| 7 | Mô tả | `contract.description` | Italic. **Ẩn hàng này nếu null** (không hiện label trống) |
+
+#### Accordion "🏊 Pool License" (RESELLER only)
+
+Không hiển thị với hợp đồng DIRECT.
+
+**Header accordion:** `🏊 Pool License [N sản phẩm]` · chevron ▼/▲ toggle
+
+**Nội dung khi có pool items:**
+
+- Summary row — 3 stat cards: **Tổng pool** (total seats), **Đã dùng** (allocated), **Còn lại** (available)
+- Mỗi pool item hiển thị:
+  - Tên sản phẩm (bold) + `Immutable` badge (xanh lá nhạt)
+  - `{allocatedQty} / {poolTotal} seats`
+  - Progress bar: màu cam nếu `allocated/total > 80%` (BR-05)
+  - `Available: {remaining} seats | {pct}% đã dùng`
+  - Sub-list "Subscriptions thuộc pool này" (nếu có) — mỗi dòng: tên beneficiary + seats
+- Nút **＋ Thêm sản phẩm vào Pool** → AF-03
+
+**Nội dung khi chưa có pool:**
+
+- Text: *"Chưa cấu hình pool."* + nút **＋ Thêm Pool** → AF-03
+
+#### Accordion "📎 Đính kèm"
+
+Áp dụng cho cả DIRECT và RESELLER. Xem mô tả đầy đủ tại **UC-CON-05**.
+
+**Header accordion:** `📎 Đính kèm [{N} file]` · nút **Upload file** (Sales & Manager) · chevron ▼/▲
+
+**Mỗi file đính kèm:**
+
+| Element | Mô tả |
+|---|---|
+| Icon loại file | Emoji theo extension (PDF, Word, Excel…) |
+| Tên file | Truncate với ellipsis nếu dài |
+| Metadata | `{mô tả} · {size}KB · {uploadedBy} · {uploadedAt}` |
+| Badge "Đã lưu" | Xám nhạt |
+| ⬇ Tải về | Text-link, underline |
+| 🗑️ Xóa | Active với Manager hoặc người upload; disabled với người khác |
+
+**Empty state:** icon 📎 + *"Chưa có file đính kèm"*
 
 ---
 
-### 3.3 Panel Subscriptions (DIRECT only)
+### 3.3 Tab 2 — Subscriptions
 
-Hiển thị danh sách subscription gắn với HĐ này.
+![Demo — Panel Subscriptions (DIRECT)](../../assets/M-02_contracts/UC-CON-03_screen_detail_direct_subs.png)
 
-**Mỗi Subscription Card gồm:**
+![Demo — Panel Subscriptions (RESELLER)](../../assets/M-02_contracts/UC-CON-03_screen_detail_reseller_pool.png)
 
-| # | Thành phần | Loại | Mô tả |
+Tab này hiển thị với **cả DIRECT và RESELLER** (BR-01).
+
+**Panel header:** `Subscriptions | {N} sub · {M} active` — căn trái. Nút **＋ Thêm Subscription** — căn phải.
+
+**Bảng Subscriptions:**
+
+| Cột | DIRECT | RESELLER | Ghi chú |
 |---|---|---|---|
-| 1 | Sub Header | Text group | Mã sub (monospace), tên gói (bold), badge trạng thái sub |
-| 2 | Date Block | Text pair | `activated_at` và `expires_at` lấy từ `license_mirror`.<br>Nếu chưa nhận webhook → hiển thị "—".<br>Màu chữ theo status: ACTIVE=xanh, EXPIRED=đỏ, GRACE=vàng. |
-| 3 | Usage Bar | Progress bar | Chỉ hiển thị khi usage > 0%.<br>Label: "Mức sử dụng license" + % in đậm.<br>Màu bar: xanh ≤80%, cam >80%.<br>Caption: "Đã kích hoạt n/m" (n = active, m = tổng được cấp phép theo sub). |
-| 4 | License Mirror Strip | Info strip | Dải màu xanh nhạt bên dưới card.<br>Hiển thị: trạng thái mirror, version, last sync từ sản phẩm. |
+| ID | ✅ | ✅ | Monospace, color: text-secondary |
+| Đơn vị thụ hưởng | ❌ | ✅ | `beneficiaryName`. "—" nếu null |
+| Gói sản phẩm | ✅ | ✅ | `packageName` (bold) + `productId` (nhỏ, nhạt) |
+| Ngày bắt đầu | ✅ | ✅ | dd/MM/yyyy + label *(dự kiến)* |
+| Ngày hết hạn | ✅ | ✅ | dd/MM/yyyy + label *(dự kiến)* |
+| Seats | ✅ | ❌ | `seatCount` |
+| License dùng (Used) | ❌ | ✅ | `licenseQty` |
+| License Mirror | ✅ | ✅ | `licMirrorStatus` (bold) + `lastSync` (nhỏ, nhạt) |
+| Trạng thái | ✅ | ✅ | Badge theo trạng thái (xem bảng bên dưới) |
 
-**Nút "+ Thêm Subscription"**: luôn hiển thị ở action bar (xem mục 3.1) và lặp lại ở cuối danh sách sub, điều hướng sang UC-SUB.
+**Badge trạng thái Subscription:**
 
-**Trạng thái rỗng** (chưa có sub nào): icon minh hoạ + "Chưa có Subscription" + nút "+ Thêm Subscription".
-
----
-
-### 3.4 Panel License Pool (RESELLER only)
-
-Hiển thị danh sách pool items và phân bổ.
-
-**Pool Block — Chế độ Full Inline (< 5 allocations/pool):**
-
-| Thành phần | Mô tả |
+| Trạng thái | Badge |
 |---|---|
-| Pool Header | 🏊 Pool · [Tên sản phẩm] |
-| Thanh phân bổ | `[used] / [total] đã cấp · còn [remaining]`. Progress bar cam nếu >80%. |
-| Controls | Sort by Seat ↓ \| Status ↕ |
-| Allocation Rows | Mặc định hiện 3 dòng đầu (theo sort hiện tại). Nếu còn ẩn: "+N chưa hiện: [summary]" + nút "Xem tất cả N ↓". Mỗi dòng: tên end-customer, số seat, badge status. |
+| DRAFT | Xám nhạt |
+| PENDING_PROVISION | Cam nhạt, dot cam |
+| ACTIVE | Xanh nhạt, dot xanh |
+| SUSPENDED | Vàng nhạt |
+| EXPIRED | Đỏ nhạt, dot đỏ |
+| REVOKED | Xám |
+| RENEWED | Tím nhạt |
 
-**Pool Block — Chế độ Preview + Link (≥ 5 allocations/pool):**
+**Empty state:** icon 🔑 + *"Chưa có Subscription nào"*
 
-| Thành phần | Mô tả |
+---
+
+### 3.4 Tab 3 — Timeline
+
+Tab này hiển thị lịch sử sự kiện của hợp đồng, tương đương Tab Timeline tại UC-CUS-03.
+
+**Các loại sự kiện (sort DESC theo thời gian):**
+
+| Icon | Dot | Sự kiện | Điều kiện |
+|---|---|---|---|
+| 📄 | Xanh dương | `Hợp đồng {code} được tạo` | Luôn có |
+| ✍️ | Cam | `Ngày ký hợp đồng được ghi nhận` | Chỉ khi `signedDate` không null |
+| 🔑 | Xanh lá | `Subscription {sub.id} được tạo` | Một entry per sub |
+| 🏊 | Xanh dương | `Pool License thêm mới — {productName}` | Một entry per pool item (RESELLER) |
+
+**Mỗi entry hiển thị:**
+
+| Element | Mô tả |
 |---|---|
-| Pool Header | Giống trên, không có controls Sort |
-| 5 rows đầu | Sort theo seats giảm dần, cố định, không expand |
-| Text-link | "Xem danh sách Subscription" — căn phải, color var(--primary), font-size 12px, underline, hover opacity 0.7. Click → mở UC-SUB-01 ở tab mới, pre-fill contract_id. |
-| Dòng tóm tắt | "Hiển thị 5 / N · còn (N-5) end-customer · [x Đang hoạt động · y Trong gia hạn · z Tạm dừng]" — căn giữa, màu chữ nhạt. |
+| Icon + dot màu | Phân biệt loại sự kiện |
+| Tiêu đề sự kiện | Bold |
+| Thời gian | dd/MM/yyyy HH:mm, màu nhạt |
+| Actor | Tag xám nhạt (display name) |
+| Chi tiết | Italic, màu nhạt (type, package, pool_total…) |
 
-**Nút "➕ Thêm Pool" / "➕ Thêm sản phẩm vào Pool"**: điều hướng sang AF-01 của UC-CON-04.
-
----
-
-### 3.5 Panel Đính kèm
-
-Xem chi tiết đầy đủ tại **UC-CON-05 Upload / Xóa File đính kèm Hợp đồng**.
-
-Panel accordion collapsible:
-- Tiêu đề: "📎 Đính kèm ({N} file)"
-- Danh sách file ACTIVE: icon loại file, tên file, dung lượng, ngày upload, tên người upload, nút ⬇ Tải về, nút 🗑️ Xóa
-- Dropzone + nút "+ Đính kèm file"
+**Empty state:** icon 📅 + *"Chưa có sự kiện"*
 
 ---
 
-### 3.6 Panel Audit Log
+### 3.5 Tab 4 — Audit Log
+
+![Demo — Panel Audit Log (DIRECT)](../../assets/M-02_contracts/UC-CON-03_screen_detail_direct_audit.png)
 
 Search bar cố định ở đầu panel (ngoài scroll container).
 
-**Các cột:**
+**Cột:**
 
 | # | Cột | Nguồn dữ liệu | Searchable |
 |---|---|---|---|
-| 1 | Thời gian | `audit_log.created_at` — dd/MM/yyyy HH:mm | ❌ |
-| 2 | Nguồn | Derive từ actor và action (xem bảng Source) | ❌ |
-| 3 | Actor | `audit_log.actor_id` → display name. Null → "System" | ✅ |
-| 4 | Hành động | `audit_log.action` | ✅ |
-| 5 | Chi tiết | CREATE: `{field}: {value}`. UPDATE: `{field}: "{before}" → "{after}"`. DELETE: `reason: {reason}`. FAILED: prefix [FAILED] màu đỏ nhạt | ✅ |
-| 6 | Kết quả | ✓ Thành công (xanh) / ✗ Thất bại (đỏ) | ❌ |
+| 1 | Thời gian | `audit_log.created_at` — dd/MM/yyyy (dòng 1) + HH:mm (dòng 2, nhạt) | ❌ |
+| 2 | Nguồn | `audit_log.source` — badge xám nhạt hiển thị giá trị gốc (UI / WEBHOOK / System…) | ❌ |
+| 3 | Actor | `audit_log.actor` | ✅ |
+| 4 | Hành động | `audit_log.action` — monospace, font-weight 600 | ✅ |
+| 5 | Chi tiết | `audit_log.detail` — màu text-secondary, max-width giới hạn | ✅ |
+| 6 | Kết quả | Badge xanh SUCCESS / đỏ FAILED | ❌ |
 
-**Bảng Source — cột Nguồn:**
-
-| Điều kiện | Badge | Màu |
-|---|---|---|
-| actor=null + action có "webhook/event từ/license." | Webhook | Tím |
-| actor=null còn lại | System | Xám |
-| Actor là người dùng UI | (Tên) | Xanh dương |
-| Gọi qua API external | API | Xanh lá |
-
-**Tải dữ liệu:**
+**Tải dữ liệu (đồng bộ với UC-CUS-03 BR-06):**
 
 | Thuộc tính | Giá trị |
 |---|---|
@@ -213,6 +272,7 @@ Search bar cố định ở đầu panel (ngoài scroll container).
 | Batch đầu | 20 bản ghi gần nhất |
 | Lazy load trigger | Scroll đến `scrollHeight - 80px` |
 | Batch size | 20 bản ghi / lần |
+| Counter | `{loaded}/{total} bản ghi` khi không search · `{n} kết quả` khi search |
 
 **Search:**
 
@@ -220,12 +280,10 @@ Search bar cố định ở đầu panel (ngoài scroll container).
 |---|---|
 | Scope | Actor + Hành động + Chi tiết |
 | Xử lý | Client-side filter, debounce 300ms |
-| Highlight | Từ khoá match được highlight màu vàng |
 | Khi search active | Hiển thị toàn bộ kết quả match — lazy load tạm dừng |
 | Khi xóa search | Reset lazy state, load lại từ đầu |
-| Counter | "{n} kết quả" khi search; "{loaded}/{total} bản ghi" khi không search |
 
-**Empty state:** Icon 🔍 + "Không tìm thấy kết quả" + "Thử từ khoá khác".
+**Empty state (search không có kết quả):** Icon 🔍 + *"Không tìm thấy kết quả"* + *"Thử từ khoá khác"*
 
 ---
 
@@ -235,44 +293,51 @@ Search bar cố định ở đầu panel (ngoài scroll container).
 
 | AC ID | Given | When | Then |
 |---|---|---|---|
-| AC-CON-03-01 | HĐ "HD-CMC-2026-001" (DIRECT) tồn tại | Sales nhấn vào dòng HĐ trong Danh sách | Trang Chi tiết mở, Contract Header hiển thị đúng mã, tên KH, badge DIRECT, ngày ký. |
-| AC-CON-03-02 | Hợp đồng ID không tồn tại | Sales truy cập URL `/contracts/{invalid-id}` | Thông báo ngắn lỗi "Không tìm thấy hợp đồng." Điều hướng về Danh sách. |
-| AC-CON-03-03 | HĐ "HD-CMC-2026-001" được mở từ Customer 360° | Sales nhấn mã HĐ trong tab Hợp đồng & Sub | Trang Chi tiết mở đúng HĐ (AF-01). Breadcrumb cập nhật. |
-| AC-CON-03-04 | HĐ DIRECT, `subs.length = 0` | Sales xem trang Chi tiết | Nút "🗑️ Xóa" ở trạng thái active. Nút "+ Thêm Subscription" hiển thị trong action bar. |
-| AC-CON-03-05 | HĐ DIRECT, `subs.length > 0` | Sales xem trang Chi tiết | Nút "🗑️ Xóa" disabled (opacity 0.5), tooltip "Đã có Subscription, không thể xóa". Nút "+ Thêm Subscription" vẫn hiển thị trong action bar. |
-| AC-CON-03-06 | HĐ RESELLER | Sales xem action bar | Nút "+ Thêm Subscription" **không xuất hiện** trong action bar. Chỉ có "✏️ Chỉnh sửa" và "🗑️ Xóa". |
+| AC-CON-03-01 | HĐ "HD-CMC-2025-001" (DIRECT) tồn tại | Sales nhấn vào dòng HĐ trong Danh sách | Trang Chi tiết mở. Contract Header hiển thị đúng mã HĐ, tên KH, badge DIRECT. Tab Thông tin HĐ active mặc định. |
+| AC-CON-03-02 | Hợp đồng ID không tồn tại | Sales truy cập URL `/contracts/{invalid-id}` | Thông báo lỗi *"Không tìm thấy hợp đồng."* Điều hướng về Danh sách. |
+| AC-CON-03-03 | HĐ "HD-CMC-2025-001" được mở từ Customer 360° | Sales nhấn mã HĐ trong tab Hợp đồng & Sub | Trang Chi tiết mở đúng HĐ (AF-01). Breadcrumb cập nhật. |
+| AC-CON-03-04 | HĐ DIRECT, `subs.length = 0` | Sales xem Action Bar | Nút "🗑️ Xóa" active (màu đỏ). |
+| AC-CON-03-05 | HĐ DIRECT, `subs.length > 0` | Sales xem Action Bar | Nút "🗑️ Xóa" disabled (opacity 0.4), tooltip *"Đã có Subscription, không thể xóa"*. |
+| AC-CON-03-06 | HĐ RESELLER | Sales xem Action Bar | Chỉ có "✏️ Chỉnh sửa", "🗑️ Xóa", "← Quay lại". Không có nút "+ Thêm Subscription". |
 
-### Nhóm 2: Panel theo loại HĐ
-
-| AC ID | Given | When | Then |
-|---|---|---|---|
-| AC-CON-03-07 | HĐ DIRECT có 2 sub (1 ACTIVE, 1 EXPIRED) | Sales xem trang Chi tiết | Panel Subscriptions hiển thị 2 sub card. Panel License Pool không xuất hiện. |
-| AC-CON-03-08 | HĐ DIRECT chưa có sub nào (`subs.length = 0`) | Sales xem panel Subscriptions | Trạng thái rỗng: icon minh hoạ + "Chưa có Subscription" + nút "+ Thêm Subscription". |
-| AC-CON-03-09 | HĐ RESELLER có 2 pool items (EDR + AV) | Sales xem trang Chi tiết | Panel License Pool hiển thị 2 pool blocks. Panel Subscriptions không xuất hiện. |
-| AC-CON-03-10 | HĐ DIRECT, sub chưa nhận webhook (`license_mirror` chưa có data) | Sales xem Subscription Card | Date Block hiển thị "—" cho `activated_at` và `expires_at`. |
-| AC-CON-03-11 | HĐ DIRECT, sub có usage = 0% | Sales xem Subscription Card | Usage Bar không hiển thị (ẩn hoàn toàn). |
-| AC-CON-03-12 | HĐ DIRECT, sub có usage = 72% | Sales xem Subscription Card | Usage Bar hiển thị. Progress bar màu xanh (72% ≤ 80%). |
-| AC-CON-03-13 | HĐ DIRECT, sub có usage = 85% | Sales xem Subscription Card | Progress bar màu cam (85% > 80%). |
-
-### Nhóm 3: License Pool (RESELLER)
+### Nhóm 2: Tab Thông tin HĐ
 
 | AC ID | Given | When | Then |
 |---|---|---|---|
-| AC-CON-03-14 | Pool có 3 allocations | Sales xem Panel License Pool | Chế độ Full Inline. Hiển thị 3 dòng với sort controls. |
-| AC-CON-03-15 | Pool có 8 allocations | Sales xem Panel License Pool | Chế độ Preview + Link. 5 dòng đầu + liên kết "Xem danh sách Subscription" + dòng tóm tắt "Hiển thị 5/8 · còn 3 end-customer". |
-| AC-CON-03-16 | HĐ RESELLER, pool có 8 allocations | Sales nhấn liên kết "Xem danh sách Subscription" | Tab mới mở UC-SUB-01, pre-fill `contract_id`. |
-| AC-CON-03-17 | `pool_total=500`, `allocated_qty=430` (86%) | Sales xem pool bar | Hiển thị "430 / 500 đã cấp · còn 70". Bar màu cam (86% > 80%). |
+| AC-CON-03-07 | HĐ DIRECT, `signedDate = null` | Sales xem tab Thông tin HĐ | Trường Ngày ký hiển thị text *"Chưa có"* (italic, màu nhạt). |
+| AC-CON-03-08 | HĐ DIRECT, `description = null` | Sales xem tab Thông tin HĐ | Hàng Mô tả **không xuất hiện** (ẩn hoàn toàn — không hiện label trống). |
+| AC-CON-03-09 | HĐ RESELLER có 1 pool item (CMC EDR, total=200, allocated=140, pct=70%) | Sales xem accordion Pool License | Summary cards hiển thị đúng. Progress bar CMC EDR màu **xanh** (70% ≤ 80%). |
+| AC-CON-03-10 | HĐ RESELLER, pool item allocated=170/200 (85%) | Sales xem accordion Pool License | Progress bar màu **cam** (85% > 80%). |
+| AC-CON-03-11 | HĐ DIRECT | Sales xem tab Thông tin HĐ | Accordion "Pool License" **không xuất hiện**. |
+| AC-CON-03-12 | HĐ RESELLER chưa có pool nào | Sales mở accordion Pool License | Text *"Chưa cấu hình pool."* + nút "＋ Thêm Pool". |
 
-### Nhóm 4: Audit Log
+### Nhóm 3: Tab Subscriptions
 
 | AC ID | Given | When | Then |
 |---|---|---|---|
-| AC-CON-03-18 | HĐ có 5 audit entries | Sales mở panel Audit Log | 5 entries hiển thị DESC theo `created_at`. Counter "5 / 5 bản ghi". |
-| AC-CON-03-19 | Entry UPDATE: `signedDate: "2026-01-01" → "2026-07-15"` | Sales xem cột Chi tiết | Hiển thị: `signedDate: "2026-01-01" → "2026-07-15"`. |
-| AC-CON-03-20 | Entry có `source_webhook_id IS NOT NULL` | Sales xem cột Nguồn | Badge "Webhook" màu tím. |
-| AC-CON-03-21 | Sales đang xem panel Audit Log | Sales nhập "FPT" vào ô tìm kiếm (sau debounce 300ms) | Chỉ hiện entries có "FPT" trong Actor/Hành động/Chi tiết. Từ khoá được highlight màu vàng. Counter hiển thị "N kết quả". |
-| AC-CON-03-22 | Sales đang xem kết quả tìm kiếm "FPT" | Sales xóa nội dung ô tìm kiếm | Toàn bộ entries hiển thị lại. Lazy load hoạt động trở lại. Counter về "{loaded}/{total} bản ghi". |
-| AC-CON-03-23 | HĐ có 47 audit entries, panel đang hiển thị 20 entries đầu (counter "20 / 47") | Sales cuộn đến cuối danh sách | 20 entries tiếp theo được tải thêm (append). Counter cập nhật "40 / 47". |
+| AC-CON-03-13 | HĐ DIRECT có 2 sub (1 ACTIVE, 1 EXPIRED) | Sales nhấn tab Subscriptions | Bảng 2 dòng. Không có cột "Đơn vị thụ hưởng". Nút "＋ Thêm Subscription" ở đầu panel. |
+| AC-CON-03-14 | HĐ RESELLER có 2 sub (beneficiary khác nhau) | Sales nhấn tab Subscriptions | Bảng 2 dòng. Có cột "Đơn vị thụ hưởng". Cột "License dùng (Used)" thay cho "Seats". |
+| AC-CON-03-15 | HĐ DIRECT chưa có sub | Sales xem tab Subscriptions | Empty state: icon 🔑 + *"Chưa có Subscription nào"*. Nút "＋ Thêm Subscription" vẫn hiển thị. |
+| AC-CON-03-16 | Sub `licMirrorStatus = PENDING`, `lastSync = 'Chưa đồng bộ'` | Sales xem cột License Mirror | Hiển thị "PENDING" + "Chưa đồng bộ" bên dưới. |
+| AC-CON-03-17 | Sales nhấn "＋ Thêm Subscription" trong tab Subs | | Điều hướng sang UC-SUB với `contract_id` pre-fill. |
+
+### Nhóm 4: Tab Timeline
+
+| AC ID | Given | When | Then |
+|---|---|---|---|
+| AC-CON-03-18 | HĐ DIRECT có `signedDate` và 2 subs | Sales nhấn tab Timeline | Ít nhất 4 entries: tạo HĐ, ghi nhận ngày ký, 2 × tạo sub. Sort DESC. |
+| AC-CON-03-19 | HĐ DIRECT có `signedDate = null` | Sales nhấn tab Timeline | Entry "Ngày ký" **không xuất hiện**. |
+| AC-CON-03-20 | HĐ RESELLER có 1 pool item và 2 subs | Sales nhấn tab Timeline | Có entry "Pool License thêm mới — {productName}" + 2 entry tạo sub. |
+
+### Nhóm 5: Tab Audit Log
+
+| AC ID | Given | When | Then |
+|---|---|---|---|
+| AC-CON-03-21 | HĐ có 5 audit entries | Sales mở tab Audit Log | 5 entries hiển thị DESC theo `created_at`. Counter *"5 / 5 bản ghi"*. |
+| AC-CON-03-22 | HĐ có 47 audit entries, đang hiển thị 20 entries đầu (counter "20 / 47") | Sales cuộn đến cuối | 20 entries tiếp theo được tải thêm (append). Counter cập nhật *"40 / 47"*. |
+| AC-CON-03-23 | Sales nhập "FPT" vào ô tìm kiếm (sau debounce 300ms) | | Chỉ hiện entries có "FPT" trong Actor/Hành động/Chi tiết. Counter hiển thị *"N kết quả"*. Lazy load tạm dừng. |
+| AC-CON-03-24 | Sales xóa nội dung ô tìm kiếm | | Toàn bộ entries hiển thị lại. Lazy load hoạt động trở lại. Counter về *"{loaded}/{total} bản ghi"*. |
+| AC-CON-03-25 | Entry có `source = 'WEBHOOK'` | Sales xem cột Nguồn | Badge xám nhạt hiển thị text "WEBHOOK". |
 
 ---
 
@@ -280,16 +345,18 @@ Search bar cố định ở đầu panel (ngoài scroll container).
 
 | Phiên bản | Ngày | Người cập nhật | Nội dung |
 |---|---|---|---|
-| 1.0 | 06/07/2026 | Claude (AI) | Tạo mới — bóc tách từ PRD v2.3 section 6.2.4 (thiếu trong PRD, tái cấu trúc từ cross-reference UC-CON-04/05 và UC-CUS-03 Tab 2). |
+| 1.0 | 06/07/2026 | Claude (AI) | Tạo mới — bóc tách từ PRD v2.3 section 6.2.4. |
 | 1.1 | 06/07/2026 | Claude (AI) | Giải quyết OQ-01/OQ-03: nút "+ Thêm Sub" luôn hiển thị với DIRECT; xóa BR Timeline (provisioning events thuộc Sub detail). |
-| 1.2 | 06/07/2026 | Claude (AI) | Self-review theo checklist FRS: tách gateway bước 5, sửa ngôn ngữ (Navigate → Điều hướng, row → dòng, click → nhấn, toast → thông báo ngắn), thêm End Events, chuẩn bảng UI section 3.3, bổ sung AC-CON-03-06/08/16 còn thiếu, renumber AC. |
+| 1.2 | 06/07/2026 | Claude (AI) | Self-review theo checklist FRS: tách gateway bước 5, chuẩn ngôn ngữ, thêm End Events, bổ sung AC còn thiếu. |
+| 1.3 | 07/07/2026 | Claude (AI) | Cập nhật theo quyết định BA: (A-01) đổi sang tab-based layout 4 tabs; (A-02/A-03) Pool & Đính kèm accordion trong tab Thông tin HĐ; (A-04) Subs tab hiển thị cả DIRECT & RESELLER; (A-05) Sales & Manager đều xóa được; (A-07) "+ Thêm Sub" chỉ trong tab Subs; (B-01) bổ sung mô tả tab Timeline; (B-02) đổi Subs panel sang table layout; (B-03) Ngày ký trong info grid; (C-01) Audit Log đồng bộ lazy load với UC-CUS-03; (C-02) cột Nguồn: gray badge per demo. |
 
 ### Quyết định đã chốt
 
 | # | Nội dung | Quyết định |
 |---|---|---|
-| OQ-01 | Nút "+ Thêm Subscription" hiển thị khi nào? | **Luôn hiển thị** trong action bar với mọi HĐ DIRECT, bất kể đã có sub hay chưa. |
-| OQ-03 | Provisioning events (webhook) có hiển thị tại Chi tiết HĐ không? | **Không.** Provisioning events gắn với Subscription, không gắn với Contract. Chúng sẽ hiển thị trong form Chi tiết Subscription (UC-SUB). |
+| OQ-01 | Nút "+ Thêm Subscription" hiển thị ở đâu? | Chỉ trong tab Subscriptions, không ở action bar. |
+| OQ-02 | Tab Subscriptions hiển thị cho loại HĐ nào? | Cả DIRECT và RESELLER. RESELLER có thêm cột Đơn vị thụ hưởng. |
+| OQ-03 | Tab Timeline có trong scope UC-CON-03 không? | Có. Events: tạo HĐ, ký HĐ, tạo sub, thêm pool. |
 
 ---
 

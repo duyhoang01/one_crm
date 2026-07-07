@@ -43,6 +43,7 @@
 - Với các mục cần tách ý, hãy xuống dòng để dễ đọc
 - Với các step dạng: Yes và No thì mỗi ý trình bày trên một dòng
 - Các giá trị tại cột "Bước" phải mapping với ký hiệu step trên BPMN, không chấp nhận các step dạng: Nx, Nx+1, Nx+2
+- Tăng độ rộng của cột BR ID để id không bị tách thành 2 dòng
 # OneCRM FSD/SRS — Checklist Review Tài liệu cho AI
 
 > Tổng hợp từ toàn bộ feedback của BA trong quá trình viết và review tài liệu

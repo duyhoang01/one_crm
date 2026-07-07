@@ -100,6 +100,8 @@
 └──────────────────────────────────────────┘
 ```
 
+![Demo — Modal xác nhận xóa Hợp đồng](../../assets/M-02_contracts/UC-CON-06_screen_modal.png)
+
 ### 3.2 Các thành phần giao diện
 
 | # | Thành phần | Loại | Mô tả |

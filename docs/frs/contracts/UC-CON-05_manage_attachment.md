@@ -125,6 +125,9 @@
 
 ![Wireframe 01 — Panel Đính kèm tại Chi tiết HĐ](../../assets/M-02_contracts/UC-CON-05_wireframe_01.png)
 ![Wireframe 02 — Upload trong Form Tạo HĐ](../../assets/M-02_contracts/UC-CON-05_wireframe_02.png)
+
+![Demo — Panel Đính kèm tại Chi tiết HĐ](../../assets/M-02_contracts/UC-CON-05_screen_attachment.png)
+
 UC-CON-05 tương tác qua 2 bề mặt:
 1. **Panel "📎 Đính kèm"** tại màn hình Chi tiết HĐ (UC-CON-03): upload và xóa tức thời.
 2. **Dropzone trong modal Tạo HĐ** (UC-CON-02): staged upload, ghi storage sau khi HĐ tạo thành công.
