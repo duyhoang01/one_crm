@@ -820,46 +820,60 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
   </div>
 </div>
 
-<!-- MODAL CHỈNH SỬA SUBSCRIPTION -->
+<!-- MODAL CHỈNH SỬA SUBSCRIPTION (chỉ DRAFT) -->
 <div class="overlay" id="subModalEditSub">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <div class="modal-title">✏️ Chỉnh sửa Subscription</div>
+      <div class="modal-title">✏️ Chỉnh sửa Draft Subscription</div>
       <button class="close-btn" onclick="subCloseModal('subModalEditSub')">✕</button>
     </div>
     <div class="modal-body">
-      <div id="subEditSubStatusNote" class="alert alert-info" style="margin-bottom:14px;display:none;">
-        <span class="alert-icon">ℹ️</span>
-        <div class="alert-body"><div class="alert-text" id="subEditSubStatusNoteText"></div></div>
-      </div>
       <input type="hidden" id="subEditSubDuration" value="12">
       <div class="form-row">
         <div class="field">
           <label class="field-label">Mã Subscription</label>
-          <input class="field-input" id="subEditSubId" readonly>
+          <input class="field-input" id="subEditSubId" readonly style="background:var(--gray-50);">
         </div>
         <div class="field">
           <label class="field-label">Gói sản phẩm</label>
-          <input class="field-input" id="subEditSubPackage" readonly>
+          <input class="field-input" id="subEditSubPackage" readonly style="background:var(--gray-50);">
         </div>
       </div>
-      <!-- Khách hàng / Đơn vị thụ hưởng — chỉ hiện khi DRAFT -->
-      <div class="form-row" id="subEditSubBeneficiaryRow" style="display:none;">
+      <div class="form-row">
         <div class="field">
-          <label class="field-label">Đơn vị thụ hưởng <span class="required">*</span></label>
-          <select class="field-select" id="subEditSubBeneficiary"></select>
+          <label class="field-label">Hợp đồng <span class="required">*</span></label>
+          <select class="field-select" id="subEditSubContract" onchange="subEditSubOnContractChange()"></select>
+          <div class="field-error" id="subErrEditSubContract" style="display:none;">Vui lòng chọn hợp đồng</div>
         </div>
         <div class="field"></div>
       </div>
-      <div class="form-row" id="subEditSubDirectCustomerRow" style="display:none;">
+      <!-- DIRECT: auto-fill khách hàng + seats -->
+      <div class="form-row" id="subEditSubDirectRow" style="display:none;">
         <div class="field">
           <label class="field-label">Khách hàng</label>
           <input class="field-input" id="subEditSubCustomerName" readonly style="background:var(--gray-50);">
         </div>
-        <div class="field"></div>
+        <div class="field">
+          <label class="field-label">Số seats <span class="required">*</span></label>
+          <input class="field-input" id="subEditSubSeats" type="text" inputmode="numeric" placeholder="VD: 100" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+          <div class="field-error" id="subErrEditSubSeats" style="display:none;">Số seats phải > 0</div>
+        </div>
       </div>
-      <!-- Ngày — chỉ hiện khi DRAFT -->
-      <div class="form-row" id="subEditSubDateRow" style="display:none;">
+      <!-- RESELLER: beneficiary dropdown + số license -->
+      <div class="form-row" id="subEditSubResellerRow" style="display:none;">
+        <div class="field">
+          <label class="field-label">Đơn vị thụ hưởng <span class="required">*</span></label>
+          <select class="field-select" id="subEditSubBeneficiary"></select>
+          <div class="field-error" id="subErrEditSubBeneficiary" style="display:none;">Vui lòng chọn đơn vị thụ hưởng</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Số license <span class="required">*</span></label>
+          <input class="field-input" id="subEditSubLic" type="text" inputmode="numeric" placeholder="VD: 50" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+          <div class="field-error" id="subErrEditSubLic" style="display:none;">Số license phải > 0</div>
+        </div>
+      </div>
+      <!-- Ngày tháng -->
+      <div class="form-row">
         <div class="field">
           <label class="field-label">Ngày bắt đầu (dự kiến)</label>
           <input class="field-input" id="subEditSubStartDate" type="date" oninput="subEditSubCalcEndDate()">
@@ -867,7 +881,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
         <div class="field">
           <label class="field-label">Ngày hết hạn (dự kiến)</label>
           <input class="field-input" id="subEditSubEndDate" type="date" readonly style="background:var(--gray-50);cursor:default;">
-          <div class="field-hint" id="subEditSubEndDateHint" style="display:none;"></div>
+          <div class="field-hint" id="subEditSubEndDateHint" style="display:none;font-size:11px;color:var(--text-secondary);margin-top:3px;"></div>
         </div>
       </div>
       <div class="form-row">
@@ -3245,7 +3259,7 @@ function subRevokeTooltip(s){
 function subCanSuspend(s){return s&&s.status==='ACTIVE'&&currentUser&&(currentUser.role==='Sales'||currentUser.role==='Manager');}
 function subCanResume(s){return s&&s.status==='SUSPENDED'&&currentUser&&(currentUser.role==='Sales'||currentUser.role==='Manager');}
 function subCanRenew(s){return s&&['ACTIVE','SUSPENDED','EXPIRED'].includes(s.status);}
-function subCanEdit(s){return s&&!['REVOKED','RENEWED','EXPIRED'].includes(s.status);}
+function subCanEdit(s){return s&&s.status==='DRAFT';}
 
 // ── VIEW ROUTING
 function subShowView(v){
@@ -3549,7 +3563,7 @@ function subRenderHero(sub){
   const backBtn=`<button class="btn btn-ghost" onclick="subShowView('list');subRenderTable();document.getElementById('breadcrumbCurrent').textContent='Subscription';">← Quay lại</button>`;
   const approveBtn=isDraft?`<button class="btn btn-primary" onclick="subOpenApproveDraft('${sub.id}')">📤 Gửi đi</button>`:'';
   const deleteDraftBtn=isDraft?`<button class="btn btn-danger" onclick="subOpenDeleteDraft('${sub.id}')">Xóa</button>`:'';
-  const editBtn=(!isDraft&&canEdit)?`<button class="btn btn-secondary btn-sm" onclick="subOpenEditSub('${sub.id}')">✏️ Sửa</button>`:'';
+  const editBtn=canEdit?`<button class="btn btn-secondary btn-sm" onclick="subOpenEditSub('${sub.id}')">✏️ Sửa</button>`:'';
   const suspendBtn=canSuspend?`<button class="btn btn-ghost btn-sm" onclick="subOpenSuspend('${sub.id}')" style="color:#D97706;border-color:#D97706;">⏸ Tạm dừng</button>`:'';
   const resumeBtn=canResume?`<button class="btn btn-ghost btn-sm" onclick="subOpenResume('${sub.id}')" style="color:#059669;border-color:#059669;">▶ Khôi phục</button>`:'';
   const renewBtn=canRenew?`<button class="btn btn-secondary btn-sm" onclick="subOpenRenew('${sub.id}')">🔄 Gia hạn</button>`:'';
@@ -3971,7 +3985,7 @@ function subConfirmRenew(){
   subOpenDetail(newId);
 }
 
-// ── EDIT SUB
+// ── EDIT SUB (chỉ DRAFT)
 let _subEditingId=null;
 function subEditSubCalcEndDate(){
   const sd=document.getElementById('subEditSubStartDate')?.value;
@@ -3979,17 +3993,42 @@ function subEditSubCalcEndDate(){
   const edEl=document.getElementById('subEditSubEndDate');
   const hint=document.getElementById('subEditSubEndDateHint');
   if(!edEl)return;
-  if(!sd){edEl.value='';return;}
+  if(!sd){edEl.value='';if(hint)hint.style.display='none';return;}
   const d=new Date(sd);
   d.setMonth(d.getMonth()+dur);
   edEl.value=d.toISOString().slice(0,10);
-  if(hint){hint.textContent=`Tự động tính: ${sd} + ${dur} tháng`;hint.style.display='';}
+  if(hint){hint.textContent=`Tự động tính: ngày bắt đầu + ${dur} tháng`;hint.style.display='';}
+}
+function subEditSubOnContractChange(existingSub){
+  const cid=document.getElementById('subEditSubContract')?.value;
+  const c=conContracts.find(x=>x.id===cid);
+  const isReseller=c&&c.type==='RESELLER';
+  const dirRow=document.getElementById('subEditSubDirectRow');
+  const rslRow=document.getElementById('subEditSubResellerRow');
+  dirRow.style.display=(!isReseller&&c)?'':'none';
+  rslRow.style.display=isReseller?'':'none';
+  if(!isReseller&&c){
+    const cn=document.getElementById('subEditSubCustomerName');
+    if(cn)cn.value=c.customerName||'';
+    const seatsEl=document.getElementById('subEditSubSeats');
+    if(seatsEl)seatsEl.value=existingSub?.seatCount||'';
+  }
+  if(isReseller){
+    const sel=document.getElementById('subEditSubBeneficiary');
+    sel.innerHTML='<option value="">▾ Chọn đơn vị thụ hưởng...</option>';
+    CON_BENEFICIARIES.forEach(b=>{
+      const o=document.createElement('option');
+      o.value=b.id;o.textContent=b.name;
+      if(existingSub&&b.id===existingSub.beneficiaryId)o.selected=true;
+      sel.appendChild(o);
+    });
+    const licEl=document.getElementById('subEditSubLic');
+    if(licEl)licEl.value=existingSub?.licenseQty||'';
+  }
 }
 function subOpenEditSub(id){
-  const sub=subFindById(id);if(!sub||!subCanEdit(sub))return;
+  const sub=subFindById(id);if(!sub||sub.status!=='DRAFT')return;
   _subEditingId=id;
-  const isDraft=sub.status==='DRAFT';
-  const isReseller=sub.contractType==='RESELLER';
   // Tìm duration của package
   let dur=12;
   for(const pkgs of Object.values(CON_PACKAGES_BY_PRODUCT)){
@@ -3999,76 +4038,71 @@ function subOpenEditSub(id){
   document.getElementById('subEditSubDuration').value=dur;
   document.getElementById('subEditSubId').value=sub.id;
   document.getElementById('subEditSubPackage').value=`${sub.packageName} (${dur} tháng)`;
-  // Khách hàng / Đơn vị thụ hưởng
-  const benRow=document.getElementById('subEditSubBeneficiaryRow');
-  const dirRow=document.getElementById('subEditSubDirectCustomerRow');
-  if(isDraft){
-    if(isReseller){
-      benRow.style.display='';dirRow.style.display='none';
-      const sel=document.getElementById('subEditSubBeneficiary');
-      sel.innerHTML='<option value="">▾ Chọn đơn vị thụ hưởng...</option>';
-      CON_BENEFICIARIES.forEach(b=>{
-        const o=document.createElement('option');
-        o.value=b.id;o.textContent=b.name;
-        if(b.id===sub.beneficiaryId)o.selected=true;
-        sel.appendChild(o);
-      });
-    } else {
-      benRow.style.display='none';dirRow.style.display='';
-      const cn=document.getElementById('subEditSubCustomerName');
-      if(cn)cn.value=sub.customerName||'';
-    }
-  } else {
-    benRow.style.display='none';dirRow.style.display='none';
-  }
-  // Ngày tháng (chỉ DRAFT)
-  const dateRow=document.getElementById('subEditSubDateRow');
-  dateRow.style.display=isDraft?'':'none';
-  if(isDraft){
-    const sd=document.getElementById('subEditSubStartDate');if(sd)sd.value=sub.startDate||'';
-    const ed=document.getElementById('subEditSubEndDate');if(ed)ed.value=sub.endDate||'';
-    const hint=document.getElementById('subEditSubEndDateHint');
-    if(hint&&sub.startDate){hint.textContent=`Tự động tính: ${sub.startDate} + ${dur} tháng`;hint.style.display='';}
-    else if(hint){hint.style.display='none';}
-  }
+  // Contract dropdown
+  const csel=document.getElementById('subEditSubContract');
+  csel.innerHTML='<option value="">▾ Chọn hợp đồng...</option>';
+  conContracts.forEach(c=>{
+    const o=document.createElement('option');
+    o.value=c.id;
+    o.textContent=`${c.code} — ${c.customerName} (${c.type})`;
+    if(c.id===sub.contractId)o.selected=true;
+    csel.appendChild(o);
+  });
+  // Trigger để hiện đúng fields theo loại HĐ hiện tại
+  subEditSubOnContractChange(sub);
+  // Ngày tháng
+  const sdEl=document.getElementById('subEditSubStartDate');if(sdEl)sdEl.value=sub.startDate||'';
+  const edEl=document.getElementById('subEditSubEndDate');if(edEl)edEl.value=sub.endDate||'';
+  const hint=document.getElementById('subEditSubEndDateHint');
+  if(hint&&sub.startDate){hint.textContent=`Tự động tính: ngày bắt đầu + ${dur} tháng`;hint.style.display='';}
+  else if(hint){hint.style.display='none';}
+  // Deal code + Note
   document.getElementById('subEditSubDealCode').value=sub.dealCode||'';
   document.getElementById('subEditSubNote').value=sub.note||'';
-  const banner=document.getElementById('subEditSubStatusNote');
-  if(banner){
-    if(isDraft){banner.style.display='none';}
-    else{
-      banner.style.display='';
-      const nt=document.getElementById('subEditSubStatusNoteText');
-      if(nt)nt.innerHTML=`Subscription đang ở trạng thái <strong>${sub.status}</strong> — chỉ có thể sửa <strong>Deal Code</strong> và <strong>Ghi chú</strong>.`;
-    }
-  }
+  // Clear errors
+  ['subErrEditSubContract','subErrEditSubSeats','subErrEditSubLic','subErrEditSubBeneficiary']
+    .forEach(eid=>{const el=document.getElementById(eid);if(el)el.style.display='none';});
   subOpenModal('subModalEditSub');
 }
 function subSubmitEditSub(){
   const found=subFindRaw(_subEditingId);if(!found)return;
   const sub=found.sub;
-  const isDraft=sub.status==='DRAFT';
-  const isReseller=sub.contractType==='RESELLER';
-  if(isDraft){
-    // Beneficiary (RESELLER)
-    if(isReseller){
-      const benId=document.getElementById('subEditSubBeneficiary')?.value||null;
-      const benName=CON_BENEFICIARIES.find(b=>b.id===benId)?.name||null;
-      sub.beneficiaryId=benId;sub.beneficiaryName=benName;
-    }
-    // Ngày tháng — endDate tự động tính, lấy từ field readonly
-    const sd=(document.getElementById('subEditSubStartDate')?.value||'').trim();
-    const ed=(document.getElementById('subEditSubEndDate')?.value||'').trim();
-    sub.startDate=sd||null;
-    sub.endDate=ed||null;
+  let ok=true;
+  const show=(eid,msg)=>{const el=document.getElementById(eid);if(el){el.textContent=msg;el.style.display='block';}ok=false;};
+  const hide=(eid)=>{const el=document.getElementById(eid);if(el)el.style.display='none';};
+  const cid=document.getElementById('subEditSubContract')?.value;
+  const c=conContracts.find(x=>x.id===cid);
+  if(!cid){show('subErrEditSubContract','Vui lòng chọn hợp đồng');}else{hide('subErrEditSubContract');}
+  const isReseller=c&&c.type==='RESELLER';
+  let seats=0,lic=0,benId=null,benName=null;
+  if(c&&!isReseller){
+    seats=parseInt((document.getElementById('subEditSubSeats')?.value||'').replace(/[^0-9]/g,''))||0;
+    if(seats<=0){show('subErrEditSubSeats','Số seats phải > 0');}else{hide('subErrEditSubSeats');}
+  } else if(c&&isReseller){
+    benId=document.getElementById('subEditSubBeneficiary')?.value||null;
+    if(!benId){show('subErrEditSubBeneficiary','Vui lòng chọn đơn vị thụ hưởng');}else{hide('subErrEditSubBeneficiary');}
+    benName=CON_BENEFICIARIES.find(b=>b.id===benId)?.name||null;
+    lic=parseInt((document.getElementById('subEditSubLic')?.value||'').replace(/[^0-9]/g,''))||0;
+    if(lic<=0){show('subErrEditSubLic','Số license phải > 0');}else{hide('subErrEditSubLic');}
   }
+  if(!ok)return;
+  // Áp dụng thay đổi
+  if(c){
+    sub.contractId=c.id;sub.contractCode=c.code;sub.contractType=c.type;
+    sub.customerId=c.customerId;sub.customerName=c.customerName;
+  }
+  if(!isReseller){sub.seatCount=seats;sub.licenseQty=null;sub.beneficiaryId=null;sub.beneficiaryName=null;}
+  else{sub.licenseQty=lic;sub.seatCount=null;sub.beneficiaryId=benId;sub.beneficiaryName=benName;}
+  const sd=(document.getElementById('subEditSubStartDate')?.value||'').trim();
+  const ed=(document.getElementById('subEditSubEndDate')?.value||'').trim();
+  sub.startDate=sd||null;sub.endDate=ed||null;
   sub.dealCode=(document.getElementById('subEditSubDealCode')?.value||'').trim()||null;
   sub.note=(document.getElementById('subEditSubNote')?.value||'').trim()||null;
   const now=new Date().toISOString();
-  const details=isDraft?`startDate: ${sub.startDate||'—'} · endDate: ${sub.endDate||'—'}`:'dealCode/note';
-  (sub.audit=sub.audit||[]).push({time:now,src:'CRM',actor:currentUser?.name||'Sales',action:'EDIT',detail:`Cập nhật Draft: ${details}`,result:'success'});
+  (sub.audit=sub.audit||[]).push({time:now,src:'CRM',actor:currentUser?.name||'Sales',action:'EDIT_DRAFT',
+    detail:`HĐ: ${sub.contractCode} · ${isReseller?`${lic} license · ${benName||'—'}`:`${seats} seats`} · ${sub.startDate||'—'} → ${sub.endDate||'—'}`,result:'success'});
   subCloseModal('subModalEditSub');
-  toast('success','Đã cập nhật',`${_subEditingId} đã được lưu`);
+  toast('success','Đã cập nhật Draft',`${_subEditingId} đã được lưu`);
   _subEditingId=null;
   if(subCurrentId)subOpenDetail(subCurrentId);
   subRenderTable();
