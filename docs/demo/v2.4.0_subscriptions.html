@@ -3346,6 +3346,8 @@ function subRenderTable(data,page){
 
   tbody.innerHTML=rows.map(sub=>{
     const isDraftRow=sub.status==='DRAFT';
+    const editDraftRowBtn=isDraftRow
+      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenEditSub('${sub.id}')" title="Sửa Draft" style="font-size:13px;">✏️</button>`:'';
     const deleteDraftRowBtn=isDraftRow
       ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Xóa Draft">${TRASH_ICON}</button>`:'';
     const beneficiary=sub.contractType==='RESELLER'&&sub.beneficiaryName
@@ -3359,7 +3361,7 @@ function subRenderTable(data,page){
           <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">${sub.contractType==='DIRECT'?(sub.seatCount||0)+' seats':(sub.licenseQty||0)+' license'}</div></td>
       <td style="font-size:13px;">${sub.endDate?subFmtDate(sub.endDate):'<em style="color:var(--gray-400)">Chưa xác định</em>'}</td>
       <td>${subStatusBadge(sub.status)}</td>
-      <td onclick="event.stopPropagation()">${deleteDraftRowBtn}</td>
+      <td onclick="event.stopPropagation()"><div style="display:flex;gap:4px;">${editDraftRowBtn}${deleteDraftRowBtn}</div></td>
     </tr>`;
   }).join('');
 
