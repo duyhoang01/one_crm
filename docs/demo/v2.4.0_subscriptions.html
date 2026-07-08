@@ -33,6 +33,15 @@ th:hover .con-sort-icon{color:var(--text-secondary);}
 .con-attach-badge.saved{background:var(--gray-100);color:var(--gray-600);}
 .con-attach-dl{font-size:12px;color:var(--primary);cursor:pointer;text-decoration:underline;flex-shrink:0;}
 
+/* ── SEARCHABLE CONTRACT DROPDOWN ───────────────────── */
+.csearch-wrap{position:relative;}
+.csearch-dropdown{position:absolute;z-index:300;background:white;border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--shadow-lg);max-height:220px;overflow-y:auto;width:100%;top:calc(100% + 2px);left:0;}
+.csearch-option{padding:9px 14px;cursor:pointer;font-size:13px;line-height:1.5;border-bottom:1px solid var(--gray-100);}
+.csearch-option:last-child{border-bottom:none;}
+.csearch-option:hover{background:var(--gray-50);}
+.csearch-code{font-weight:600;color:var(--navy);font-family:monospace;font-size:12px;}
+.csearch-info{color:var(--text-secondary);font-size:12px;}
+
 /* ── LOGIN ───────────────────────────────────────────── */
 .login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#EBF4FD 0%,#F2F6FA 50%,#F3EFFE 100%);z-index:1000;display:flex;align-items:center;justify-content:center;}
 .login-card{background:white;border-radius:20px;box-shadow:var(--shadow-lg);padding:40px;width:420px;max-width:92vw;}
@@ -588,21 +597,15 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
     </div>
     <div class="modal-body">
       <input type="hidden" id="subCrtDuration" value="">
-      <div class="form-row">
-        <div class="field">
-          <label class="field-label">Mã Subscription</label>
-          <input class="field-input" id="subCrtId" readonly style="background:var(--gray-50);color:var(--text-secondary);font-family:monospace;">
-          <div class="field-hint">Mã tự sinh theo hệ thống</div>
-          <div class="field-error" id="subErrCrtId" style="display:none;"></div>
-        </div>
-        <div class="field"></div>
-      </div>
+      <input type="hidden" id="subCrtId">
       <div class="form-row full">
         <div class="field">
           <label class="field-label">Hợp đồng <span class="required">*</span></label>
-          <select class="field-select" id="subCrtContract" onchange="subOnContractChange()">
-            <option value="">▾ Chọn hợp đồng...</option>
-          </select>
+          <div class="csearch-wrap" id="subCrtContractWrap">
+            <input class="field-input" id="subCrtContractSearch" placeholder="🔍 Tìm theo mã hoặc tên khách hàng..." oninput="subFilterCrtContracts()" onfocus="subShowCrtContracts()" onblur="setTimeout(()=>{const d=document.getElementById('subCrtContractDropdown');if(d)d.style.display='none';},200)" autocomplete="off">
+            <input type="hidden" id="subCrtContract">
+            <div class="csearch-dropdown" id="subCrtContractDropdown" style="display:none;"></div>
+          </div>
           <div class="field-error" id="subErrCrtContract" style="display:none;">Vui lòng chọn hợp đồng</div>
         </div>
       </div>
@@ -649,6 +652,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <div class="field">
             <label class="field-label">Số license <span class="required">*</span></label>
             <input class="field-input" id="subCrtLic" type="text" inputmode="numeric" placeholder="VD: 50" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            <div class="field-hint" id="subCrtLicHint" style="display:none;color:var(--green);"></div>
             <div class="field-error" id="subErrCrtLic" style="display:none;">Số license là bắt buộc và phải > 0</div>
           </div>
         </div>
@@ -859,7 +863,11 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
       <div class="form-row full">
         <div class="field">
           <label class="field-label">Hợp đồng <span class="required">*</span></label>
-          <select class="field-select" id="subEditSubContract" onchange="subEditSubOnContractChange()"></select>
+          <div class="csearch-wrap" id="subEditContractWrap">
+            <input class="field-input" id="subEditContractSearch" placeholder="🔍 Tìm theo mã hoặc tên khách hàng..." oninput="subFilterEditContracts()" onfocus="subShowEditContracts()" onblur="setTimeout(()=>{const d=document.getElementById('subEditContractDropdown');if(d)d.style.display='none';},200)" autocomplete="off">
+            <input type="hidden" id="subEditSubContract">
+            <div class="csearch-dropdown" id="subEditContractDropdown" style="display:none;"></div>
+          </div>
           <div class="field-error" id="subErrEditSubContract" style="display:none;">Vui lòng chọn hợp đồng</div>
         </div>
       </div>
@@ -900,6 +908,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
         <div class="field">
           <label class="field-label">Số license <span class="required">*</span></label>
           <input class="field-input" id="subEditSubLic" type="text" inputmode="numeric" placeholder="VD: 50" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+          <div class="field-hint" id="subEditSubLicHint" style="display:none;color:var(--green);"></div>
           <div class="field-error" id="subErrEditSubLic" style="display:none;">Số license phải > 0</div>
         </div>
       </div>
@@ -1857,9 +1866,9 @@ let conContracts = [
       {id:'SUB-2026-001',contractId:'con-001',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EDR-03',packageName:'CMC EDR',
        startDate:'2025-01-20',endDate:'2026-01-19',licenseQty:null,seatCount:500,
-       status:'ACTIVE',note:'Triển khai SaaS multi-tenant',dealCode:'DEAL-2025-FPT-001',
+       status:'EXPIRED',note:'Triển khai SaaS multi-tenant',dealCode:'DEAL-2025-FPT-001',
        previousSubId:null,
-       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-01-19',lastSync:'8 phút trước',
+       licMirrorStatus:'EXPIRED',licMirrorExpiry:'2026-01-19',lastSync:'—',
        createdBy:'Sales A',createdAt:'2025-01-15T10:00:00',
        timeline:[
          {icon:'📊',cls:'tl-dot-gray',source:'WEBHOOK',actor:'System',title:'Usage snapshot cập nhật',time:'2026-07-08 08:00',detail:'486 / 500 seats đang dùng (97.2%)'},
@@ -1889,7 +1898,7 @@ let conContracts = [
       {id:'SUB-2026-002',contractId:'con-002',beneficiaryId:'B001',beneficiaryName:'Công ty TNHH Văn Phòng',
        productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR',
        startDate:'2025-03-15',endDate:'2026-03-14',licenseQty:80,seatCount:80,
-       status:'ACTIVE',note:'',licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-03-14',lastSync:'12 phút trước',
+       status:'EXPIRED',note:'',licMirrorStatus:'EXPIRED',licMirrorExpiry:'2026-03-14',lastSync:'—',
        createdBy:'Sales B',createdAt:'2025-03-15T09:00:00',
        timeline:[
          {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2025-03-15 10:00',detail:'Beneficiary: Công ty TNHH Văn Phòng · 80 license'},
@@ -1975,7 +1984,7 @@ let conContracts = [
       {id:'SUB-2026-005',contractId:'con-004',beneficiaryId:'B003',beneficiaryName:'Mekong Foods',
        productId:'CA',packageId:'PKG-EPR-02',packageName:'CA Organization',
        startDate:'2025-05-01',endDate:'2026-04-30',licenseQty:120,seatCount:120,
-       status:'ACTIVE',note:'',licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-04-30',lastSync:'25 phút trước',
+       status:'SUSPENDED',note:'Tạm dừng do KH chưa gia hạn sau khi hết hạn.',suspendReason:'Hết hạn hợp đồng — chờ gia hạn.',licMirrorStatus:'SUSPENDED',licMirrorExpiry:'2026-04-30',lastSync:'1 ngày trước',
        createdBy:'Sales C',createdAt:'2025-05-01T09:00:00',
        timeline:[
          {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2025-05-01 10:30',detail:'Beneficiary: Mekong Foods · 120 license · CA Organization'},
@@ -3432,15 +3441,11 @@ function subOpenCreate(){
   document.getElementById('subCrtProductSection').style.display='none';
   document.getElementById('subCrtSeatsRow').style.display='none';
   document.getElementById('subCrtBeneficiaryRow').style.display='none';
-  ['subErrCrtId','subErrCrtContract','subErrCrtPackage','subErrCrtSeats','subErrCrtLic','subErrCrtBeneficiary'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-  const sel=document.getElementById('subCrtContract');
-  sel.innerHTML='<option value="">▾ Chọn hợp đồng...</option>';
-  conContracts.forEach(c=>{
-    const opt=document.createElement('option');
-    opt.value=c.id;
-    opt.textContent=`${c.code} · ${c.customerName} (${c.type})`;
-    sel.appendChild(opt);
-  });
+  ['subErrCrtContract','subErrCrtPackage','subErrCrtSeats','subErrCrtLic','subErrCrtBeneficiary'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  const hintEl=document.getElementById('subCrtLicHint');if(hintEl)hintEl.style.display='none';
+  document.getElementById('subCrtContractSearch').value='';
+  document.getElementById('subCrtContract').value='';
+  document.getElementById('subCrtContractDropdown').style.display='none';
   const pkgSel=document.getElementById('subCrtPackage');
   pkgSel.innerHTML='<option value="">▾ Chọn gói sản phẩm...</option>';
   pkgSel.disabled=false;
@@ -3454,6 +3459,66 @@ function subGetContractPkgs(c){
   const allPkgs=Object.values(CON_PACKAGES_BY_PRODUCT).flat();
   return(c.packages||[]).map(id=>allPkgs.find(p=>p.id===id)).filter(Boolean);
 }
+/* ── CSEARCH — Create form ── */
+function subRenderCrtContracts(q){
+  const dd=document.getElementById('subCrtContractDropdown');
+  const filtered=conContracts.filter(c=>{
+    if(!q)return true;
+    const s=q.toLowerCase();
+    return c.code.toLowerCase().includes(s)||c.customerName.toLowerCase().includes(s);
+  });
+  dd.innerHTML='';
+  if(!filtered.length){dd.innerHTML='<div class="csearch-option" style="color:var(--text-secondary)">Không tìm thấy hợp đồng</div>';dd.style.display='';return;}
+  filtered.forEach(c=>{
+    const d=document.createElement('div');d.className='csearch-option';
+    const badgeBg=c.type==='DIRECT'?'#DBEAFE':'#FEF3C7';
+    const badgeColor=c.type==='DIRECT'?'#1D4ED8':'#92400E';
+    d.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span class="csearch-code">${c.code}</span><span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px;background:${badgeBg};color:${badgeColor};white-space:nowrap;">${c.type}</span></div><div class="csearch-info" style="margin-top:3px;">${c.customerName}</div>`;
+    d.onmousedown=()=>subSelectCrtContract(c.id);
+    dd.appendChild(d);
+  });
+  dd.style.display='';
+}
+function subShowCrtContracts(){subRenderCrtContracts(document.getElementById('subCrtContractSearch').value);}
+function subFilterCrtContracts(){subRenderCrtContracts(document.getElementById('subCrtContractSearch').value);}
+function subSelectCrtContract(id){
+  const c=conContracts.find(x=>x.id===id);
+  if(!c)return;
+  document.getElementById('subCrtContractSearch').value=`${c.code} · ${c.customerName}`;
+  document.getElementById('subCrtContract').value=id;
+  document.getElementById('subCrtContractDropdown').style.display='none';
+  subOnContractChange();
+}
+/* ── CSEARCH — Edit form ── */
+function subRenderEditContracts(q){
+  const dd=document.getElementById('subEditContractDropdown');
+  const filtered=conContracts.filter(c=>{
+    if(!q)return true;
+    const s=q.toLowerCase();
+    return c.code.toLowerCase().includes(s)||c.customerName.toLowerCase().includes(s);
+  });
+  dd.innerHTML='';
+  if(!filtered.length){dd.innerHTML='<div class="csearch-option" style="color:var(--text-secondary)">Không tìm thấy hợp đồng</div>';dd.style.display='';return;}
+  filtered.forEach(c=>{
+    const d=document.createElement('div');d.className='csearch-option';
+    const badgeBg=c.type==='DIRECT'?'#DBEAFE':'#FEF3C7';
+    const badgeColor=c.type==='DIRECT'?'#1D4ED8':'#92400E';
+    d.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span class="csearch-code">${c.code}</span><span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px;background:${badgeBg};color:${badgeColor};white-space:nowrap;">${c.type}</span></div><div class="csearch-info" style="margin-top:3px;">${c.customerName}</div>`;
+    d.onmousedown=()=>subSelectEditContract(c.id);
+    dd.appendChild(d);
+  });
+  dd.style.display='';
+}
+function subShowEditContracts(){subRenderEditContracts(document.getElementById('subEditContractSearch').value);}
+function subFilterEditContracts(){subRenderEditContracts(document.getElementById('subEditContractSearch').value);}
+function subSelectEditContract(id){
+  const c=conContracts.find(x=>x.id===id);
+  if(!c)return;
+  document.getElementById('subEditContractSearch').value=`${c.code} · ${c.customerName}`;
+  document.getElementById('subEditSubContract').value=id;
+  document.getElementById('subEditContractDropdown').style.display='none';
+  subEditSubOnContractChange(null);
+}
 function subOnContractChange(){
   const cid=document.getElementById('subCrtContract').value;
   const c=conContracts.find(x=>x.id===cid);
@@ -3465,20 +3530,29 @@ function subOnContractChange(){
   const durDisp=document.getElementById('subCrtDurationDisplay');
   const durHid=document.getElementById('subCrtDuration');
   const allPkgs=Object.values(CON_PACKAGES_BY_PRODUCT).flat();
+  const licHintEl=document.getElementById('subCrtLicHint');
   if(!c){
     contextRow.style.display='none';
     productSection.style.display='none';
     document.getElementById('subCrtEndDate').value='';
+    if(licHintEl)licHintEl.style.display='none';
     return;
   }
   document.getElementById('subCrtCustomerName').value=c.customerName||'';
   document.getElementById('subCrtContractType').value=c.type;
   contextRow.style.display='';
-  productSection.style.display='';
+  productSection.style.display='block';
   pkgSel.innerHTML='';
   pkgSel.disabled=false;
   durDisp.value='';
   durHid.value='';
+  if(licHintEl)licHintEl.style.display='none';
+  const showPoolHint=(pkg)=>{
+    if(!licHintEl||c.type!=='RESELLER')return;
+    const productId=Object.keys(CON_PACKAGES_BY_PRODUCT).find(pid=>(CON_PACKAGES_BY_PRODUCT[pid]||[]).some(p=>p.id===pkg.id))||'';
+    const pool=c.poolItems.find(p=>p.productId===productId);
+    if(pool){licHintEl.textContent=`Còn ${pool.poolTotal-pool.allocatedQty} / ${pool.poolTotal} license khả dụng`;licHintEl.style.display='';}
+  };
   const setAutoPkg=(pkg)=>{
     if(!pkg)return;
     const o=document.createElement('option');
@@ -3487,6 +3561,7 @@ function subOnContractChange(){
     pkgSel.disabled=true;
     durHid.value=pkg.duration_months;
     durDisp.value=`${pkg.duration_months} tháng`;
+    showPoolHint(pkg);
   };
   if(c.type==='DIRECT'){
     const pkg=allPkgs.find(p=>p.id===c.packages[0]);
@@ -3494,16 +3569,24 @@ function subOnContractChange(){
     seatsRow.style.display='';
     benRow.style.display='none';
   } else {
-    const pkgs=subGetContractPkgs(c);
-    const isSinglePool=(c.poolItems||[]).length<=1;
-    if(isSinglePool&&pkgs.length>0){
-      setAutoPkg(pkgs[0]);
+    const pools=c.poolItems||[];
+    const isSinglePool=pools.length<=1;
+    if(isSinglePool&&pools.length===1){
+      const singlePkgs=CON_PACKAGES_BY_PRODUCT[pools[0].productId]||[];
+      if(singlePkgs.length>0)setAutoPkg(singlePkgs[0]);
     } else {
       pkgSel.innerHTML='<option value="">▾ Chọn gói sản phẩm...</option>';
-      pkgs.forEach(pkg=>{
-        const o=document.createElement('option');
-        o.value=pkg.id;o.textContent=pkg.name;
-        pkgSel.appendChild(o);
+      pools.forEach(pool=>{
+        const poolPkgs=CON_PACKAGES_BY_PRODUCT[pool.productId]||[];
+        if(!poolPkgs.length)return;
+        const grp=document.createElement('optgroup');
+        grp.label=`${pool.productName} — còn ${pool.poolTotal-pool.allocatedQty}/${pool.poolTotal} license`;
+        poolPkgs.forEach(pkg=>{
+          const o=document.createElement('option');
+          o.value=pkg.id;o.textContent=pkg.name;
+          grp.appendChild(o);
+        });
+        pkgSel.appendChild(grp);
       });
     }
     const benSel=document.getElementById('subCrtBeneficiary');
@@ -3521,18 +3604,36 @@ function subCrtOnPackageChange(){
   const pkg=Object.values(CON_PACKAGES_BY_PRODUCT).flat().find(p=>p.id===pkgId);
   const durHid=document.getElementById('subCrtDuration');
   const durDisp=document.getElementById('subCrtDurationDisplay');
-  if(pkg){durHid.value=pkg.duration_months;durDisp.value=`${pkg.duration_months} tháng`;}
-  else{durHid.value='';durDisp.value='';}
+  const hintEl=document.getElementById('subCrtLicHint');
+  if(pkg){
+    durHid.value=pkg.duration_months;durDisp.value=`${pkg.duration_months} tháng`;
+    if(hintEl){
+      const cid=document.getElementById('subCrtContract').value;
+      const c=conContracts.find(x=>x.id===cid);
+      if(c&&c.type==='RESELLER'){
+        const productId=Object.keys(CON_PACKAGES_BY_PRODUCT).find(pid=>(CON_PACKAGES_BY_PRODUCT[pid]||[]).some(p=>p.id===pkgId))||'';
+        const pool=c.poolItems.find(p=>p.productId===productId);
+        if(pool){hintEl.textContent=`Còn ${pool.poolTotal-pool.allocatedQty} / ${pool.poolTotal} license khả dụng`;hintEl.style.display='';}
+        else hintEl.style.display='none';
+      }
+    }
+  }else{
+    durHid.value='';durDisp.value='';
+    if(hintEl)hintEl.style.display='none';
+  }
   subCrtCalcEndDate();
 }
 function subCrtCalcEndDate(){
-  const sd=document.getElementById('subCrtStartDate')?.value;
+  const sdEl=document.getElementById('subCrtStartDate');
   const dur=parseInt(document.getElementById('subCrtDuration')?.value||'0');
   const edEl=document.getElementById('subCrtEndDate');
-  if(!edEl)return;
-  if(!sd||!dur){edEl.value='';return;}
-  const d=new Date(sd);
+  if(!edEl||!dur)return;
+  if(!sdEl.value){
+    sdEl.value=new Date().toISOString().slice(0,10);
+  }
+  const d=new Date(sdEl.value);
   d.setMonth(d.getMonth()+dur);
+  d.setDate(d.getDate()-1);
   edEl.value=d.toISOString().slice(0,10);
 }
 function subSubmitCreate(){
@@ -3613,8 +3714,8 @@ function subRenderHero(sub){
   const canRenew=subCanRenew(sub);
   const canEdit=subCanEdit(sub);
   const backBtn=`<button class="btn btn-ghost" onclick="subShowView('list');subRenderTable();document.getElementById('breadcrumbCurrent').textContent='Subscription';">← Quay lại</button>`;
-  const approveBtn=isDraft?`<button class="btn btn-primary" onclick="subOpenApproveDraft('${sub.id}')">📤 Gửi đi</button>`:'';
-  const deleteDraftBtn=isDraft?`<button class="btn btn-danger" onclick="subOpenDeleteDraft('${sub.id}')">Xóa</button>`:'';
+  const approveBtn=isDraft?`<button class="btn btn-primary" onclick="subOpenApproveDraft('${sub.id}')">✅ Xác nhận</button>`:'';
+  const deleteDraftBtn=isDraft?`<button class="btn btn-danger" onclick="subOpenDeleteDraft('${sub.id}')">🗑️ Xóa</button>`:'';
   const editBtn=canEdit?`<button class="btn btn-secondary btn-sm" onclick="subOpenEditSub('${sub.id}')">✏️ Sửa</button>`:'';
   const suspendBtn=canSuspend?`<button class="btn btn-ghost btn-sm" onclick="subOpenSuspend('${sub.id}')" style="color:#D97706;border-color:#D97706;">⏸ Tạm dừng</button>`:'';
   const resumeBtn=canResume?`<button class="btn btn-ghost btn-sm" onclick="subOpenResume('${sub.id}')" style="color:#059669;border-color:#059669;">▶ Khôi phục</button>`:'';
@@ -3975,6 +4076,7 @@ function subOpenRenew(id){
   const baseDate=isSuspended?new Date():(sub.endDate?new Date(sub.endDate):new Date());
   const newEnd=new Date(baseDate);
   newEnd.setMonth(newEnd.getMonth()+durationMonths);
+  newEnd.setDate(newEnd.getDate()-1);
   const newEndStr=newEnd.toISOString().slice(0,10);
   const baseLbl=isSuspended?'hôm nay (đang Suspended)':`ngày hết hạn cũ (${subFmtDate(sub.endDate)})`;
   const box=document.getElementById('subRenewInfoBox');
@@ -4047,6 +4149,7 @@ function subEditSubCalcEndDate(){
   if(!sd){edEl.value='';return;}
   const d=new Date(sd);
   d.setMonth(d.getMonth()+dur);
+  d.setDate(d.getDate()-1);
   edEl.value=d.toISOString().slice(0,10);
 }
 function subEditSubOnContractChange(existingSub){
@@ -4083,6 +4186,13 @@ function subEditSubOnContractChange(existingSub){
     });
     const licEl=document.getElementById('subEditSubLic');
     if(licEl)licEl.value=existingSub?.licenseQty||'';
+    const hintEl=document.getElementById('subEditSubLicHint');
+    if(hintEl&&existingSub?.packageId){
+      const productId=Object.keys(CON_PACKAGES_BY_PRODUCT).find(pid=>(CON_PACKAGES_BY_PRODUCT[pid]||[]).some(p=>p.id===existingSub.packageId))||'';
+      const pool=c.poolItems.find(p=>p.productId===productId);
+      if(pool){hintEl.textContent=`Còn ${pool.poolTotal-pool.allocatedQty} / ${pool.poolTotal} license khả dụng`;hintEl.style.display='';}
+      else hintEl.style.display='none';
+    }
   }
 }
 function subOpenEditSub(id){
@@ -4097,15 +4207,10 @@ function subOpenEditSub(id){
   document.getElementById('subEditSubId').value=sub.id;
   document.getElementById('subEditSubPackage').value=sub.packageName||'';
   document.getElementById('subEditSubDurationDisplay').value=`${dur} tháng`;
-  const csel=document.getElementById('subEditSubContract');
-  csel.innerHTML='<option value="">▾ Chọn hợp đồng...</option>';
-  conContracts.forEach(c=>{
-    const o=document.createElement('option');
-    o.value=c.id;
-    o.textContent=`${c.code} · ${c.customerName} (${c.type})`;
-    if(c.id===sub.contractId)o.selected=true;
-    csel.appendChild(o);
-  });
+  const con=conContracts.find(c=>c.id===sub.contractId);
+  document.getElementById('subEditSubContract').value=sub.contractId||'';
+  document.getElementById('subEditContractSearch').value=con?`${con.code} · ${con.customerName}`:'';
+  const dd=document.getElementById('subEditContractDropdown');if(dd)dd.style.display='none';
   subEditSubOnContractChange(sub);
   const sdEl=document.getElementById('subEditSubStartDate');if(sdEl)sdEl.value=sub.startDate||'';
   const edEl=document.getElementById('subEditSubEndDate');if(edEl)edEl.value=sub.endDate||'';
