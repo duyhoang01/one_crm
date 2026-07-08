@@ -496,14 +496,15 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <div class="toolbar">
             <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="subSearchInput" type="text" placeholder="Tìm theo mã sub, gói sản phẩm, khách hàng, đơn vị thụ hưởng..." oninput="subFilterTable()"></div>
             <select class="filter-select" id="subFilterStatus" onchange="subFilterTable()">
-              <option value="">Tất cả trạng thái</option>
+              <option value="">All Status</option>
               <option value="DRAFT">Draft</option>
-              <option value="PENDING_PROVISION">Đang triển khai</option>
-              <option value="ACTIVE">Đang hoạt động</option>
-              <option value="SUSPENDED">Tạm dừng</option>
-              <option value="EXPIRED">Hết hạn</option>
-              <option value="REVOKED">Đã thu hồi</option>
-              <option value="RENEWED">Đã gia hạn</option>
+              <option value="PENDING_PROVISION">Provisioning</option>
+              <option value="ACTIVE">Active</option>
+              <option value="EXPIRING_SOON">⚠ Expiring Soon (≤60d)</option>
+              <option value="SUSPENDED">Suspended</option>
+              <option value="EXPIRED">Expired</option>
+              <option value="REVOKED">Revoked</option>
+              <option value="RENEWED">Renewed</option>
             </select>
             <select class="filter-select" id="subFilterType" onchange="subFilterTable()">
               <option value="">Tất cả loại HĐ</option>
@@ -1764,12 +1765,12 @@ let conContracts = [
     subs:[
       {id:'SUB-2026-007',contractId:'con-005',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR Enterprise',
-       startDate:'2026-04-10',endDate:'2027-04-09',licenseQty:null,seatCount:500,
+       startDate:'2026-04-10',endDate:'2026-09-05',licenseQty:null,seatCount:500,
        status:'ACTIVE',note:'Triển khai trên hạ tầng VNPT Cloud.',
-       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2027-04-09',lastSync:'2 giờ trước',
+       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-09-05',lastSync:'2 giờ trước',
        createdBy:'Sales B',createdAt:'2026-04-03T11:00:00',
        timeline:[
-         {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2026-04-10 09:00',detail:'Hiệu lực → 2027-04-09 · 500 seats'},
+         {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2026-04-10 09:00',detail:'Hiệu lực → 2026-09-05 · 500 seats'},
          {icon:'📤',cls:'tl-dot-gray',source:'UI',actor:'Sales B',title:'Đã gửi yêu cầu provisioning',time:'2026-04-03 11:30',detail:'EDR Enterprise 500 seat'},
          {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales B',title:'Subscription được tạo',time:'2026-04-03 11:00',detail:'HĐ: HD-CMC-2026-001 · EDR Enterprise 500 seat'},
        ],
@@ -1789,12 +1790,12 @@ let conContracts = [
     subs:[
       {id:'SUB-2026-008',contractId:'con-006',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EDR-01',packageName:'CMC EDR Standard',
-       startDate:'2026-06-05',endDate:'2027-06-04',licenseQty:null,seatCount:50,
+       startDate:'2026-06-05',endDate:'2026-08-05',licenseQty:null,seatCount:50,
        status:'ACTIVE',note:'',
-       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2027-06-04',lastSync:'45 phút trước',
+       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-08-05',lastSync:'45 phút trước',
        createdBy:'Sales A',createdAt:'2026-06-01T09:30:00',
        timeline:[
-         {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2026-06-05 10:00',detail:'Hiệu lực → 2027-06-04 · 50 seats'},
+         {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2026-06-05 10:00',detail:'Hiệu lực → 2026-08-05 · 50 seats'},
          {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales A',title:'Subscription được tạo',time:'2026-06-01 09:30',detail:'HĐ: HD-CMC-2026-002 · EDR Standard 50 seat'},
        ],
        audit:[
@@ -1865,12 +1866,12 @@ let conContracts = [
     subs:[
       {id:'SUB-2026-011',contractId:'con-009',beneficiaryId:'B005',beneficiaryName:'Alpha Technology JSC',
        productId:'CMC_EDR',packageId:'PKG-EDR-01',packageName:'CMC EDR Standard',
-       startDate:'2026-03-20',endDate:'2027-03-19',licenseQty:150,seatCount:150,
+       startDate:'2026-03-20',endDate:'2026-07-20',licenseQty:150,seatCount:150,
        status:'ACTIVE',note:'',
-       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2027-03-19',lastSync:'30 phút trước',
+       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-07-20',lastSync:'30 phút trước',
        createdBy:'Sales B',createdAt:'2026-03-20T09:00:00',
        timeline:[
-         {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2026-03-20 10:00',detail:'Beneficiary: Alpha Technology JSC · 150 license'},
+         {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2026-03-20 10:00',detail:'Beneficiary: Alpha Technology JSC · 150 license · Hiệu lực → 2026-07-20'},
          {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales B',title:'Subscription được tạo',time:'2026-03-20 09:00',detail:'HĐ: HD-CMC-2026-005 · EDR Standard 150 license · Alpha Technology JSC'},
        ],
        audit:[
@@ -2973,13 +2974,13 @@ function subFindRaw(id){
 
 // ── STATUS HELPERS
 const SUB_STATUS_META={
-  DRAFT:{label:'Bản nháp',cls:'sub-s-draft',dot:''},
-  PENDING_PROVISION:{label:'Đang triển khai',cls:'sub-s-pending',dot:''},
-  ACTIVE:{label:'Đang hoạt động',cls:'sub-s-active',dot:''},
-  SUSPENDED:{label:'Tạm dừng',cls:'sub-s-suspended',dot:''},
-  EXPIRED:{label:'Hết hạn',cls:'sub-s-expired',dot:''},
-  REVOKED:{label:'Đã thu hồi',cls:'sub-s-revoked',dot:''},
-  RENEWED:{label:'Đã gia hạn',cls:'sub-s-renewed',dot:''},
+  DRAFT:{label:'Draft',cls:'sub-s-draft',dot:''},
+  PENDING_PROVISION:{label:'Provisioning',cls:'sub-s-pending',dot:''},
+  ACTIVE:{label:'Active',cls:'sub-s-active',dot:''},
+  SUSPENDED:{label:'Suspended',cls:'sub-s-suspended',dot:''},
+  EXPIRED:{label:'Expired',cls:'sub-s-expired',dot:''},
+  REVOKED:{label:'Revoked',cls:'sub-s-revoked',dot:''},
+  RENEWED:{label:'Renewed',cls:'sub-s-renewed',dot:''},
 };
 function subStatusBadge(status){
   const m=SUB_STATUS_META[status]||{label:status,cls:'sub-s-draft',dot:''};
@@ -2993,11 +2994,11 @@ function subTypeBadge(type){
 function subMirrorBadge(status){
   if(!status||status==='N/A')return`<span class="sub-mirror-badge sub-mirror-na">—</span>`;
   const map={
-    ACTIVE:{cls:'sub-mirror-active',label:'Đang hoạt động'},
-    PENDING:{cls:'sub-mirror-pending',label:'Đang triển khai'},
-    SUSPENDED:{cls:'sub-mirror-suspended',label:'Tạm dừng'},
-    EXPIRED:{cls:'sub-mirror-expired',label:'Hết hạn'},
-    REVOKED:{cls:'sub-mirror-revoked',label:'Đã thu hồi'},
+    ACTIVE:{cls:'sub-mirror-active',label:'Active'},
+    PENDING:{cls:'sub-mirror-pending',label:'Pending'},
+    SUSPENDED:{cls:'sub-mirror-suspended',label:'Suspended'},
+    EXPIRED:{cls:'sub-mirror-expired',label:'Expired'},
+    REVOKED:{cls:'sub-mirror-revoked',label:'Revoked'},
   };
   const m=map[status]||{cls:'sub-mirror-na',label:status};
   return`<span class="sub-mirror-badge ${m.cls}">${m.label}</span>`;
@@ -3074,7 +3075,14 @@ function subRenderTable(data,page){
     const st=document.getElementById('subFilterStatus')?.value||'';
     const tp=document.getElementById('subFilterType')?.value||'';
     const matchQ=!q||(s.id||'').toLowerCase().includes(q)||(s.packageName||'').toLowerCase().includes(q)||(s.customerName||'').toLowerCase().includes(q)||(s.beneficiaryName||'').toLowerCase().includes(q)||(s.contractCode||'').toLowerCase().includes(q);
-    return matchQ&&(!st||s.status===st)&&(!tp||s.contractType===tp);
+    let matchSt=true;
+    if(st==='EXPIRING_SOON'){
+      const today=new Date();today.setHours(0,0,0,0);
+      const in60=new Date(today);in60.setDate(in60.getDate()+60);
+      const ed=s.endDate?new Date(s.endDate):null;
+      matchSt=s.status==='ACTIVE'&&ed&&ed>=today&&ed<=in60;
+    }else if(st){matchSt=s.status===st;}
+    return matchQ&&matchSt&&(!tp||s.contractType===tp);
   }));
   const tbody=document.getElementById('subTable'),empty=document.getElementById('subTableEmpty');
   if(!tbody)return;
