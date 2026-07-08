@@ -714,6 +714,48 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
   </div>
 </div>
 
+<!-- MODAL PHÊ DUYỆT DRAFT -->
+<div class="overlay" id="subModalApprove">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title">✅ Phê duyệt & Gửi Subscription</div>
+      <button class="close-btn" onclick="subCloseModal('subModalApprove')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="subApproveInfoBox" style="background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;line-height:2;margin-bottom:14px;"></div>
+      <div style="background:#EFF6FF;border:1px solid #93C5FD;border-radius:8px;padding:12px 16px;display:flex;gap:10px;font-size:13px;color:#1D4ED8;">
+        <div>📤</div>
+        <div>Subscription sẽ được gửi tới hệ thống Product để kích hoạt. Trạng thái chuyển sang <strong>Provisioning</strong>.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="subCloseModal('subModalApprove')">Hủy</button>
+      <button class="btn btn-primary" onclick="subConfirmApproveDraft()">📤 Xác nhận gửi</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL XÓA DRAFT -->
+<div class="overlay" id="subModalDeleteDraft">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title">Xóa Subscription Draft</div>
+      <button class="close-btn" onclick="subCloseModal('subModalDeleteDraft')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="subDeleteDraftInfoBox" style="background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;line-height:2;margin-bottom:14px;"></div>
+      <div class="alert alert-warn" style="margin-bottom:0;align-items:flex-start;">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-body"><div class="alert-text">Sub Draft sẽ bị <strong>xóa vĩnh viễn</strong>. Hành động này không thể hoàn tác.</div></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="subCloseModal('subModalDeleteDraft')">Hủy</button>
+      <button class="btn btn-danger" onclick="subConfirmDeleteDraft()">🗑 Xóa vĩnh viễn</button>
+    </div>
+  </div>
+</div>
+
 <!-- ════════════ MODALS: HỢP ĐỒNG ════════════ -->
 
 <!-- MODAL TẠO HỢP ĐỒNG (1 bước, lightweight) -->
@@ -1910,7 +1952,7 @@ let conContracts = [
        productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR Enterprise',
        startDate:'2026-03-21',endDate:'2027-03-20',licenseQty:null,seatCount:300,
        status:'RENEWED',note:'Gia hạn từ HĐ cũ năm 2025.',
-       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2027-03-20',lastSync:'3 giờ trước',
+       licMirrorStatus:'EXPIRED',licMirrorExpiry:'2027-03-20',lastSync:'3 giờ trước',
        createdBy:'Sales B',createdAt:'2026-03-14T10:00:00',
        timeline:[
          {icon:'🔄',cls:'tl-dot-blue',source:'UI',actor:'Sales B',title:'Subscription được gia hạn',time:'2026-03-21 09:00',detail:'Hiệu lực mới → 2027-03-20 · 300 seat'},
@@ -2945,6 +2987,8 @@ let subSortDir='desc';
 let subCurrentId=null;
 let subEditingId=null;
 let subRevokingId=null;
+let subApprovingId=null;
+let subDeletingDraftId=null;
 let _subAuditData=[],_subAuditTimer=null;
 
 // ── DATA ACCESS
@@ -3083,11 +3127,22 @@ function subRenderTable(data,page){
   const TRASH_ICON=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
 
   tbody.innerHTML=rows.map(sub=>{
-    const canRevoke=subCanRevoke(sub)&&currentUser?.role==='Manager';
-    const tooltip=subRevokeTooltip(sub)||(!canRevoke&&currentUser?.role!=='Manager'?'Chỉ Manager mới có quyền thu hồi':'');
-    const revokeBtn=canRevoke
+    const role=currentUser?.role;
+    const isDraftRow=sub.status==='DRAFT';
+    const canApproveRow=isDraftRow&&(role==='CSKH'||role==='Manager');
+    const canEditRow=isDraftRow||(role!=='Auditor'&&['ACTIVE','SUSPENDED','PENDING_PROVISION'].includes(sub.status));
+    const canRevokeRow=subCanRevoke(sub)&&role==='Manager';
+    const revokeTooltip=subRevokeTooltip(sub)||(!canRevokeRow&&role!=='Manager'?'Chỉ Manager mới có quyền thu hồi':'');
+    const approveRowBtn=canApproveRow
+      ?`<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();subOpenApproveDraft('${sub.id}')" title="Phê duyệt & Gửi">✅ Phê duyệt</button>`:'';
+    const editRowBtn=canEditRow
+      ?`<button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();subOpenEdit('${sub.id}')">✏️ Sửa</button>`:'';
+    const deleteDraftRowBtn=isDraftRow
+      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Xóa Draft">${TRASH_ICON}</button>`:'';
+    const revokeRowBtn=!isDraftRow?(canRevokeRow
       ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenRevoke('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Thu hồi">${TRASH_ICON}</button>`
-      :`<button class="btn btn-ghost btn-sm" disabled title="${tooltip}" style="opacity:.4;cursor:not-allowed;gap:4px;">${TRASH_ICON}</button>`;
+      :(role==='Manager'&&!['REVOKED','EXPIRED','RENEWED'].includes(sub.status)
+        ?`<button class="btn btn-ghost btn-sm" disabled title="${revokeTooltip}" style="opacity:.4;cursor:not-allowed;gap:4px;">${TRASH_ICON}</button>`:'')):''
     const beneficiary=sub.contractType==='RESELLER'&&sub.beneficiaryName
       ?`<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">→ ${sub.beneficiaryName}</div>`:''
     return`<tr onclick="subOpenDetail('${sub.id}')">
@@ -3100,8 +3155,7 @@ function subRenderTable(data,page){
       <td style="font-size:13px;">${sub.endDate?subFmtDate(sub.endDate):'<em style="color:var(--gray-400)">Chưa xác định</em>'}</td>
       <td>${subStatusBadge(sub.status)}</td>
       <td onclick="event.stopPropagation()"><div style="display:flex;gap:4px;">
-        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();subOpenEdit('${sub.id}')">✏️ Sửa</button>
-        ${revokeBtn}
+        ${approveRowBtn}${editRowBtn}${deleteDraftRowBtn}${revokeRowBtn}
       </div></td>
     </tr>`;
   }).join('');
@@ -3116,8 +3170,8 @@ function subRenderTable(data,page){
 // ── MODAL OPEN/CLOSE
 function subOpenModal(id){const el=document.getElementById(id);if(el)el.classList.add('open');}
 function subCloseModal(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){['subModalCreate','subModalEdit','subModalRevoke'].forEach(id=>subCloseModal(id));}});
-document.addEventListener('click',e=>{['subModalCreate','subModalEdit','subModalRevoke'].forEach(id=>{const ov=document.getElementById(id);if(ov&&e.target===ov)subCloseModal(id);});});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){['subModalCreate','subModalEdit','subModalRevoke','subModalApprove','subModalDeleteDraft'].forEach(id=>subCloseModal(id));}});
+document.addEventListener('click',e=>{['subModalCreate','subModalEdit','subModalRevoke','subModalApprove','subModalDeleteDraft'].forEach(id=>{const ov=document.getElementById(id);if(ov&&e.target===ov)subCloseModal(id);});});
 
 // ── CREATE
 function subGenId(){
@@ -3269,15 +3323,15 @@ function subSubmitCreate(){
     productId,packageId:pkgId,packageName,
     startDate,endDate,
     licenseQty:isReseller?lic:null,seatCount:isReseller?null:seats,
-    status:'PENDING_PROVISION',note,
-    licMirrorStatus:'PENDING',licMirrorExpiry:null,lastSync:'Chưa đồng bộ',
+    status:'DRAFT',note,
+    licMirrorStatus:null,licMirrorExpiry:null,lastSync:'—',
     createdBy:currentUser?.name||'Sales A',createdAt:now,
-    timeline:[{icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:currentUser?.name||'Sales A',title:'Subscription được tạo',time:now.replace('T',' ').slice(0,16),detail:`HĐ: ${c.code} · ${packageName}${isReseller?' · '+benName:' · '+(seats)+' seat'}`}],
-    audit:[{time:now.replace('T',' ').slice(0,16),source:'UI',actor:currentUser?.name||'Sales A',action:'Tạo Subscription',detail:`status: PENDING_PROVISION · ${packageName}`,result:'SUCCESS'}],
+    timeline:[{icon:'📝',cls:'tl-dot-gray',source:'UI',actor:currentUser?.name||'Sales A',title:'Subscription được tạo (Draft)',time:now.replace('T',' ').slice(0,16),detail:`HĐ: ${c.code} · ${packageName}${isReseller?' · '+benName:' · '+seats+' seat'} · Chờ CSKH phê duyệt`}],
+    audit:[{time:now.replace('T',' ').slice(0,16),source:'UI',actor:currentUser?.name||'Sales A',action:'Tạo Subscription (Draft)',detail:`status: DRAFT · ${packageName} · chờ CSKH phê duyệt`,result:'SUCCESS'}],
   };
   c.subs.push(newSub);
   subCloseModal('subModalCreate');
-  toast('success','Đã tạo Subscription',`${id} — ${packageName} · PENDING_PROVISION`);
+  toast('success','Đã tạo Subscription (Draft)',`${id} — ${packageName} · Chờ CSKH phê duyệt`);
   subOpenDetail(id);
 }
 
@@ -3292,12 +3346,22 @@ function subOpenDetail(id){
   subShowView('detail');
 }
 function subRenderHero(sub){
-  const canRevoke=subCanRevoke(sub)&&currentUser?.role==='Manager';
-  const tooltip=subRevokeTooltip(sub);
+  const role=currentUser?.role;
+  const isDraft=sub.status==='DRAFT';
+  const canApprove=isDraft&&(role==='CSKH'||role==='Manager');
+  const canEdit=isDraft||(role!=='Auditor'&&['ACTIVE','SUSPENDED','PENDING_PROVISION'].includes(sub.status));
+  const canRevoke=subCanRevoke(sub)&&role==='Manager';
+  const backBtn=`<button class="btn btn-ghost" onclick="subShowView('list');subRenderTable();document.getElementById('breadcrumbCurrent').textContent='Subscription';">← Quay lại</button>`;
+  const approveBtn=canApprove?`<button class="btn btn-primary" onclick="subOpenApproveDraft('${sub.id}')">📤 Phê duyệt & Gửi</button>`:'';
+  const editBtn=canEdit?`<button class="btn btn-secondary" onclick="subOpenEdit('${sub.id}')">✏️ Chỉnh sửa</button>`:'';
+  const deleteDraftBtn=isDraft?`<button class="btn btn-ghost" onclick="subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);">🗑 Xóa Draft</button>`:'';
   const revokeBtn=canRevoke
     ?`<button class="btn btn-ghost" onclick="subOpenRevoke('${sub.id}')" style="color:var(--red);border-color:var(--red);">🚫 Thu hồi</button>`
-    :`<button class="btn btn-ghost" disabled title="${tooltip}" style="opacity:.4;cursor:not-allowed;">🚫 Thu hồi</button>`;
+    :(!isDraft&&role==='Manager'&&!['REVOKED','EXPIRED','RENEWED','DRAFT'].includes(sub.status))
+      ?`<button class="btn btn-ghost" disabled title="${subRevokeTooltip(sub)}" style="opacity:.4;cursor:not-allowed;">🚫 Thu hồi</button>`:'';
+  const draftBanner=isDraft?`<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:10px 16px;display:flex;gap:10px;align-items:center;font-size:13px;color:#92400E;margin-bottom:12px;"><span>⏳</span><span>Subscription đang ở <strong>Draft</strong> — chờ CSKH phê duyệt trước khi gửi provisioning.</span></div>`:'';
   document.getElementById('subDetailHero').innerHTML=`
+    ${draftBanner}
     <div class="profile-header">
       <div class="profile-id">
         <div class="profile-avatar" style="font-size:14px;font-family:monospace;">${sub.id.slice(-3)}</div>
@@ -3312,9 +3376,7 @@ function subRenderHero(sub){
         </div>
       </div>
       <div class="profile-actions">
-        <button class="btn btn-secondary" onclick="subOpenEdit('${sub.id}')">✏️ Chỉnh sửa</button>
-        ${revokeBtn}
-        <button class="btn btn-ghost" onclick="subShowView('list');subRenderTable();document.getElementById('breadcrumbCurrent').textContent='Subscription';">← Quay lại</button>
+        ${approveBtn}${editBtn}${deleteDraftBtn}${revokeBtn}${backBtn}
       </div>
     </div>`;
 }
@@ -3519,6 +3581,60 @@ function subConfirmRevoke(){
   subCloseModal('subModalRevoke');
   toast('success','Đã thu hồi',`${subRevokingId} — trạng thái chuyển sang REVOKED`);
   subShowView('list');
+  subRenderTable();
+  document.getElementById('breadcrumbCurrent').textContent='Subscription';
+}
+
+// ── APPROVE DRAFT
+function subOpenApproveDraft(id){
+  const found=subFindRaw(id);if(!found)return;
+  const sub=found.sub;
+  subApprovingId=id;
+  const box=document.getElementById('subApproveInfoBox');
+  if(box)box.innerHTML=`<div style="font-size:13px;line-height:1.8;">
+    <div><strong>Mã Subscription:</strong> ${sub.id}</div>
+    <div><strong>Khách hàng:</strong> ${sub.customerName}${sub.beneficiaryName?' → '+sub.beneficiaryName:''}</div>
+    <div><strong>Gói:</strong> ${sub.packageName} · ${sub.licenseQty||sub.seatCount||0} license</div>
+    <div><strong>Hợp đồng:</strong> ${sub.contractCode}</div>
+  </div>`;
+  document.getElementById('subModalApprove').classList.add('open');
+}
+function subConfirmApproveDraft(){
+  const found=subFindRaw(subApprovingId);if(!found)return;
+  const sub=found.sub;
+  sub.status='PENDING_PROVISION';
+  const now=new Date().toISOString().replace('T',' ').slice(0,16);
+  (sub.timeline=sub.timeline||[]).unshift({icon:'📤',cls:'tl-dot-blue',source:'UI',actor:currentUser?.name||'CSKH',title:'Subscription được phê duyệt & gửi provisioning',time:now,detail:'DRAFT → PENDING_PROVISION · Sự kiện subscription.created đã publish'});
+  (sub.audit=sub.audit||[]).unshift({time:now,source:'UI',actor:currentUser?.name||'CSKH',action:'Phê duyệt Subscription (DRAFT → PENDING_PROVISION)',detail:'Gửi yêu cầu provisioning tới hệ thống product',result:'SUCCESS'});
+  subCloseModal('subModalApprove');
+  toast('success','Đã phê duyệt',`${subApprovingId} — trạng thái chuyển sang PENDING_PROVISION`);
+  if(subCurrentId===subApprovingId){subRenderHero(sub);subRenderInfo(sub);}
+  else{subRenderTable();}
+  subApprovingId=null;
+}
+
+// ── DELETE DRAFT
+function subOpenDeleteDraft(id){
+  const found=subFindRaw(id);if(!found)return;
+  const sub=found.sub;
+  subDeletingDraftId=id;
+  const box=document.getElementById('subDeleteDraftInfoBox');
+  if(box)box.innerHTML=`<div style="font-size:13px;line-height:1.8;">
+    <div><strong>Mã Subscription:</strong> ${sub.id}</div>
+    <div><strong>Khách hàng:</strong> ${sub.customerName}${sub.beneficiaryName?' → '+sub.beneficiaryName:''}</div>
+    <div><strong>Gói:</strong> ${sub.packageName}</div>
+  </div>`;
+  document.getElementById('subModalDeleteDraft').classList.add('open');
+}
+function subConfirmDeleteDraft(){
+  const found=subFindRaw(subDeletingDraftId);if(!found)return;
+  const subs=found.contract.subs;
+  const idx=subs.indexOf(found.sub);
+  if(idx>-1)subs.splice(idx,1);
+  subCloseModal('subModalDeleteDraft');
+  toast('success','Đã xóa Draft',`${subDeletingDraftId} đã bị xóa vĩnh viễn`);
+  subDeletingDraftId=null;
+  if(subCurrentId){subCurrentId=null;subShowView('list');}
   subRenderTable();
   document.getElementById('breadcrumbCurrent').textContent='Subscription';
 }
