@@ -587,6 +587,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
       <button class="close-btn" onclick="subCloseModal('subModalCreate')">✕</button>
     </div>
     <div class="modal-body">
+      <input type="hidden" id="subCrtDuration" value="">
       <div class="form-row">
         <div class="field">
           <label class="field-label">Mã Subscription</label>
@@ -594,53 +595,72 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <div class="field-hint">Mã tự sinh theo hệ thống</div>
           <div class="field-error" id="subErrCrtId" style="display:none;"></div>
         </div>
+        <div class="field"></div>
+      </div>
+      <div class="form-row full">
         <div class="field">
           <label class="field-label">Hợp đồng <span class="required">*</span></label>
           <select class="field-select" id="subCrtContract" onchange="subOnContractChange()">
             <option value="">▾ Chọn hợp đồng...</option>
           </select>
-          <div class="field-hint" id="subCrtContractHint" style="display:none;"></div>
-          <div class="field-error" id="subErrCrtContract">Vui lòng chọn hợp đồng</div>
+          <div class="field-error" id="subErrCrtContract" style="display:none;">Vui lòng chọn hợp đồng</div>
         </div>
       </div>
-      <div class="form-row" id="subCrtBeneficiaryRow" style="display:none;">
+      <div class="form-row" id="subCrtContextRow" style="display:none;">
         <div class="field">
-          <label class="field-label">Đơn vị thụ hưởng <span class="required">*</span></label>
-          <select class="field-select" id="subCrtBeneficiary">
-            <option value="">▾ Chọn đơn vị thụ hưởng...</option>
-          </select>
-          <div class="field-error" id="subErrCrtBeneficiary">Vui lòng chọn đơn vị thụ hưởng</div>
+          <label class="field-label">Khách hàng</label>
+          <input class="field-input" id="subCrtCustomerName" readonly style="background:var(--gray-50);">
         </div>
-        <div class="field"></div>
+        <div class="field">
+          <label class="field-label">Loại hợp đồng</label>
+          <input class="field-input" id="subCrtContractType" readonly style="background:var(--gray-50);">
+        </div>
       </div>
-      <div class="form-row">
-        <div class="field">
-          <label class="field-label">Gói sản phẩm <span class="required">*</span></label>
-          <select class="field-select" id="subCrtPackage">
-            <option value="">▾ Chọn gói sản phẩm...</option>
-          </select>
-          <div class="field-error" id="subErrCrtPackage">Vui lòng chọn gói sản phẩm</div>
+      <div id="subCrtProductSection" style="display:none;">
+        <div class="form-row">
+          <div class="field">
+            <label class="field-label">Gói sản phẩm <span class="required">*</span></label>
+            <select class="field-select" id="subCrtPackage" onchange="subCrtOnPackageChange()">
+              <option value="">▾ Chọn gói sản phẩm...</option>
+            </select>
+            <div class="field-error" id="subErrCrtPackage" style="display:none;">Vui lòng chọn gói sản phẩm</div>
+          </div>
+          <div class="field">
+            <label class="field-label">Thời hạn</label>
+            <input class="field-input" id="subCrtDurationDisplay" readonly style="background:var(--gray-50);">
+          </div>
         </div>
-        <div class="field" id="subCrtSeatsField">
-          <label class="field-label">Số seats <span class="required">*</span></label>
-          <input class="field-input" id="subCrtSeats" type="text" inputmode="numeric" placeholder="VD: 100">
-          <div class="field-error" id="subErrCrtSeats">Số seats là bắt buộc và phải > 0</div>
+        <div class="form-row" id="subCrtSeatsRow" style="display:none;">
+          <div class="field">
+            <label class="field-label">Số seats <span class="required">*</span></label>
+            <input class="field-input" id="subCrtSeats" type="text" inputmode="numeric" placeholder="VD: 100" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            <div class="field-error" id="subErrCrtSeats" style="display:none;">Số seats là bắt buộc và phải > 0</div>
+          </div>
+          <div class="field"></div>
         </div>
-        <div class="field" id="subCrtLicField" style="display:none;">
-          <label class="field-label">Số license <span class="required">*</span></label>
-          <input class="field-input" id="subCrtLic" type="text" inputmode="numeric" placeholder="VD: 50">
-          <div class="field-error" id="subErrCrtLic">Số license là bắt buộc và phải > 0</div>
+        <div class="form-row" id="subCrtBeneficiaryRow" style="display:none;">
+          <div class="field">
+            <label class="field-label">Đơn vị thụ hưởng <span class="required">*</span></label>
+            <select class="field-select" id="subCrtBeneficiary">
+              <option value="">▾ Chọn đơn vị thụ hưởng...</option>
+            </select>
+            <div class="field-error" id="subErrCrtBeneficiary" style="display:none;">Vui lòng chọn đơn vị thụ hưởng</div>
+          </div>
+          <div class="field">
+            <label class="field-label">Số license <span class="required">*</span></label>
+            <input class="field-input" id="subCrtLic" type="text" inputmode="numeric" placeholder="VD: 50" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            <div class="field-error" id="subErrCrtLic" style="display:none;">Số license là bắt buộc và phải > 0</div>
+          </div>
         </div>
       </div>
       <div class="form-row">
         <div class="field">
           <label class="field-label">Ngày bắt đầu (dự kiến)</label>
-          <input class="field-input" id="subCrtStartDate" type="date">
+          <input class="field-input" id="subCrtStartDate" type="date" oninput="subCrtCalcEndDate()">
         </div>
         <div class="field">
-          <label class="field-label">Ngày hết hạn (dự kiến) <span class="required">*</span></label>
-          <input class="field-input" id="subCrtEndDate" type="date">
-          <div class="field-error" id="subErrCrtEndDate">Ngày hết hạn là bắt buộc</div>
+          <label class="field-label">Ngày hết hạn (dự kiến)</label>
+          <input class="field-input" id="subCrtEndDate" type="date" readonly style="background:var(--gray-50);cursor:default;">
         </div>
       </div>
       <div class="form-row">
@@ -834,32 +854,43 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <label class="field-label">Mã Subscription</label>
           <input class="field-input" id="subEditSubId" readonly style="background:var(--gray-50);">
         </div>
-        <div class="field">
-          <label class="field-label">Gói sản phẩm</label>
-          <input class="field-input" id="subEditSubPackage" readonly style="background:var(--gray-50);">
-        </div>
+        <div class="field"></div>
       </div>
-      <div class="form-row">
+      <div class="form-row full">
         <div class="field">
           <label class="field-label">Hợp đồng <span class="required">*</span></label>
           <select class="field-select" id="subEditSubContract" onchange="subEditSubOnContractChange()"></select>
           <div class="field-error" id="subErrEditSubContract" style="display:none;">Vui lòng chọn hợp đồng</div>
         </div>
-        <div class="field"></div>
       </div>
-      <!-- DIRECT: auto-fill khách hàng + seats -->
-      <div class="form-row" id="subEditSubDirectRow" style="display:none;">
+      <div class="form-row" id="subEditSubContextRow" style="display:none;">
         <div class="field">
           <label class="field-label">Khách hàng</label>
           <input class="field-input" id="subEditSubCustomerName" readonly style="background:var(--gray-50);">
         </div>
         <div class="field">
+          <label class="field-label">Loại hợp đồng</label>
+          <input class="field-input" id="subEditSubContractType" readonly style="background:var(--gray-50);">
+        </div>
+      </div>
+      <div class="form-row" id="subEditSubPackageRow" style="display:none;">
+        <div class="field">
+          <label class="field-label">Gói sản phẩm</label>
+          <input class="field-input" id="subEditSubPackage" readonly style="background:var(--gray-50);">
+        </div>
+        <div class="field">
+          <label class="field-label">Thời hạn</label>
+          <input class="field-input" id="subEditSubDurationDisplay" readonly style="background:var(--gray-50);">
+        </div>
+      </div>
+      <div class="form-row" id="subEditSubDirectRow" style="display:none;">
+        <div class="field">
           <label class="field-label">Số seats <span class="required">*</span></label>
           <input class="field-input" id="subEditSubSeats" type="text" inputmode="numeric" placeholder="VD: 100" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
           <div class="field-error" id="subErrEditSubSeats" style="display:none;">Số seats phải > 0</div>
         </div>
+        <div class="field"></div>
       </div>
-      <!-- RESELLER: beneficiary dropdown + số license -->
       <div class="form-row" id="subEditSubResellerRow" style="display:none;">
         <div class="field">
           <label class="field-label">Đơn vị thụ hưởng <span class="required">*</span></label>
@@ -872,7 +903,6 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <div class="field-error" id="subErrEditSubLic" style="display:none;">Số license phải > 0</div>
         </div>
       </div>
-      <!-- Ngày tháng -->
       <div class="form-row">
         <div class="field">
           <label class="field-label">Ngày bắt đầu (dự kiến)</label>
@@ -3394,35 +3424,26 @@ function subOpenCreate(){
   document.getElementById('subCrtLic').value='';
   document.getElementById('subCrtStartDate').value='';
   document.getElementById('subCrtEndDate').value='';
+  document.getElementById('subCrtDuration').value='';
+  document.getElementById('subCrtDurationDisplay').value='';
+  document.getElementById('subCrtCustomerName').value='';
+  document.getElementById('subCrtContractType').value='';
+  document.getElementById('subCrtContextRow').style.display='none';
+  document.getElementById('subCrtProductSection').style.display='none';
+  document.getElementById('subCrtSeatsRow').style.display='none';
   document.getElementById('subCrtBeneficiaryRow').style.display='none';
-  document.getElementById('subCrtSeatsField').style.display='';
-  document.getElementById('subCrtLicField').style.display='none';
-  document.getElementById('subCrtContractHint').style.display='none';
-  ['subErrCrtId','subErrCrtContract','subErrCrtPackage','subErrCrtSeats','subErrCrtLic','subErrCrtEndDate','subErrCrtBeneficiary'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-  // Populate contract dropdown
+  ['subErrCrtId','subErrCrtContract','subErrCrtPackage','subErrCrtSeats','subErrCrtLic','subErrCrtBeneficiary'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   const sel=document.getElementById('subCrtContract');
   sel.innerHTML='<option value="">▾ Chọn hợp đồng...</option>';
   conContracts.forEach(c=>{
     const opt=document.createElement('option');
     opt.value=c.id;
-    opt.textContent=`${c.code} — ${c.customerName} (${c.type})`;
+    opt.textContent=`${c.code} · ${c.customerName} (${c.type})`;
     sel.appendChild(opt);
   });
-  // Populate package dropdown
   const pkgSel=document.getElementById('subCrtPackage');
   pkgSel.innerHTML='<option value="">▾ Chọn gói sản phẩm...</option>';
-  CON_PRODUCTS.forEach(p=>{
-    const grp=document.createElement('optgroup');
-    grp.label=p.name;
-    (CON_PACKAGES_BY_PRODUCT[p.id]||[]).forEach(pkg=>{
-      const o=document.createElement('option');
-      o.value=pkg.id;
-      o.dataset.productId=p.id;
-      o.textContent=pkg.name;
-      grp.appendChild(o);
-    });
-    pkgSel.appendChild(grp);
-  });
+  pkgSel.disabled=false;
   subOpenModal('subModalCreate');
 }
 function subGetContractPkgs(c){
@@ -3436,95 +3457,125 @@ function subGetContractPkgs(c){
 function subOnContractChange(){
   const cid=document.getElementById('subCrtContract').value;
   const c=conContracts.find(x=>x.id===cid);
-  const hintEl=document.getElementById('subCrtContractHint');
+  const contextRow=document.getElementById('subCrtContextRow');
+  const productSection=document.getElementById('subCrtProductSection');
+  const seatsRow=document.getElementById('subCrtSeatsRow');
   const benRow=document.getElementById('subCrtBeneficiaryRow');
-  const seatsField=document.getElementById('subCrtSeatsField');
-  const licField=document.getElementById('subCrtLicField');
   const pkgSel=document.getElementById('subCrtPackage');
-  if(!c){hintEl.style.display='none';benRow.style.display='none';pkgSel.innerHTML='<option value="">▾ Chọn gói sản phẩm...</option>';pkgSel.disabled=false;return;}
-  // Package dropdown — filter by contract
-  const pkgs=subGetContractPkgs(c);
+  const durDisp=document.getElementById('subCrtDurationDisplay');
+  const durHid=document.getElementById('subCrtDuration');
+  const allPkgs=Object.values(CON_PACKAGES_BY_PRODUCT).flat();
+  if(!c){
+    contextRow.style.display='none';
+    productSection.style.display='none';
+    document.getElementById('subCrtEndDate').value='';
+    return;
+  }
+  document.getElementById('subCrtCustomerName').value=c.customerName||'';
+  document.getElementById('subCrtContractType').value=c.type;
+  contextRow.style.display='';
+  productSection.style.display='';
   pkgSel.innerHTML='';
   pkgSel.disabled=false;
-  if(pkgs.length===1){
+  durDisp.value='';
+  durHid.value='';
+  const setAutoPkg=(pkg)=>{
+    if(!pkg)return;
     const o=document.createElement('option');
-    o.value=pkgs[0].id;o.dataset.productId=Object.keys(CON_PACKAGES_BY_PRODUCT).find(pid=>(CON_PACKAGES_BY_PRODUCT[pid]||[]).some(p=>p.id===pkgs[0].id))||'';
-    o.textContent=pkgs[0].name;
+    o.value=pkg.id;o.textContent=pkg.name;
     pkgSel.appendChild(o);
     pkgSel.disabled=true;
+    durHid.value=pkg.duration_months;
+    durDisp.value=`${pkg.duration_months} tháng`;
+  };
+  if(c.type==='DIRECT'){
+    const pkg=allPkgs.find(p=>p.id===c.packages[0]);
+    setAutoPkg(pkg);
+    seatsRow.style.display='';
+    benRow.style.display='none';
   } else {
-    pkgSel.innerHTML='<option value="">▾ Chọn gói sản phẩm...</option>';
-    pkgs.forEach(pkg=>{
-      const o=document.createElement('option');
-      o.value=pkg.id;
-      o.dataset.productId=Object.keys(CON_PACKAGES_BY_PRODUCT).find(pid=>(CON_PACKAGES_BY_PRODUCT[pid]||[]).some(p=>p.id===pkg.id))||'';
-      o.textContent=pkg.name;
-      pkgSel.appendChild(o);
-    });
-  }
-  if(c.type==='RESELLER'){
-    const poolInfo=c.poolItems.map(p=>`${p.productName}: còn ${p.poolTotal-p.allocatedQty}/${p.poolTotal}`).join(' · ');
-    hintEl.textContent=`Loại: RESELLER · ${c.customerName} · Pool: ${poolInfo}`;
-    hintEl.style.display='';
-    benRow.style.display='';
-    seatsField.style.display='none';
-    licField.style.display='';
+    const pkgs=subGetContractPkgs(c);
+    const isSinglePool=(c.poolItems||[]).length<=1;
+    if(isSinglePool&&pkgs.length>0){
+      setAutoPkg(pkgs[0]);
+    } else {
+      pkgSel.innerHTML='<option value="">▾ Chọn gói sản phẩm...</option>';
+      pkgs.forEach(pkg=>{
+        const o=document.createElement('option');
+        o.value=pkg.id;o.textContent=pkg.name;
+        pkgSel.appendChild(o);
+      });
+    }
     const benSel=document.getElementById('subCrtBeneficiary');
     benSel.innerHTML='<option value="">▾ Chọn đơn vị thụ hưởng...</option>';
-    CON_BENEFICIARIES.forEach(b=>{const o=document.createElement('option');o.value=b.id;o.textContent=b.name;benSel.appendChild(o);});
-  } else {
-    hintEl.textContent=`Loại: DIRECT · ${c.customerName}`;
-    hintEl.style.display='';
-    benRow.style.display='none';
-    seatsField.style.display='';
-    licField.style.display='none';
+    CON_BENEFICIARIES.forEach(b=>{
+      const o=document.createElement('option');o.value=b.id;o.textContent=b.name;benSel.appendChild(o);
+    });
+    seatsRow.style.display='none';
+    benRow.style.display='';
   }
+  subCrtCalcEndDate();
+}
+function subCrtOnPackageChange(){
+  const pkgId=document.getElementById('subCrtPackage').value;
+  const pkg=Object.values(CON_PACKAGES_BY_PRODUCT).flat().find(p=>p.id===pkgId);
+  const durHid=document.getElementById('subCrtDuration');
+  const durDisp=document.getElementById('subCrtDurationDisplay');
+  if(pkg){durHid.value=pkg.duration_months;durDisp.value=`${pkg.duration_months} tháng`;}
+  else{durHid.value='';durDisp.value='';}
+  subCrtCalcEndDate();
+}
+function subCrtCalcEndDate(){
+  const sd=document.getElementById('subCrtStartDate')?.value;
+  const dur=parseInt(document.getElementById('subCrtDuration')?.value||'0');
+  const edEl=document.getElementById('subCrtEndDate');
+  if(!edEl)return;
+  if(!sd||!dur){edEl.value='';return;}
+  const d=new Date(sd);
+  d.setMonth(d.getMonth()+dur);
+  edEl.value=d.toISOString().slice(0,10);
 }
 function subSubmitCreate(){
   let ok=true;
   const id=document.getElementById('subCrtId').value.trim();
   const cid=document.getElementById('subCrtContract').value;
-  const pkgEl=document.getElementById('subCrtPackage');
-  const pkgId=pkgEl.value;
-  const endDate=document.getElementById('subCrtEndDate').value;
+  const pkgSel=document.getElementById('subCrtPackage');
+  const pkgId=pkgSel.value;
   const c=conContracts.find(x=>x.id===cid);
-
-  const show=(id,msg)=>{const el=document.getElementById(id);if(el){el.textContent=msg;el.style.display='block';}ok=false;};
-  if(!cid)show('subErrCrtContract','Vui lòng chọn hợp đồng');
-  else document.getElementById('subErrCrtContract').style.display='none';
-  if(!pkgId)show('subErrCrtPackage','Vui lòng chọn gói sản phẩm');
-  else document.getElementById('subErrCrtPackage').style.display='none';
-  if(!endDate)show('subErrCrtEndDate','Ngày hết hạn là bắt buộc');
-  else document.getElementById('subErrCrtEndDate').style.display='none';
+  const show=(eid,msg)=>{const el=document.getElementById(eid);if(el){el.textContent=msg;el.style.display='block';}ok=false;};
+  const hide=(eid)=>{const el=document.getElementById(eid);if(el)el.style.display='none';};
+  if(!cid)show('subErrCrtContract','Vui lòng chọn hợp đồng');else hide('subErrCrtContract');
+  if(!pkgId)show('subErrCrtPackage','Vui lòng chọn gói sản phẩm');else hide('subErrCrtPackage');
   const isReseller=c&&c.type==='RESELLER';
-  const seats=parseInt((document.getElementById('subCrtSeats').value||'').replace(/\./g,''))||0;
-  const lic=parseInt((document.getElementById('subCrtLic').value||'').replace(/\./g,''))||0;
-  if(!isReseller&&seats<=0)show('subErrCrtSeats','Số seats là bắt buộc và phải > 0');
-  else document.getElementById('subErrCrtSeats').style.display='none';
-  if(isReseller&&lic<=0){show('subErrCrtLic','Số license là bắt buộc và phải > 0');}
-  else if(isReseller&&lic>0&&c){
-    const selectedPid=pkgEl.options[pkgEl.selectedIndex]?.dataset?.productId;
-    const pool=c.poolItems.find(p=>p.productId===selectedPid);
-    const avail=pool?pool.poolTotal-pool.allocatedQty:Infinity;
-    if(lic>avail)show('subErrCrtLic',`Vượt pool khả dụng — còn lại ${avail} license`);
-    else document.getElementById('subErrCrtLic').style.display='none';
-  } else document.getElementById('subErrCrtLic').style.display='none';
+  const seats=parseInt((document.getElementById('subCrtSeats').value||'').replace(/[^0-9]/g,''))||0;
+  const lic=parseInt((document.getElementById('subCrtLic').value||'').replace(/[^0-9]/g,''))||0;
+  if(!isReseller&&c&&seats<=0)show('subErrCrtSeats','Số seats là bắt buộc và phải > 0');else hide('subErrCrtSeats');
+  if(isReseller&&c){
+    if(lic<=0)show('subErrCrtLic','Số license là bắt buộc và phải > 0');
+    else{
+      const productId=Object.keys(CON_PACKAGES_BY_PRODUCT).find(pid=>(CON_PACKAGES_BY_PRODUCT[pid]||[]).some(p=>p.id===pkgId))||'';
+      const pool=c.poolItems.find(p=>p.productId===productId);
+      const avail=pool?pool.poolTotal-pool.allocatedQty:Infinity;
+      if(lic>avail)show('subErrCrtLic',`Vượt pool khả dụng — còn lại ${avail} license`);
+      else hide('subErrCrtLic');
+    }
+  } else hide('subErrCrtLic');
   let benId=null,benName=null;
   if(isReseller){
     benId=document.getElementById('subCrtBeneficiary').value;
     if(!benId)show('subErrCrtBeneficiary','Vui lòng chọn đơn vị thụ hưởng');
-    else{document.getElementById('subErrCrtBeneficiary').style.display='none';benName=(CON_BENEFICIARIES.find(b=>b.id===benId)||{}).name||'';}
+    else{hide('subErrCrtBeneficiary');benName=(CON_BENEFICIARIES.find(b=>b.id===benId)||{}).name||'';}
   }
   if(!ok)return;
-
-  const selectedOpt=pkgEl.options[pkgEl.selectedIndex];
-  const productId=selectedOpt.dataset?.productId||'';
-  const packageName=selectedOpt.textContent||pkgId;
+  const productId=Object.keys(CON_PACKAGES_BY_PRODUCT).find(pid=>(CON_PACKAGES_BY_PRODUCT[pid]||[]).some(p=>p.id===pkgId))||'';
+  const allPkgs=Object.values(CON_PACKAGES_BY_PRODUCT).flat();
+  const pkg=allPkgs.find(p=>p.id===pkgId);
+  const packageName=pkg?.name||pkgId;
   const startDate=document.getElementById('subCrtStartDate').value||null;
+  const endDate=document.getElementById('subCrtEndDate').value||null;
   const note=document.getElementById('subCrtNote').value.trim();
   const dealCode=(document.getElementById('subCrtDealCode')?.value||'').trim()||null;
   const now=new Date().toISOString();
-
   const newSub={
     id,contractId:cid,contractCode:c.code,contractType:c.type,
     customerId:c.customerId,customerName:c.customerName,
@@ -4001,14 +4052,23 @@ function subEditSubCalcEndDate(){
 function subEditSubOnContractChange(existingSub){
   const cid=document.getElementById('subEditSubContract')?.value;
   const c=conContracts.find(x=>x.id===cid);
-  const isReseller=c&&c.type==='RESELLER';
+  const contextRow=document.getElementById('subEditSubContextRow');
+  const pkgRow=document.getElementById('subEditSubPackageRow');
   const dirRow=document.getElementById('subEditSubDirectRow');
   const rslRow=document.getElementById('subEditSubResellerRow');
-  dirRow.style.display=(!isReseller&&c)?'':'none';
+  if(!c){
+    contextRow.style.display='none';pkgRow.style.display='none';
+    dirRow.style.display='none';rslRow.style.display='none';
+    return;
+  }
+  document.getElementById('subEditSubCustomerName').value=c.customerName||'';
+  document.getElementById('subEditSubContractType').value=c.type;
+  contextRow.style.display='';
+  pkgRow.style.display='';
+  const isReseller=c.type==='RESELLER';
+  dirRow.style.display=(!isReseller)?'':'none';
   rslRow.style.display=isReseller?'':'none';
-  if(!isReseller&&c){
-    const cn=document.getElementById('subEditSubCustomerName');
-    if(cn)cn.value=c.customerName||'';
+  if(!isReseller){
     const seatsEl=document.getElementById('subEditSubSeats');
     if(seatsEl)seatsEl.value=existingSub?.seatCount||'';
   }
@@ -4028,7 +4088,6 @@ function subEditSubOnContractChange(existingSub){
 function subOpenEditSub(id){
   const sub=subFindById(id);if(!sub||sub.status!=='DRAFT')return;
   _subEditingId=id;
-  // Tìm duration của package
   let dur=12;
   for(const pkgs of Object.values(CON_PACKAGES_BY_PRODUCT)){
     const pkg=pkgs.find(p=>p.id===sub.packageId);
@@ -4036,26 +4095,22 @@ function subOpenEditSub(id){
   }
   document.getElementById('subEditSubDuration').value=dur;
   document.getElementById('subEditSubId').value=sub.id;
-  document.getElementById('subEditSubPackage').value=`${sub.packageName} (${dur} tháng)`;
-  // Contract dropdown
+  document.getElementById('subEditSubPackage').value=sub.packageName||'';
+  document.getElementById('subEditSubDurationDisplay').value=`${dur} tháng`;
   const csel=document.getElementById('subEditSubContract');
   csel.innerHTML='<option value="">▾ Chọn hợp đồng...</option>';
   conContracts.forEach(c=>{
     const o=document.createElement('option');
     o.value=c.id;
-    o.textContent=`${c.code} — ${c.customerName} (${c.type})`;
+    o.textContent=`${c.code} · ${c.customerName} (${c.type})`;
     if(c.id===sub.contractId)o.selected=true;
     csel.appendChild(o);
   });
-  // Trigger để hiện đúng fields theo loại HĐ hiện tại
   subEditSubOnContractChange(sub);
-  // Ngày tháng
   const sdEl=document.getElementById('subEditSubStartDate');if(sdEl)sdEl.value=sub.startDate||'';
   const edEl=document.getElementById('subEditSubEndDate');if(edEl)edEl.value=sub.endDate||'';
-  // Deal code + Note
   document.getElementById('subEditSubDealCode').value=sub.dealCode||'';
   document.getElementById('subEditSubNote').value=sub.note||'';
-  // Clear errors
   ['subErrEditSubContract','subErrEditSubSeats','subErrEditSubLic','subErrEditSubBeneficiary']
     .forEach(eid=>{const el=document.getElementById(eid);if(el)el.style.display='none';});
   subOpenModal('subModalEditSub');
