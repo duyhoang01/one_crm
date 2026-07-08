@@ -547,7 +547,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
                 <tr>
                   <th onclick="subSort('id')" style="cursor:pointer;user-select:none;white-space:nowrap">Mã Sub <span id="subSortIcon-id" class="con-sort-icon">↕</span></th>
                   <th onclick="subSort('customerName')" style="cursor:pointer;user-select:none;white-space:nowrap">Khách hàng <span id="subSortIcon-customerName" class="con-sort-icon">↕</span></th>
-                  <th>Loại HĐ</th>
+                  <th onclick="subSort('contractType')" style="cursor:pointer;user-select:none;white-space:nowrap">Loại HĐ <span id="subSortIcon-contractType" class="con-sort-icon">↕</span></th>
                   <th onclick="subSort('packageName')" style="cursor:pointer;user-select:none;white-space:nowrap">Gói sản phẩm <span id="subSortIcon-packageName" class="con-sort-icon">↕</span></th>
                   <th onclick="subSort('endDate')" style="cursor:pointer;user-select:none;white-space:nowrap">Ngày hết hạn <span id="subSortIcon-endDate" class="con-sort-icon">↕</span></th>
                   <th onclick="subSort('status')" style="cursor:pointer;user-select:none;white-space:nowrap">Trạng thái <span id="subSortIcon-status" class="con-sort-icon">↕</span></th>
@@ -746,15 +746,13 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
       <button class="close-btn" onclick="subCloseModal('subModalDeleteDraft')">✕</button>
     </div>
     <div class="modal-body">
+      <div style="font-size:15px;font-weight:700;color:var(--navy);text-align:center;margin-bottom:18px;line-height:1.4;">Bạn có chắc chắn muốn xóa subscription này?</div>
       <div id="subDeleteDraftInfoBox" style="background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;line-height:2;margin-bottom:14px;"></div>
-      <div class="alert alert-warn" style="margin-bottom:0;align-items:flex-start;">
-        <div class="alert-icon">⚠️</div>
-        <div class="alert-body"><div class="alert-text">Subscription này sẽ bị <strong>xóa vĩnh viễn</strong>. Hành động này không thể hoàn tác.</div></div>
-      </div>
+      <div class="alert alert-warn" style="margin-bottom:0;align-items:center;"><div class="alert-icon" style="margin-top:0;">⚠️</div><div class="alert-body"><div class="alert-text" style="margin-top:0;">Subscription sẽ bị xóa vĩnh viễn và không thể khôi phục.</div></div></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="subCloseModal('subModalDeleteDraft')">Hủy</button>
-      <button class="btn btn-danger" onclick="subConfirmDeleteDraft()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg> Xóa</button>
+      <button class="btn btn-danger" onclick="subConfirmDeleteDraft()">🗑️ Xóa</button>
     </div>
   </div>
 </div>
@@ -3056,7 +3054,7 @@ function conFmtInputNum(el){const raw=conParseNum(el.value);if(!raw||isNaN(raw))
       createdAt:`${yr}-${mo}-${day}T0${(i%9)+1}:00:00`,
       poolItems:isRes?[{id:`pool-d${i}`,contractId:`con-demo-${String(i+1).padStart(2,'0')}`,productId:CON_PRODUCTS.find(p=>p.id===prod.pId)?.name||prod.pId,productName:CON_PRODUCTS.find(p=>p.id===prod.pId)?.name||prod.pId,poolTotal,allocatedQty:Math.floor(poolTotal*0.6)}]:[],
       subs:[{
-        id:`sub-d${String(i+1).padStart(2,'0')}`,
+        id:`SUB-D${String(i+1).padStart(2,'0')}`,
         contractId:`con-demo-${String(i+1).padStart(2,'0')}`,
         beneficiaryId:isRes?`BD${i}`:null,
         beneficiaryName:isRes?`Đơn vị ${dc.name} #1`:null,
@@ -3324,7 +3322,7 @@ function subApplySort(arr){
   });
 }
 function subUpdateSortIcons(){
-  ['id','customerName','packageName','endDate','status'].forEach(f=>{
+  ['id','customerName','contractType','packageName','endDate','status'].forEach(f=>{
     const el=document.getElementById('subSortIcon-'+f);
     if(!el)return;
     el.className='con-sort-icon';
@@ -3973,11 +3971,7 @@ function subOpenDeleteDraft(id){
   const sub=found.sub;
   subDeletingDraftId=id;
   const box=document.getElementById('subDeleteDraftInfoBox');
-  if(box)box.innerHTML=`<div style="font-size:13px;line-height:1.8;">
-    <div><strong>Mã Subscription:</strong> ${sub.id}</div>
-    <div><strong>Khách hàng:</strong> ${sub.customerName}${sub.beneficiaryName?' → '+sub.beneficiaryName:''}</div>
-    <div><strong>Gói:</strong> ${sub.packageName}</div>
-  </div>`;
+  if(box)box.innerHTML=`• Mã Sub: <b>${sub.id}</b><br>• Khách hàng: <b>${sub.customerName}${sub.beneficiaryName?' → '+sub.beneficiaryName:''}</b><br>• Gói: <b>${sub.packageName}</b>`;
   document.getElementById('subModalDeleteDraft').classList.add('open');
 }
 function subConfirmDeleteDraft(){
