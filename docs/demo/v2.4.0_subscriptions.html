@@ -4088,6 +4088,13 @@ function subSubmitEditSub(){
   if(!ok)return;
   // Áp dụng thay đổi
   if(c){
+    // Nếu đổi sang hợp đồng khác → dịch chuyển sub giữa các contract arrays
+    if(c.id!==found.contract.id){
+      const oldSubs=found.contract.subs||[];
+      const idx=oldSubs.indexOf(found.sub);
+      if(idx>-1)oldSubs.splice(idx,1);
+      (c.subs=c.subs||[]).push(found.sub);
+    }
     sub.contractId=c.id;sub.contractCode=c.code;sub.contractType=c.type;
     sub.customerId=c.customerId;sub.customerName=c.customerName;
   }
@@ -4095,6 +4102,7 @@ function subSubmitEditSub(){
   else{sub.licenseQty=lic;sub.seatCount=null;sub.beneficiaryId=benId;sub.beneficiaryName=benName;}
   const sd=(document.getElementById('subEditSubStartDate')?.value||'').trim();
   const ed=(document.getElementById('subEditSubEndDate')?.value||'').trim();
+  if(sd&&!ed){toast('error','Thiếu ngày hết hạn','Nhập ngày bắt đầu để tự động tính ngày kết thúc');return;}
   sub.startDate=sd||null;sub.endDate=ed||null;
   sub.dealCode=(document.getElementById('subEditSubDealCode')?.value||'').trim()||null;
   sub.note=(document.getElementById('subEditSubNote')?.value||'').trim()||null;
