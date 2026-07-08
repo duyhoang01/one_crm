@@ -1626,7 +1626,7 @@ let conContracts = [
   {
     id:'con-001', code:'HD-CMC-2025-001',
     customerId:'cust-001', customerName:'FPT Software', customerType:'B2B',
-    type:'DIRECT',
+    type:'DIRECT', packages:['PKG-EDR-EDR'],
     signedDate:'2025-01-15', description:'HĐ cung cấp EDR cho FPT Software. Ưu tiên triển khai Q1/2025.',
     createdBy:'Sales A', createdAt:'2025-01-15T09:00:00',
     poolItems:[],
@@ -1693,7 +1693,7 @@ let conContracts = [
   {
     id:'con-003', code:'HD-CMC-2025-003',
     customerId:'cust-003', customerName:'Viettel Solutions', customerType:'B2B',
-    type:'DIRECT',
+    type:'DIRECT', packages:['PKG-EDR-EPP'],
     signedDate:'2025-02-10', description:'Cung cấp EPP Enterprise 1000 users.',
     createdBy:'Sales A', createdAt:'2025-02-10T14:00:00',
     poolItems:[],
@@ -1760,7 +1760,7 @@ let conContracts = [
   {
     id:'con-005', code:'HD-CMC-2026-001',
     customerId:'cust-007', customerName:'VNPT Technology', customerType:'B2B',
-    type:'DIRECT',
+    type:'DIRECT', packages:['PKG-EDR-EDR'],
     signedDate:'2026-04-03', description:'Cung cấp EDR Enterprise cho hệ thống nội bộ VNPT.',
     createdBy:'Sales B', createdAt:'2026-04-03T10:00:00',
     poolItems:[],
@@ -1785,7 +1785,7 @@ let conContracts = [
   {
     id:'con-006', code:'HD-CMC-2026-002',
     customerId:'cust-005', customerName:'VietinBank', customerType:'B2B',
-    type:'DIRECT',
+    type:'DIRECT', packages:['PKG-EDR-EPP'],
     signedDate:'2026-06-01', description:'Cung cấp EDR Standard cho hội sở VietinBank.',
     createdBy:'Sales A', createdAt:'2026-06-01T09:00:00',
     poolItems:[],
@@ -1809,7 +1809,7 @@ let conContracts = [
   {
     id:'con-007', code:'HD-CMC-2026-003',
     customerId:'cust-025', customerName:'Bamboo Airways', customerType:'B2B',
-    type:'DIRECT',
+    type:'DIRECT', packages:['PKG-EDR-EDR'],
     signedDate:'2026-06-23', description:'Cung cấp EDR Enterprise 400 seat cho Bamboo Airways.',
     createdBy:'Sales B', createdAt:'2026-06-23T14:00:00',
     poolItems:[],
@@ -1835,7 +1835,7 @@ let conContracts = [
   {
     id:'con-008', code:'HD-CMC-2026-004',
     customerId:'cust-012', customerName:'Trung Nguyên Legend', customerType:'B2B',
-    type:'DIRECT',
+    type:'DIRECT', packages:['PKG-EDR-EPP'],
     signedDate:'2026-04-12', description:'Cung cấp EDR Standard 100 seat cho Trung Nguyên.',
     createdBy:'Sales A', createdAt:'2026-04-12T11:00:00',
     poolItems:[],
@@ -1901,7 +1901,7 @@ let conContracts = [
   {
     id:'con-010', code:'HD-CMC-2026-006',
     customerId:'cust-015', customerName:'Sacombank', customerType:'B2B',
-    type:'DIRECT',
+    type:'DIRECT', packages:['PKG-EDR-EDR'],
     signedDate:'2026-03-14', description:'Cung cấp EDR Enterprise cho Sacombank — gia hạn lần 1.',
     createdBy:'Sales B', createdAt:'2026-03-14T09:30:00',
     poolItems:[],
@@ -1953,7 +1953,7 @@ let conContracts = [
   {
     id:'con-012', code:'HD-CMC-2026-008',
     customerId:'cust-010', customerName:'Bộ Tài chính', customerType:'B2B',
-    type:'DIRECT',
+    type:'DIRECT', packages:['PKG-EDR-EPR'],
     signedDate:null, description:'Dự kiến cung cấp EDR Gov 1000 seat — đang soạn thảo.',
     createdBy:'Sales B', createdAt:'2026-07-01T10:00:00',
     poolItems:[],
@@ -3001,6 +3001,13 @@ function subFmtDate(d){
   if(!d)return'<em style="color:var(--gray-400)">—</em>';
   const [y,m,day]=d.split('-');return`${day}/${m}/${y}`;
 }
+function subFmtDateTime(s){
+  if(!s)return'—';
+  const [datePart,timePart]=s.split(' ');
+  if(!datePart)return s;
+  const [y,m,d]=datePart.split('-');
+  return`${d}/${m}/${y}${timePart?' '+timePart:''}`;
+}
 function subCanRevoke(s){
   return s&&!['REVOKED','EXPIRED','DRAFT'].includes(s.status);
 }
@@ -3158,6 +3165,14 @@ function subOpenCreate(){
   });
   subOpenModal('subModalCreate');
 }
+function subGetContractPkgs(c){
+  if(!c)return[];
+  if(c.type==='RESELLER'){
+    return c.poolItems.flatMap(p=>CON_PACKAGES_BY_PRODUCT[p.productId]||[]);
+  }
+  const allPkgs=Object.values(CON_PACKAGES_BY_PRODUCT).flat();
+  return(c.packages||[]).map(id=>allPkgs.find(p=>p.id===id)).filter(Boolean);
+}
 function subOnContractChange(){
   const cid=document.getElementById('subCrtContract').value;
   const c=conContracts.find(x=>x.id===cid);
@@ -3165,18 +3180,41 @@ function subOnContractChange(){
   const benRow=document.getElementById('subCrtBeneficiaryRow');
   const seatsField=document.getElementById('subCrtSeatsField');
   const licField=document.getElementById('subCrtLicField');
-  if(!c){hintEl.style.display='none';benRow.style.display='none';return;}
-  hintEl.textContent=`Loại: ${c.type} · Khách hàng: ${c.customerName}`;
-  hintEl.style.display='';
+  const pkgSel=document.getElementById('subCrtPackage');
+  if(!c){hintEl.style.display='none';benRow.style.display='none';pkgSel.innerHTML='<option value="">▾ Chọn gói sản phẩm...</option>';pkgSel.disabled=false;return;}
+  // Package dropdown — filter by contract
+  const pkgs=subGetContractPkgs(c);
+  pkgSel.innerHTML='';
+  pkgSel.disabled=false;
+  if(pkgs.length===1){
+    const o=document.createElement('option');
+    o.value=pkgs[0].id;o.dataset.productId=Object.keys(CON_PACKAGES_BY_PRODUCT).find(pid=>(CON_PACKAGES_BY_PRODUCT[pid]||[]).some(p=>p.id===pkgs[0].id))||'';
+    o.textContent=pkgs[0].name;
+    pkgSel.appendChild(o);
+    pkgSel.disabled=true;
+  } else {
+    pkgSel.innerHTML='<option value="">▾ Chọn gói sản phẩm...</option>';
+    pkgs.forEach(pkg=>{
+      const o=document.createElement('option');
+      o.value=pkg.id;
+      o.dataset.productId=Object.keys(CON_PACKAGES_BY_PRODUCT).find(pid=>(CON_PACKAGES_BY_PRODUCT[pid]||[]).some(p=>p.id===pkg.id))||'';
+      o.textContent=pkg.name;
+      pkgSel.appendChild(o);
+    });
+  }
   if(c.type==='RESELLER'){
+    const poolInfo=c.poolItems.map(p=>`${p.productName}: còn ${p.poolTotal-p.allocatedQty}/${p.poolTotal}`).join(' · ');
+    hintEl.textContent=`Loại: RESELLER · ${c.customerName} · Pool: ${poolInfo}`;
+    hintEl.style.display='';
     benRow.style.display='';
     seatsField.style.display='none';
     licField.style.display='';
-    // Populate beneficiaries
     const benSel=document.getElementById('subCrtBeneficiary');
     benSel.innerHTML='<option value="">▾ Chọn đơn vị thụ hưởng...</option>';
     CON_BENEFICIARIES.forEach(b=>{const o=document.createElement('option');o.value=b.id;o.textContent=b.name;benSel.appendChild(o);});
   } else {
+    hintEl.textContent=`Loại: DIRECT · ${c.customerName}`;
+    hintEl.style.display='';
     benRow.style.display='none';
     seatsField.style.display='';
     licField.style.display='none';
@@ -3203,8 +3241,14 @@ function subSubmitCreate(){
   const lic=parseInt((document.getElementById('subCrtLic').value||'').replace(/\./g,''))||0;
   if(!isReseller&&seats<=0)show('subErrCrtSeats','Số seats là bắt buộc và phải > 0');
   else document.getElementById('subErrCrtSeats').style.display='none';
-  if(isReseller&&lic<=0)show('subErrCrtLic','Số license là bắt buộc và phải > 0');
-  else document.getElementById('subErrCrtLic').style.display='none';
+  if(isReseller&&lic<=0){show('subErrCrtLic','Số license là bắt buộc và phải > 0');}
+  else if(isReseller&&lic>0&&c){
+    const selectedPid=pkgEl.options[pkgEl.selectedIndex]?.dataset?.productId;
+    const pool=c.poolItems.find(p=>p.productId===selectedPid);
+    const avail=pool?pool.poolTotal-pool.allocatedQty:Infinity;
+    if(lic>avail)show('subErrCrtLic',`Vượt pool khả dụng — còn lại ${avail} license`);
+    else document.getElementById('subErrCrtLic').style.display='none';
+  } else document.getElementById('subErrCrtLic').style.display='none';
   let benId=null,benName=null;
   if(isReseller){
     benId=document.getElementById('subCrtBeneficiary').value;
@@ -3294,7 +3338,7 @@ function subSwitchTab(el,subOrPanel,panelId){
 function subRenderInfo(sub){
   const el=document.getElementById('sub-tp-info');if(!el)return;
   const cell=(label,value)=>`<div><div class="sub-info-label">${label}</div><div class="sub-info-value">${value!=null&&value!==''?value:'<em style="color:var(--gray-400)">—</em>'}</div></div>`;
-  const contractLink=`<span style="font-family:monospace;color:var(--primary);cursor:pointer;text-decoration:underline;font-weight:600;" onclick="conOpenDetail('${sub.contractId}');showModule('contract');">${sub.contractCode}</span>`;
+  const contractLink=`<span style="font-family:monospace;color:var(--primary);cursor:pointer;text-decoration:underline;font-weight:600;" onclick="showModule('contract');conOpenDetail('${sub.contractId}');">${sub.contractCode}</span>`;
   const qtyLabel=sub.contractType==='DIRECT'?'Số seats':'Số license';
   const qtyVal=sub.contractType==='DIRECT'
     ?`<span style="font-weight:700;font-size:16px;color:var(--navy)">${(sub.seatCount||0).toLocaleString('vi-VN')}</span> <span style="font-size:12px;color:var(--text-secondary)">seats</span>`
@@ -3331,8 +3375,8 @@ function subRenderInfo(sub){
       ${cell('License Mirror',mirrorVal)}
     </div>
     <div class="sub-field-row">
-      ${cell('Ngày bắt đầu (dự kiến)',subFmtDate(sub.startDate))}
-      ${cell('Ngày hết hạn (dự kiến)',`<span style="font-weight:600;">${subFmtDate(sub.endDate)}</span>`)}
+      ${cell(['PENDING','N/A',null,undefined].includes(sub.licMirrorStatus)?'Ngày bắt đầu (dự kiến)':'Ngày bắt đầu',subFmtDate(sub.startDate))}
+      ${cell(['PENDING','N/A',null,undefined].includes(sub.licMirrorStatus)?'Ngày hết hạn (dự kiến)':'Ngày hết hạn',`<span style="font-weight:600;">${subFmtDate(sub.endDate)}</span>`)}
       <div></div>
     </div>
   </div>`;
@@ -3343,7 +3387,7 @@ function subRenderTimeline(sub){
   if(!tl.length){el.innerHTML=`<div class="card" style="padding:48px;text-align:center;color:var(--text-secondary);"><div style="font-size:36px;margin-bottom:12px;">📅</div><div style="font-size:15px;font-weight:600;color:var(--text-primary);">Chưa có sự kiện</div></div>`;return;}
   el.innerHTML=`<div class="card" style="padding:20px;"><div class="section-hdr">Timeline Provisioning</div><div class="timeline">${tl.map(t=>{
     const src=deriveSrc(t);
-    return`<div class="timeline-item"><div class="tl-dot ${t.cls||'tl-dot-gray'}">${t.icon||'●'}</div><div class="tl-body"><div class="tl-title">${t.title}</div><div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap;"><span class="tl-time">🕐 ${t.time}</span>${srcBadge(src,true)}<span style="font-size:11px;color:var(--text-secondary);">${t.actor||'System'}</span></div>${t.detail?`<div class="tl-detail">${t.detail}</div>`:''}</div></div>`;
+    return`<div class="timeline-item"><div class="tl-dot ${t.cls||'tl-dot-gray'}">${t.icon||'●'}</div><div class="tl-body"><div class="tl-title">${t.title}</div><div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap;"><span class="tl-time">🕐 ${subFmtDateTime(t.time)}</span>${srcBadge(src,true)}<span style="font-size:11px;color:var(--text-secondary);">${t.actor||'System'}</span></div>${t.detail?`<div class="tl-detail">${t.detail}</div>`:''}</div></div>`;
   }).join('')}</div></div>`;
 }
 function subRenderAuditLog(sub){
