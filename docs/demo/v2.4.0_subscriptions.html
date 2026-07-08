@@ -619,19 +619,16 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <select class="field-select" id="subCrtPackage">
             <option value="">▾ Chọn gói sản phẩm...</option>
           </select>
-          <div class="field-hint">🔒 Không thể thay đổi sau khi tạo</div>
           <div class="field-error" id="subErrCrtPackage">Vui lòng chọn gói sản phẩm</div>
         </div>
         <div class="field" id="subCrtSeatsField">
           <label class="field-label">Số seats <span class="required">*</span></label>
           <input class="field-input" id="subCrtSeats" type="text" inputmode="numeric" placeholder="VD: 100">
-          <div class="field-hint">🔒 Không thể thay đổi sau khi tạo</div>
           <div class="field-error" id="subErrCrtSeats">Số seats là bắt buộc và phải > 0</div>
         </div>
         <div class="field" id="subCrtLicField" style="display:none;">
           <label class="field-label">Số license <span class="required">*</span></label>
           <input class="field-input" id="subCrtLic" type="text" inputmode="numeric" placeholder="VD: 50">
-          <div class="field-hint">🔒 Không thể thay đổi sau khi tạo</div>
           <div class="field-error" id="subErrCrtLic">Số license là bắt buộc và phải > 0</div>
         </div>
       </div>
@@ -818,7 +815,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="subCloseModal('subModalRenew')">Hủy</button>
-      <button class="btn btn-primary" onclick="subConfirmRenew()">🔄 Tạo gia hạn (Draft)</button>
+      <button class="btn btn-primary" onclick="subConfirmRenew()">🔄 Gia hạn</button>
     </div>
   </div>
 </div>
@@ -839,12 +836,10 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
         <div class="field">
           <label class="field-label">Mã Subscription</label>
           <input class="field-input" id="subEditSubId" readonly>
-          <div class="immutable-note">🔒 Không thể thay đổi</div>
         </div>
         <div class="field">
           <label class="field-label">Gói sản phẩm</label>
           <input class="field-input" id="subEditSubPackage" readonly>
-          <div class="immutable-note" id="subEditSubPackageNote">🔒 Không thể thay đổi sau khi tạo</div>
         </div>
       </div>
       <div class="form-row" id="subEditSubDateRow">
@@ -972,11 +967,11 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
     </div>
     <div class="modal-body">
       <div class="form-row">
-        <div class="field"><label class="field-label">Mã Hợp đồng</label><input class="field-input" id="conEditCode" readonly><div class="immutable-note">🔒 Không thể thay đổi</div></div>
-        <div class="field"><label class="field-label">Khách hàng</label><input class="field-input" id="conEditCustomer" readonly><div class="immutable-note">🔒 Không thể thay đổi</div></div>
+        <div class="field"><label class="field-label">Mã Hợp đồng</label><input class="field-input" id="conEditCode" readonly></div>
+        <div class="field"><label class="field-label">Khách hàng</label><input class="field-input" id="conEditCustomer" readonly></div>
       </div>
       <div class="form-row">
-        <div class="field"><label class="field-label">Loại HĐ</label><input class="field-input" id="conEditType" readonly><div class="immutable-note">🔒 Không thể thay đổi</div></div>
+        <div class="field"><label class="field-label">Loại HĐ</label><input class="field-input" id="conEditType" readonly></div>
         <div class="field"><label class="field-label">Ngày ký</label><input class="field-input" id="conEditSignDate" type="date"><div class="field-hint">Chỉnh sửa được khi có phụ lục đính chính</div></div>
       </div>
       <div class="form-row full">
@@ -1166,10 +1161,10 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
     <div class="modal-body">
       <div class="form-row">
         <div class="field"><label class="field-label">Tên <span class="required">*</span></label><input class="field-input" id="editName" type="text"></div>
-        <div class="field"><label class="field-label">Loại</label><input class="field-input" id="editType" readonly><div class="immutable-note">🔒 Không thể thay đổi</div></div>
+        <div class="field"><label class="field-label">Loại</label><input class="field-input" id="editType" readonly></div>
       </div>
       <div class="form-row">
-        <div class="field"><label class="field-label">MST</label><input class="field-input" id="editTax" readonly><div class="immutable-note">🔒 Không thể thay đổi</div></div>
+        <div class="field"><label class="field-label">MST</label><input class="field-input" id="editTax" readonly></div>
         <div class="field"><label class="field-label">Email <span class="required">*</span></label><input class="field-input" id="editEmail" type="email"></div>
       </div>
       <div class="form-row" id="editIndustryRow">
@@ -2678,7 +2673,6 @@ function conAddPoolRow(){
     <div class="field" style="margin:0">
       <label class="field-label" style="font-size:12px">Tổng số license (Total) <span class="required">*</span></label>
       <input class="field-input" id="qty-${rowId}" type="text" inputmode="numeric" placeholder="VD: 200" oninput="conFmtInputNum(this)" style="font-size:13px">
-      <div style="font-size:10px;color:var(--amber);margin-top:3px;font-weight:500">⚠️ Không thể thay đổi sau khi lưu</div>
     </div>
     <button type="button" onclick="document.getElementById('${rowId}').remove();conCreatePoolRows=conCreatePoolRows.filter(r=>r!=='${rowId}')" title="Xóa dòng này" style="background:none;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;color:var(--gray-400);font-size:14px;width:32px;height:36px;display:flex;align-items:center;justify-content:center;transition:.15s;margin-bottom:19px" onmouseover="this.style.background='#FEF2F2';this.style.color='var(--red)'" onmouseout="this.style.background='';this.style.color='var(--gray-400)'">✕</button>`;
   document.getElementById('conPoolRows').appendChild(div);
@@ -3639,8 +3633,8 @@ function subRenderInfo(sub){
     </div>
     <div class="sub-field-row">
       ${noteCell}
-      <div></div>
-      <div></div>
+      ${cell('Sub trước',predecessor?`<span style="font-family:monospace;color:var(--primary);cursor:pointer;text-decoration:underline;" onclick="subOpenDetail('${predecessor.id}')">${predecessor.id}</span> ${subStatusBadge(predecessor.status)}`:'—')}
+      ${cell('Sub kế tiếp',successors.length?successors.map(s=>`<span style="font-family:monospace;color:var(--primary);cursor:pointer;text-decoration:underline;" onclick="subOpenDetail('${s.id}')">${s.id}</span> ${subStatusBadge(s.status)}`).join('<br>'):'—')}
     </div>
   </div>
   <div class="card" style="padding:20px;">
@@ -3882,14 +3876,29 @@ let _subRenewingId=null;
 function subOpenRenew(id){
   const sub=subFindById(id);if(!sub||!subCanRenew(sub))return;
   _subRenewingId=id;
+  // Tìm duration_months của package
+  let durationMonths=12;
+  for(const pkgs of Object.values(CON_PACKAGES_BY_PRODUCT)){
+    const pkg=pkgs.find(p=>p.id===sub.packageId);
+    if(pkg){durationMonths=pkg.duration_months;break;}
+  }
+  // Tính ngày hết hạn mới
+  // SUSPENDED → tính từ hôm nay; ACTIVE/EXPIRED → tính từ endDate của sub cũ
+  const isSuspended=sub.status==='SUSPENDED';
+  const baseDate=isSuspended?new Date():(sub.endDate?new Date(sub.endDate):new Date());
+  const newEnd=new Date(baseDate);
+  newEnd.setMonth(newEnd.getMonth()+durationMonths);
+  const newEndStr=newEnd.toISOString().slice(0,10);
+  const baseLbl=isSuspended?'hôm nay (đang Suspended)':`ngày hết hạn cũ (${subFmtDate(sub.endDate)})`;
   const box=document.getElementById('subRenewInfoBox');
   if(box)box.innerHTML=`<div style="font-size:13px;line-height:1.8;">
     <div><strong>Gia hạn từ:</strong> <span style="font-family:monospace;">${sub.id}</span></div>
-    <div><strong>Gói:</strong> ${sub.packageName}</div>
-    <div><strong>Hết hạn hiện tại:</strong> ${subFmtDate(sub.endDate)}</div>
-    <div><strong>Trạng thái:</strong> ${subStatusBadge(sub.status)}</div>
+    <div><strong>Gói:</strong> ${sub.packageName} <span style="color:var(--text-secondary);font-size:12px;">(${durationMonths} tháng)</span></div>
+    <div><strong>Trạng thái hiện tại:</strong> ${subStatusBadge(sub.status)}</div>
+    <div><strong>Ngày tính từ:</strong> ${baseLbl}</div>
+    <div><strong>Ngày hết hạn mới (dự kiến):</strong> <span style="font-weight:700;color:var(--primary);">${subFmtDate(newEndStr)}</span></div>
   </div>`;
-  const ed=document.getElementById('subRenewEndDate');if(ed)ed.value='';
+  const ed=document.getElementById('subRenewEndDate');if(ed)ed.value=newEndStr;
   const dc=document.getElementById('subRenewDealCode');if(dc)dc.value='';
   const nt=document.getElementById('subRenewNote');if(nt)nt.value='';
   subOpenModal('subModalRenew');
