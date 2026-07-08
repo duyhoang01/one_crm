@@ -11,7 +11,7 @@
 |---|---|
 | **Tên chức năng** | Xóa Hợp đồng |
 | **UC ID** | UC-CON-06 |
-| **Mô tả** | Sales/Manager xóa một hợp đồng khỏi hệ thống bằng cách soft delete (set `deleted_at`). Chỉ được phép xóa khi hợp đồng chưa có Subscription nào. Thao tác yêu cầu nhập lý do xóa, xác nhận và ghi Audit Log bắt buộc. |
+| **Mô tả** | Sales/Manager xóa một hợp đồng khỏi hệ thống bằng cách soft delete (set `deleted_at`). Chỉ được phép xóa khi hợp đồng chưa có Subscription nào. Thao tác yêu cầu nhập lý do xóa, xác nhận, và cố gắng ghi Audit Log (best-effort — không chặn luồng xóa). |
 | **Tác nhân** | Sales, Manager |
 | **Tiền điều kiện** | Đã đăng nhập và có quyền `contract:delete`. Hợp đồng tồn tại trong hệ thống (`deleted_at IS NULL`). |
 | **Hậu điều kiện** | (Success) Hợp đồng được đánh dấu `deleted_at = now()`, không hiển thị trong hệ thống. Audit log ghi nhận actor, timestamp, mã HĐ, lý do xóa. Actor redirect về Danh sách Hợp đồng với toast thành công. (Failure) Không có dữ liệu nào bị thay đổi. Hợp đồng vẫn tồn tại nguyên vẹn. |
@@ -24,7 +24,7 @@
 |---|---|
 | BR-01 | Chỉ được xóa khi `subs.length = 0`. Kể cả subscription đã EXPIRED/REVOKED cũng chặn xóa — một khi HĐ đã phát sinh sub, không thể xóa. |
 | BR-02 | Nút 🗑️ bị disabled ngay khi render nếu `subs.length > 0` — không đợi người dùng nhấn rồi mới báo lỗi. Tooltip: *"Đã có Subscription, không thể xóa"*. |
-| BR-03 | Audit log bắt buộc — ghi nhận actor, timestamp, mã HĐ, loại HĐ, tên KH, **lý do xóa**. Nếu không ghi được thì rollback toàn bộ, không thực hiện soft delete. |
+| BR-03 | Audit log **best-effort** — cố gắng ghi nhận actor, timestamp, mã HĐ, loại HĐ, tên KH, **lý do xóa**. Thành công hay thất bại đều **KHÔNG chặn** luồng soft delete — hệ thống luôn tiếp tục thực hiện bước xóa (bước 8) bất kể kết quả ghi log. |
 | BR-04 | Xóa là **soft delete** — set `contract.deleted_at = now()`, `contract.deleted_by = actor_id`, `contract.delete_reason = {lý do}`. Record vẫn tồn tại trong DB, không hiển thị trong UI. Không có luồng khôi phục qua UI (chỉ admin DB). |
 | BR-05 | Field "Lý do xóa" là bắt buộc — nút "🗑️ Xóa" trong modal disabled cho đến khi field được điền. |
 
@@ -40,6 +40,8 @@
 
 ## 2. Luồng nghiệp vụ
 
+![BPMN 2.0 — UC-CON-06 Xóa Hợp đồng](../../assets/M-02_contracts/UC-CON-06_bpmn.png)
+
 ### 2.1 Luồng chính
 
 | Bước | Actor | Hành động / Phản hồi |
@@ -48,12 +50,13 @@
 | **2** | Sales/Manager | Nhấn icon 🗑️ (Danh sách) hoặc nút "🗑️ Xóa" (Chi tiết) — chỉ khả dụng khi `subs.length = 0`. |
 | **3** | System | Mở modal xác nhận xóa. Hiển thị: thông tin tóm tắt HĐ (Mã HĐ, Tên KH, Loại HĐ, Ngày tạo), cảnh báo không thể khôi phục qua UI, field **"Lý do xóa \*"**. |
 | **4** | Sales/Manager | Nhập lý do xóa vào textarea. Nút "🗑️ Xóa" active sau khi có nội dung (BR-05). |
-| **5** | Sales/Manager | Nhấn **"🗑️ Xóa"** → tiếp bước 6; hoặc nhấn **"Hủy"** / **"✕"** / **ESC** → AF-01. |
-| **6** | System | Re-check `subs.length = 0` ngay trước khi xóa (phòng race condition). |
-| **6a** | System | **[Vẫn còn 0 sub]** → tiếp bước 7. **[Đã phát sinh sub giữa lúc modal mở]** → EF-01. |
-| **7** | System | Ghi Audit Log (actor, timestamp, mã HĐ, loại HĐ, tên KH, lý do xóa). |
+| **5** | Sales/Manager | **[Gateway — Xác nhận xóa?]** Nhấn **"🗑️ Xóa"** → tiếp bước 6; hoặc nhấn **"Hủy"** / **"✕"** / **ESC** → **AF-01**. |
+| **6** | System | Re-check `subs.length = 0` ngay trước khi xóa (phòng race condition). **[Gateway — Vẫn còn 0 sub?]** Có → tiếp bước 7. Không → **EF-01**. |
+| **7** | System | *(Best-effort)* Cố gắng ghi Audit Log (actor, timestamp, mã HĐ, loại HĐ, tên KH, lý do xóa). Thành công hay thất bại đều **KHÔNG chặn** — luôn tiếp tục bước 8 (BR-03). |
 | **8** | System | Soft delete: set `deleted_at = now()`, `deleted_by = actor_id`, `delete_reason = {lý do}` (BR-04). |
-| **9** | System | Đóng modal. Redirect về Danh sách Hợp đồng (UC-CON-01). Hiển thị toast: *"Đã xóa hợp đồng {mã HĐ}"*. |
+| **9** | System | **[Gateway — Soft delete thành công? (DB write)]** Có → tiếp bước 10. Không → **EF-02**. |
+| **10** | System | Đóng modal. Redirect về Danh sách Hợp đồng (UC-CON-01). Hiển thị toast: *"Đã xóa hợp đồng {mã HĐ}"*. |
+| → | — | **End 1 (Success)** |
 
 ### 2.2 Luồng phụ
 
@@ -73,11 +76,22 @@
 | **6b** | System | Đóng modal. Hiển thị toast lỗi: *"Không thể xóa — hợp đồng vừa có Subscription mới."* Không thay đổi dữ liệu. |
 | → | — | Nút 🗑️ ở UI tự động chuyển sang disabled (UI re-sync khi page refresh hoặc next render). |
 
-**[EF-02: Lỗi hệ thống khi xóa (ghi audit log hoặc DB thất bại)]** — kích hoạt tại bước 7 hoặc 8.
+**[EF-02: Lỗi hệ thống — Soft Delete Thất Bại]** — kích hoạt tại bước 9 khi DB write thất bại.
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **7a** | System | Rollback toàn bộ (BR-03). Hiển thị toast lỗi: *"Xóa thất bại. Vui lòng thử lại."* Đóng modal. Hợp đồng vẫn tồn tại nguyên vẹn. |
+| **EF-02a** | System | Hiển thị toast lỗi: *"Xóa thất bại. Vui lòng thử lại."* Đóng modal. |
+| **EF-02b** | System | HĐ vẫn tồn tại nguyên vẹn (`deleted_at` vẫn NULL). Nếu audit log ở bước 7 đã ghi thành công, entry đó **vẫn giữ nguyên** — không rollback audit. |
+| → | — | **End 4 (Failure — EF-02)** |
+
+### 2.4 Điểm kết thúc (End Events)
+
+| # | Tên | Điều kiện |
+|---|---|---|
+| **End 1** | Success — Xóa thành công | Soft delete hoàn tất, redirect về Danh sách |
+| **End 2** | AF-01 — Hủy thao tác | Sales nhấn Hủy / ✕ / ESC |
+| **End 3** | Failure — EF-01 (Race Condition) | Sub mới phát sinh giữa lúc modal mở, xóa bị từ chối |
+| **End 4** | Failure — EF-02 (DB Error) | DB write thất bại, `deleted_at` vẫn NULL |
 
 ---
 
@@ -158,7 +172,8 @@
 
 | AC ID | Given | When | Then |
 |---|---|---|---|
-| AC-CON-06-15 | DB hoặc audit log service gặp lỗi khi xóa | Sales xác nhận xóa | Rollback, toast *"Xóa thất bại. Vui lòng thử lại."* HĐ vẫn tồn tại nguyên vẹn (`deleted_at` vẫn NULL). |
+| AC-CON-06-15 | DB write thất bại tại bước 8 (soft delete thất bại) | Sales xác nhận xóa | Toast *"Xóa thất bại. Vui lòng thử lại."* HĐ vẫn tồn tại nguyên vẹn (`deleted_at` vẫn NULL). Nếu audit log bước 7 đã ghi → entry audit vẫn giữ, không rollback. |
+| AC-CON-06-16 | Audit log service thất bại tại bước 7 | Sales xác nhận xóa | Hệ thống tiếp tục thực hiện soft delete (bước 8) — audit log failure không chặn việc xóa (BR-03 best-effort). |
 
 ---
 
@@ -168,6 +183,7 @@
 |---|---|---|---|
 | 1.0 | 06/07/2026 | Claude (AI) | Tạo mới — bóc tách từ PRD v2.3. |
 | 1.1 | 07/07/2026 | Claude (AI) | Giải quyết OQ-01/OQ-02/OQ-03: đổi sang soft delete, bổ sung data model (`deleted_at`, `deleted_by`, `delete_reason`), thêm field "Lý do xóa \*" bắt buộc trong modal, bỏ wireframe text thay bằng screenshot demo, cập nhật AC theo thay đổi. |
+| 1.2 | 08/07/2026 | Claude (AI) | Cập nhật luồng nghiệp vụ theo BPMN UC-CON-06: nhúng ảnh BPMN, đổi BR-03 từ "bắt buộc/blocking" sang "best-effort", tách bước 9 thành gateway DB write, cập nhật EF-02 (tách khỏi audit log — chỉ là lỗi DB), bổ sung End Events table, thêm AC-CON-06-16. |
 
 ### Quyết định đã chốt
 

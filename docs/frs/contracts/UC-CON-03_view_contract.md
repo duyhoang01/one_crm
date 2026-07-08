@@ -31,56 +31,69 @@
 
 ## 2. Luồng nghiệp vụ
 
+![BPMN 2.0 — UC-CON-03 Xem Chi tiết Hợp đồng](../../assets/M-02_contracts/UC-CON-03_bpmn.png)
+
 ### 2.1 Luồng chính
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
 | **1** | Sales | Nhấn vào dòng hợp đồng trong Danh sách (UC-CON-01) hoặc nhấn mã HĐ trong tab Hợp đồng & Sub của Customer 360° (UC-CUS-03). |
-| **2** | System | Điều hướng sang trang Chi tiết. Hiển thị **Contract Header** (mã HĐ, tên KH, badge Loại HĐ) và **Action bar**. Tab **Thông tin HĐ** active mặc định. |
-| **3** | System | Render tab **Thông tin HĐ**: info grid (mã HĐ, KH, loại, ngày ký, ngày tạo, người tạo, mô tả) + accordion **Pool License** (RESELLER only) + accordion **Đính kèm**. |
-| **4** | Sales | (Tuỳ chọn) Nhấn tab **Subscriptions**. |
-| **5** | System | Render bảng subscriptions. DIRECT: cột Seats, không có Đơn vị thụ hưởng. RESELLER: thêm cột Đơn vị thụ hưởng, cột License dùng thay Seats. Nút **＋ Thêm Subscription** ở đầu panel. |
-| **6** | Sales | (Tuỳ chọn) Nhấn tab **Timeline**. |
-| **7** | System | Render danh sách sự kiện của hợp đồng: tạo HĐ, ghi nhận ngày ký, tạo sub, thêm pool — sort DESC theo thời gian. |
-| **8** | Sales | (Tuỳ chọn) Nhấn tab **Audit Log**. |
-| **9** | System | Load batch 20 audit entries đầu tiên, sort DESC `created_at`. Hiển thị search bar. |
-| **10** | Sales | (Tuỳ chọn) Tương tác: mở rộng accordion, tìm kiếm audit log, lazy load thêm entries. |
-| → | — | **End (Success)** — Trang chi tiết hiển thị đầy đủ. Không thay đổi dữ liệu. |
+| **2** | System | Gọi API kiểm tra hợp đồng tồn tại theo `contractId`. **[Gateway — Hợp đồng tồn tại?]** Có → tiếp bước 3. Không → **EF-01**. |
+| **3** | System | Điều hướng sang trang Chi tiết. Hiển thị **Contract Header** (mã HĐ, tên KH, badge Loại HĐ) và **Action Bar**. Tab **Thông tin HĐ** active mặc định. |
+| **4** | System | Render tab **Thông tin HĐ**: info grid (mã HĐ, KH, loại, ngày ký, ngày tạo, người tạo, mô tả) + accordion **Pool License** (RESELLER only) + accordion **Đính kèm**. |
+| **5** | Sales | *(Tuỳ chọn)* Nhấn tab **Subscriptions**. |
+| **6** | System | Render bảng Subscriptions. DIRECT: cột Seats, không có Đơn vị thụ hưởng. RESELLER: thêm cột Đơn vị thụ hưởng, cột License dùng thay Seats. Nút **＋ Thêm Subscription** ở đầu panel. |
+| **7** | Sales | *(Tuỳ chọn)* Nhấn tab **Timeline**. |
+| **8** | System | Render danh sách sự kiện của hợp đồng (tạo HĐ, ký HĐ, tạo sub, thêm pool) — sort DESC theo thời gian. |
+| **9** | Sales | *(Tuỳ chọn)* Nhấn tab **Audit Log**. |
+| **10** | System | Load batch 20 audit entries đầu tiên, sort DESC `created_at`. Hiển thị search bar. |
+| **11** | Sales | *(Tuỳ chọn)* Tương tác: mở rộng accordion, tìm kiếm audit log, lazy load thêm entries. |
+| → | — | **End 1 (Success)** — Trang chi tiết hiển thị đầy đủ. Không thay đổi dữ liệu. |
 
 ### 2.2 Luồng phụ
 
-**[AF-01: Từ Customer 360°]** — kích hoạt tại bước 1 khi entry point là tab Hợp đồng & Sub.
+**[AF-01: Entry từ Customer 360°]** — kích hoạt tại bước 1 khi entry point là tab Hợp đồng & Sub.
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **1a** | Sales | Tại Customer 360° (UC-CUS-03), tab Hợp đồng & Sub, nhấn mã hợp đồng. |
-| **1b** | System | Điều hướng sang trang Chi tiết Hợp đồng. |
-| → | — | Quay lại luồng chính tại bước 2. |
+| **AF-01a** | Sales | Tại Customer 360° (UC-CUS-03), tab Hợp đồng & Sub, nhấn mã hợp đồng. |
+| **AF-01b** | System | Điều hướng sang trang Chi tiết Hợp đồng. |
+| → | — | Quay lại luồng chính tại **bước 2** (API check). |
 
-**[AF-02: Thêm Subscription]** — kích hoạt tại bước 5 khi Sales nhấn "＋ Thêm Subscription".
-
-| Bước | Actor | Hành động / Phản hồi |
-|---|---|---|
-| **5a** | Sales | Nhấn **"＋ Thêm Subscription"** trong tab Subscriptions. |
-| **5b** | System | Điều hướng sang UC-SUB (tạo sub mới, pre-fill `contract_id`). |
-| → | — | **End (Điều hướng ra ngoài)** — Sales tiếp tục tại UC-SUB. |
-
-**[AF-03: Thêm Pool License (RESELLER)]** — kích hoạt từ accordion Pool trong tab Thông tin HĐ.
+**[AF-02: Thêm Subscription]** — kích hoạt tại bước 6 khi Sales nhấn "＋ Thêm Subscription".
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **3a** | Sales | Nhấn **"＋ Thêm Pool"** hoặc **"＋ Thêm sản phẩm vào Pool"** trong accordion Pool License. |
-| **3b** | System | Điều hướng sang AF-01 của UC-CON-04 (Cập nhật Hợp đồng — Thêm Pool). |
-| → | — | **End (Điều hướng ra ngoài)** — Sales tiếp tục tại UC-CON-04. |
+| **AF-02a** | Sales | Nhấn **"＋ Thêm Subscription"** trong tab Subscriptions. |
+| **AF-02b** | System | Điều hướng sang UC-SUB (tạo sub mới, pre-fill `contract_id`). |
+| → | — | **End 2 (Điều hướng UC-SUB)** — Sales tiếp tục tại UC-SUB. |
+
+**[AF-03: Thêm Pool Product (RESELLER only)]** — kích hoạt từ bước 4, accordion Pool License.
+
+| Bước | Actor | Hành động / Phản hồi |
+|---|---|---|
+| **AF-03a** | Sales | Nhấn **"＋ Thêm Pool"** hoặc **"＋ Thêm sản phẩm vào Pool"** trong accordion Pool License. |
+| **AF-03b** | System | Điều hướng sang AF-01 của UC-CON-04 (Cập nhật Hợp đồng — Thêm Pool). |
+| → | — | **End 3 (Điều hướng UC-CON-04)** — Sales tiếp tục tại UC-CON-04. |
 
 ### 2.3 Luồng ngoại lệ
 
-**[EF-01: Hợp đồng không tìm thấy]** — kích hoạt tại bước 2 khi API trả về 404.
+**[EF-01: Hợp đồng không tìm thấy]** — kích hoạt tại bước 2 khi API trả về không có kết quả.
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **2a** | System | Hiển thị thông báo lỗi: *"Không tìm thấy hợp đồng."* Điều hướng về Danh sách Hợp đồng (UC-CON-01). |
-| → | — | **End (Failure)** |
+| **EF-01a** | System | Hiển thị thông báo lỗi: *"Không tìm thấy hợp đồng."* |
+| **EF-01b** | System | Điều hướng về Danh sách Hợp đồng (UC-CON-01). |
+| → | — | **End 4 (Failure — EF-01)** |
+
+### 2.4 Điểm kết thúc (End Events)
+
+| # | Tên | Điều kiện |
+|---|---|---|
+| **End 1** | Success — Xem chi tiết thành công | Luồng chính hoàn tất, trang chi tiết hiển thị đầy đủ |
+| **End 2** | Điều hướng UC-SUB | AF-02: Sales nhấn "＋ Thêm Subscription" |
+| **End 3** | Điều hướng UC-CON-04 | AF-03: Sales nhấn "＋ Thêm Pool" (RESELLER) |
+| **End 4** | Failure — EF-01 | Hợp đồng không tìm thấy, redirect về danh sách |
 
 ---
 
@@ -349,6 +362,7 @@ Search bar cố định ở đầu panel (ngoài scroll container).
 | 1.1 | 06/07/2026 | Claude (AI) | Giải quyết OQ-01/OQ-03: nút "+ Thêm Sub" luôn hiển thị với DIRECT; xóa BR Timeline (provisioning events thuộc Sub detail). |
 | 1.2 | 06/07/2026 | Claude (AI) | Self-review theo checklist FRS: tách gateway bước 5, chuẩn ngôn ngữ, thêm End Events, bổ sung AC còn thiếu. |
 | 1.3 | 07/07/2026 | Claude (AI) | Cập nhật theo quyết định BA: (A-01) đổi sang tab-based layout 4 tabs; (A-02/A-03) Pool & Đính kèm accordion trong tab Thông tin HĐ; (A-04) Subs tab hiển thị cả DIRECT & RESELLER; (A-05) Sales & Manager đều xóa được; (A-07) "+ Thêm Sub" chỉ trong tab Subs; (B-01) bổ sung mô tả tab Timeline; (B-02) đổi Subs panel sang table layout; (B-03) Ngày ký trong info grid; (C-01) Audit Log đồng bộ lazy load với UC-CUS-03; (C-02) cột Nguồn: gray badge per demo. |
+| 1.4 | 08/07/2026 | Claude (AI) | Cập nhật section 2 theo BPMN UC-CON-03: nhúng ảnh BPMN, tách bước 2 (API check gateway) ra khỏi bước redirect, đánh lại số bước 3-11 khớp badge BPMN, cập nhật AF-01/AF-02/AF-03 dùng prefix chuẩn, thêm section 2.4 End Events. |
 
 ### Quyết định đã chốt
 
