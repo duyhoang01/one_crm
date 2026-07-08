@@ -881,7 +881,6 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
         <div class="field">
           <label class="field-label">Ngày hết hạn (dự kiến)</label>
           <input class="field-input" id="subEditSubEndDate" type="date" readonly style="background:var(--gray-50);cursor:default;">
-          <div class="field-hint" id="subEditSubEndDateHint" style="display:none;font-size:11px;color:var(--text-secondary);margin-top:3px;"></div>
         </div>
       </div>
       <div class="form-row">
@@ -3993,13 +3992,11 @@ function subEditSubCalcEndDate(){
   const sd=document.getElementById('subEditSubStartDate')?.value;
   const dur=parseInt(document.getElementById('subEditSubDuration')?.value||'12');
   const edEl=document.getElementById('subEditSubEndDate');
-  const hint=document.getElementById('subEditSubEndDateHint');
   if(!edEl)return;
-  if(!sd){edEl.value='';if(hint)hint.style.display='none';return;}
+  if(!sd){edEl.value='';return;}
   const d=new Date(sd);
   d.setMonth(d.getMonth()+dur);
   edEl.value=d.toISOString().slice(0,10);
-  if(hint){hint.textContent=`Tự động tính: ngày bắt đầu + ${dur} tháng`;hint.style.display='';}
 }
 function subEditSubOnContractChange(existingSub){
   const cid=document.getElementById('subEditSubContract')?.value;
@@ -4055,9 +4052,6 @@ function subOpenEditSub(id){
   // Ngày tháng
   const sdEl=document.getElementById('subEditSubStartDate');if(sdEl)sdEl.value=sub.startDate||'';
   const edEl=document.getElementById('subEditSubEndDate');if(edEl)edEl.value=sub.endDate||'';
-  const hint=document.getElementById('subEditSubEndDateHint');
-  if(hint&&sub.startDate){hint.textContent=`Tự động tính: ngày bắt đầu + ${dur} tháng`;hint.style.display='';}
-  else if(hint){hint.style.display='none';}
   // Deal code + Note
   document.getElementById('subEditSubDealCode').value=sub.dealCode||'';
   document.getElementById('subEditSubNote').value=sub.note||'';
