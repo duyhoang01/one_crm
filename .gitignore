@@ -23,6 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 
+# Claude Code
+.claude/settings.local.json
+
+# GitNexus (auto-generated — nội dung đã có trong CLAUDE.md)
+AGENTS.md
+.gitnexus/
+
 # Microsoft Word temp files
 ~$*.docx
 ~$*.doc
