@@ -3130,8 +3130,7 @@ function subRenderTable(data,page){
     const isDraftRow=sub.status==='DRAFT';
     const canEditRow=isDraftRow||['ACTIVE','SUSPENDED','PENDING_PROVISION'].includes(sub.status);
     const canRevokeRow=!isDraftRow&&subCanRevoke(sub);
-    const approveRowBtn=isDraftRow
-      ?`<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();subOpenApproveDraft('${sub.id}')" title="Phê duyệt & Gửi">✅ Phê duyệt</button>`:'';
+    const approveRowBtn='';
     const editRowBtn=canEditRow
       ?`<button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();subOpenEdit('${sub.id}')">✏️ Sửa</button>`:'';
     const deleteDraftRowBtn=isDraftRow
