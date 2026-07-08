@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -299,6 +299,8 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
 .sub-mirror-suspended{background:#FFF7ED;color:#EA580C;}
 .sub-mirror-expired,.sub-mirror-revoked{background:#FEF2F2;color:var(--red);}
 .sub-mirror-na{background:var(--gray-100);color:var(--gray-400);}
+.sub-field-row{display:grid;grid-template-columns:repeat(3,1fr);padding:16px 0;border-bottom:1px solid var(--border);}
+.sub-field-row:last-child{border-bottom:none;}
 </style>
 </head>
 <body>
@@ -1629,7 +1631,7 @@ let conContracts = [
     createdBy:'Sales A', createdAt:'2025-01-15T09:00:00',
     poolItems:[],
     subs:[
-      {id:'sub-001',contractId:'con-001',beneficiaryId:null,beneficiaryName:null,
+      {id:'SUB-2026-001',contractId:'con-001',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EDR-03',packageName:'CMC EDR',
        startDate:'2025-01-20',endDate:'2026-01-19',licenseQty:null,seatCount:500,
        status:'ACTIVE',note:'Triển khai SaaS multi-tenant',
@@ -1660,7 +1662,7 @@ let conContracts = [
       {id:'pool-001',contractId:'con-002',productId:'CMC_EDR',productName:'CMC EDR',poolTotal:200,allocatedQty:140},
     ],
     subs:[
-      {id:'sub-002',contractId:'con-002',beneficiaryId:'B001',beneficiaryName:'Công ty TNHH Văn Phòng',
+      {id:'SUB-2026-002',contractId:'con-002',beneficiaryId:'B001',beneficiaryName:'Công ty TNHH Văn Phòng',
        productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR',
        startDate:'2025-03-15',endDate:'2026-03-14',licenseQty:80,seatCount:80,
        status:'ACTIVE',note:'',licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-03-14',lastSync:'12 phút trước',
@@ -1673,7 +1675,7 @@ let conContracts = [
          {time:'2025-03-15 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · 80 license',result:'SUCCESS'},
          {time:'2025-03-15 09:00',source:'UI',actor:'Sales B',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · CMC EDR 80 license',result:'SUCCESS'},
        ]},
-      {id:'sub-003',contractId:'con-002',beneficiaryId:'B002',beneficiaryName:'Trường ĐH Kinh Tế HCM',
+      {id:'SUB-2026-003',contractId:'con-002',beneficiaryId:'B002',beneficiaryName:'Trường ĐH Kinh Tế HCM',
        productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR',
        startDate:'2025-04-01',endDate:'2026-03-31',licenseQty:60,seatCount:60,
        status:'ACTIVE',note:'',licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-03-31',lastSync:'12 phút trước',
@@ -1696,7 +1698,7 @@ let conContracts = [
     createdBy:'Sales A', createdAt:'2025-02-10T14:00:00',
     poolItems:[],
     subs:[
-      {id:'sub-004',contractId:'con-003',beneficiaryId:null,beneficiaryName:null,
+      {id:'SUB-2026-004',contractId:'con-003',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EPP-03',packageName:'CMC EPP',
        startDate:'2025-02-15',endDate:'2025-08-14',licenseQty:null,seatCount:1000,
        status:'EXPIRED',note:'KH không gia hạn — chuyển sang gói mới EPR Q4/2025.',
@@ -1727,7 +1729,7 @@ let conContracts = [
       {id:'pool-003',contractId:'con-004',productId:'CMC_EDR',productName:'EPP',poolTotal:100,allocatedQty:40},
     ],
     subs:[
-      {id:'sub-005',contractId:'con-004',beneficiaryId:'B003',beneficiaryName:'Mekong Foods',
+      {id:'SUB-2026-005',contractId:'con-004',beneficiaryId:'B003',beneficiaryName:'Mekong Foods',
        productId:'CA',packageId:'PKG-EPR-02',packageName:'CA Organization',
        startDate:'2025-05-01',endDate:'2026-04-30',licenseQty:120,seatCount:120,
        status:'ACTIVE',note:'',licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-04-30',lastSync:'25 phút trước',
@@ -1740,7 +1742,7 @@ let conContracts = [
          {time:'2025-05-01 10:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · CA Organization 120 license',result:'SUCCESS'},
          {time:'2025-05-01 09:00',source:'UI',actor:'Sales C',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · CA Organization 120 license',result:'SUCCESS'},
        ]},
-      {id:'sub-006',contractId:'con-004',beneficiaryId:'B004',beneficiaryName:'Nam Long Group',
+      {id:'SUB-2026-006',contractId:'con-004',beneficiaryId:'B004',beneficiaryName:'Nam Long Group',
        productId:'CA',packageId:'PKG-EPR-02',packageName:'CA Organization',
        startDate:'2025-05-10',endDate:'2026-05-09',licenseQty:100,seatCount:100,
        status:'PENDING_PROVISION',note:'Đang chờ Product Module kích hoạt',
@@ -1763,7 +1765,7 @@ let conContracts = [
     createdBy:'Sales B', createdAt:'2026-04-03T10:00:00',
     poolItems:[],
     subs:[
-      {id:'sub-007',contractId:'con-005',beneficiaryId:null,beneficiaryName:null,
+      {id:'SUB-2026-007',contractId:'con-005',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR Enterprise',
        startDate:'2026-04-10',endDate:'2027-04-09',licenseQty:null,seatCount:500,
        status:'ACTIVE',note:'Triển khai trên hạ tầng VNPT Cloud.',
@@ -1788,7 +1790,7 @@ let conContracts = [
     createdBy:'Sales A', createdAt:'2026-06-01T09:00:00',
     poolItems:[],
     subs:[
-      {id:'sub-008',contractId:'con-006',beneficiaryId:null,beneficiaryName:null,
+      {id:'SUB-2026-008',contractId:'con-006',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EDR-01',packageName:'CMC EDR Standard',
        startDate:'2026-06-05',endDate:'2027-06-04',licenseQty:null,seatCount:50,
        status:'ACTIVE',note:'',
@@ -1812,7 +1814,7 @@ let conContracts = [
     createdBy:'Sales B', createdAt:'2026-06-23T14:00:00',
     poolItems:[],
     subs:[
-      {id:'sub-009',contractId:'con-007',beneficiaryId:null,beneficiaryName:null,
+      {id:'SUB-2026-009',contractId:'con-007',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR Enterprise',
        startDate:'2026-06-25',endDate:'2027-06-24',licenseQty:null,seatCount:400,
        status:'PENDING_PROVISION',note:'Đang chờ xác nhận hạ tầng từ IT Bamboo.',
@@ -1838,7 +1840,7 @@ let conContracts = [
     createdBy:'Sales A', createdAt:'2026-04-12T11:00:00',
     poolItems:[],
     subs:[
-      {id:'sub-010',contractId:'con-008',beneficiaryId:null,beneficiaryName:null,
+      {id:'SUB-2026-010',contractId:'con-008',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EDR-01',packageName:'CMC EDR Standard',
        startDate:'2026-04-15',endDate:'2027-04-14',licenseQty:null,seatCount:100,
        status:'SUSPENDED',note:'Tạm dừng do chưa thanh toán đúng hạn.',
@@ -1864,7 +1866,7 @@ let conContracts = [
     createdBy:'Sales B', createdAt:'2026-03-15T14:00:00',
     poolItems:[{id:'pool-004',contractId:'con-009',productId:'CMC_EDR',productName:'CMC EDR',poolTotal:1000,allocatedQty:230}],
     subs:[
-      {id:'sub-011',contractId:'con-009',beneficiaryId:'B005',beneficiaryName:'Alpha Technology JSC',
+      {id:'SUB-2026-011',contractId:'con-009',beneficiaryId:'B005',beneficiaryName:'Alpha Technology JSC',
        productId:'CMC_EDR',packageId:'PKG-EDR-01',packageName:'CMC EDR Standard',
        startDate:'2026-03-20',endDate:'2027-03-19',licenseQty:150,seatCount:150,
        status:'ACTIVE',note:'',
@@ -1878,7 +1880,7 @@ let conContracts = [
          {time:'2026-03-20 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · 150 license',result:'SUCCESS'},
          {time:'2026-03-20 09:00',source:'UI',actor:'Sales B',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · EDR Standard 150 license',result:'SUCCESS'},
        ]},
-      {id:'sub-012',contractId:'con-009',beneficiaryId:'B006',beneficiaryName:'Beta Solutions Corp',
+      {id:'SUB-2026-012',contractId:'con-009',beneficiaryId:'B006',beneficiaryName:'Beta Solutions Corp',
        productId:'CMC_EDR',packageId:'PKG-EDR-01',packageName:'CMC EDR Standard',
        startDate:'2026-04-01',endDate:'2027-03-31',licenseQty:80,seatCount:80,
        status:'REVOKED',note:'',
@@ -1904,7 +1906,7 @@ let conContracts = [
     createdBy:'Sales B', createdAt:'2026-03-14T09:30:00',
     poolItems:[],
     subs:[
-      {id:'sub-013',contractId:'con-010',beneficiaryId:null,beneficiaryName:null,
+      {id:'SUB-2026-013',contractId:'con-010',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR Enterprise',
        startDate:'2026-03-21',endDate:'2027-03-20',licenseQty:null,seatCount:300,
        status:'RENEWED',note:'Gia hạn từ HĐ cũ năm 2025.',
@@ -1930,7 +1932,7 @@ let conContracts = [
     createdBy:'Sales A', createdAt:'2026-02-20T14:00:00',
     poolItems:[{id:'pool-005',contractId:'con-011',productId:'AV',productName:'AV Business',poolTotal:500,allocatedQty:80}],
     subs:[
-      {id:'sub-014',contractId:'con-011',beneficiaryId:'B001',beneficiaryName:'Cty A Đà Nẵng',
+      {id:'SUB-2026-014',contractId:'con-011',beneficiaryId:'B001',beneficiaryName:'Cty A Đà Nẵng',
        productId:'AV',packageId:'PKG-CA-02',packageName:'AV Business',
        startDate:'2026-02-25',endDate:'2026-08-24',licenseQty:80,seatCount:80,
        status:'EXPIRED',note:'',
@@ -1956,7 +1958,7 @@ let conContracts = [
     createdBy:'Sales B', createdAt:'2026-07-01T10:00:00',
     poolItems:[],
     subs:[
-      {id:'sub-015',contractId:'con-012',beneficiaryId:null,beneficiaryName:null,
+      {id:'SUB-2026-015',contractId:'con-012',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EDR-03',packageName:'CMC EDR Gov',
        startDate:null,endDate:'2027-09-30',licenseQty:null,seatCount:1000,
        status:'DRAFT',note:'Chờ phê duyệt ngân sách Q3/2026.',
@@ -2702,7 +2704,7 @@ function conSubmitCreateSub(){
   const benId=isReseller?benSel.value||null:null;
   const benName=isReseller?(benSel.selectedOptions[0]?.textContent||null):null;
   const pkgName=document.getElementById('conSubPackage').selectedOptions[0]?.textContent||pkg;
-  const newSub={id:'sub-'+Date.now(),contractId:c.id,beneficiaryId:benId,beneficiaryName:benName,productId:prd,packageId:pkg,packageName:pkgName,startDate:start,endDate:end,licenseQty:licQty,seatCount,status:'DRAFT',note:document.getElementById('conSubNote').value.trim(),licMirrorStatus:null,licMirrorExpiry:null,lastSync:'Chưa đồng bộ',createdBy:currentUser?.name||'Sales A',createdAt:new Date().toISOString()};
+  const newSub={id:subGenId(),contractId:c.id,beneficiaryId:benId,beneficiaryName:benName,productId:prd,packageId:pkg,packageName:pkgName,startDate:start,endDate:end,licenseQty:licQty,seatCount,status:'DRAFT',note:document.getElementById('conSubNote').value.trim(),licMirrorStatus:null,licMirrorExpiry:null,lastSync:'Chưa đồng bộ',createdBy:currentUser?.name||'Sales A',createdAt:new Date().toISOString()};
   c.subs.push(newSub);
   if(isReseller&&licQty){const pool=c.poolItems.find(p=>p.productId===prd);if(pool)pool.allocatedQty+=licQty;}
   conCloseModal('conModalCreateSub');conRenderSubsPanel();
@@ -3291,31 +3293,47 @@ function subSwitchTab(el,subOrPanel,panelId){
 }
 function subRenderInfo(sub){
   const el=document.getElementById('sub-tp-info');if(!el)return;
-  const row=(label,value)=>`<div class="sub-info-row"><div class="sub-info-label">${label}</div><div class="sub-info-value">${value}</div></div>`;
+  const cell=(label,value)=>`<div><div class="sub-info-label">${label}</div><div class="sub-info-value">${value!=null&&value!==''?value:'<em style="color:var(--gray-400)">—</em>'}</div></div>`;
+  const contractLink=`<span style="font-family:monospace;color:var(--primary);cursor:pointer;text-decoration:underline;font-weight:600;" onclick="conOpenDetail('${sub.contractId}');showModule('contract');">${sub.contractCode}</span>`;
   const qtyLabel=sub.contractType==='DIRECT'?'Số seats':'Số license';
   const qtyVal=sub.contractType==='DIRECT'
     ?`<span style="font-weight:700;font-size:16px;color:var(--navy)">${(sub.seatCount||0).toLocaleString('vi-VN')}</span> <span style="font-size:12px;color:var(--text-secondary)">seats</span>`
     :`<span style="font-weight:700;font-size:16px;color:var(--navy)">${(sub.licenseQty||0).toLocaleString('vi-VN')}</span> <span style="font-size:12px;color:var(--text-secondary)">license</span>`;
+  const mirrorVal=`${subMirrorBadge(sub.licMirrorStatus)}<span style="font-size:12px;color:var(--text-secondary);margin-left:6px;">Đồng bộ: ${sub.lastSync||'—'}</span>`;
+  const beneficiaryCell=sub.contractType==='RESELLER'
+    ?cell('Đơn vị thụ hưởng',sub.beneficiaryName?`<span style="font-weight:500;">${sub.beneficiaryName}</span>`:null)
+    :`<div></div>`;
+  const noteCell=sub.note?cell('Ghi chú',`<em style="color:var(--text-secondary)">${sub.note}</em>`):`<div></div>`;
   el.innerHTML=`
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-    <div class="card" style="padding:20px;">
-      <div class="section-hdr" style="margin-bottom:14px;">Hợp đồng & Khách hàng</div>
-      ${row('Mã Subscription',`<span style="font-family:monospace;font-weight:600;font-size:14px;">${sub.id}</span>`)}
-      ${row('Hợp đồng',`<span style="font-family:monospace;color:var(--primary);cursor:pointer;text-decoration:underline;font-weight:600;" onclick="conOpenDetail('${sub.contractId}');showModule('contract');">${sub.contractCode}</span>`)}
-      ${row('Khách hàng',`<span style="font-weight:500;">${sub.customerName}</span>`)}
-      ${row('Loại HĐ',subTypeBadge(sub.contractType))}
-      ${sub.contractType==='RESELLER'?row('Đơn vị thụ hưởng',`<span style="font-weight:500;">${sub.beneficiaryName||'<em style="color:var(--gray-400)">—</em>'}</span>`):''}
-      ${row('Người tạo',`${sub.createdBy} <span style="color:var(--text-secondary);font-size:12px;">· ${subFmtDate(sub.createdAt?.slice(0,10))}</span>`)}
-      ${sub.note?row('Ghi chú',`<em style="color:var(--text-secondary);">${sub.note}</em>`):''}
+  <div class="card" style="padding:20px;margin-bottom:16px;">
+    <div class="section-hdr">1. Thông tin chung</div>
+    <div class="sub-field-row">
+      ${cell('Mã Subscription',`<span style="font-family:monospace;font-weight:600;font-size:14px;">${sub.id}</span>`)}
+      ${cell('Hợp đồng',contractLink)}
+      ${cell('Khách hàng',`<span style="font-weight:500;">${sub.customerName}</span>`)}
     </div>
-    <div class="card" style="padding:20px;">
-      <div class="section-hdr" style="margin-bottom:14px;">Gói sản phẩm & License</div>
-      ${row('Gói sản phẩm',`<span style="font-weight:600;font-size:14px;">${sub.packageName}</span>`)}
-      ${row(qtyLabel,qtyVal)}
-      ${row('Ngày bắt đầu (dự kiến)',subFmtDate(sub.startDate))}
-      ${row('Ngày hết hạn (dự kiến)',`<span style="font-weight:600;">${subFmtDate(sub.endDate)}</span>`)}
-      ${row('Trạng thái',subStatusBadge(sub.status))}
-      ${row('License Mirror',`${subMirrorBadge(sub.licMirrorStatus)} <span style="font-size:12px;color:var(--text-secondary);margin-left:6px;">Đồng bộ: ${sub.lastSync||'—'}</span>`)}
+    <div class="sub-field-row">
+      ${cell('Loại HĐ',subTypeBadge(sub.contractType))}
+      ${cell('Trạng thái',subStatusBadge(sub.status))}
+      ${beneficiaryCell}
+    </div>
+    <div class="sub-field-row">
+      ${cell('Ngày tạo',subFmtDate(sub.createdAt?.slice(0,10)))}
+      ${cell('Người tạo',sub.createdBy)}
+      ${noteCell}
+    </div>
+  </div>
+  <div class="card" style="padding:20px;">
+    <div class="section-hdr">2. Gói sản phẩm & License</div>
+    <div class="sub-field-row">
+      ${cell('Gói sản phẩm',`<span style="font-weight:600;">${sub.packageName}</span>`)}
+      ${cell(qtyLabel,qtyVal)}
+      ${cell('License Mirror',mirrorVal)}
+    </div>
+    <div class="sub-field-row">
+      ${cell('Ngày bắt đầu (dự kiến)',subFmtDate(sub.startDate))}
+      ${cell('Ngày hết hạn (dự kiến)',`<span style="font-weight:600;">${subFmtDate(sub.endDate)}</span>`)}
+      <div></div>
     </div>
   </div>`;
 }
