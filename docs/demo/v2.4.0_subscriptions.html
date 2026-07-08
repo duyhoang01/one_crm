@@ -301,6 +301,17 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
 .sub-mirror-na{background:var(--gray-100);color:var(--gray-400);}
 .sub-field-row{display:grid;grid-template-columns:repeat(3,1fr);padding:16px 0;border-bottom:1px solid var(--border);}
 .sub-field-row:last-child{border-bottom:none;}
+/* Sub Chain */
+.sub-chain-wrap{display:flex;align-items:flex-start;gap:0;padding:14px 0;overflow-x:auto;}
+.sub-chain-node{display:flex;flex-direction:column;align-items:center;min-width:160px;}
+.sub-chain-box{padding:8px 12px;border:2px solid var(--border);border-radius:var(--r-sm);font-size:12px;text-align:center;background:white;cursor:pointer;transition:border .15s;}
+.sub-chain-box:hover{border-color:var(--primary);}
+.sub-chain-box.current{border-color:var(--primary);background:#EBF4FD;}
+.sub-chain-box.predecessor{border-color:var(--gray-400);}
+.sub-chain-arrow{font-size:18px;color:var(--text-secondary);padding:0 6px;margin-top:14px;flex-shrink:0;}
+/* Quick chip filter */
+.sub-quick-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:100px;font-size:12px;font-weight:500;border:1.5px solid var(--border);background:white;cursor:pointer;color:var(--text-secondary);transition:all .15s;}
+.sub-quick-chip.active{border-color:var(--amber);background:#FFFBEB;color:#D97706;}
 </style>
 </head>
 <body>
@@ -496,21 +507,29 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <div class="toolbar">
             <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="subSearchInput" type="text" placeholder="Tìm theo mã sub, gói sản phẩm, khách hàng, đơn vị thụ hưởng..." oninput="subFilterTable()"></div>
             <select class="filter-select" id="subFilterStatus" onchange="subFilterTable()">
-              <option value="">All Status</option>
+              <option value="ACTIVE_GROUP">Đang hoạt động</option>
+              <option value="">Tất cả trạng thái</option>
               <option value="DRAFT">Draft</option>
               <option value="PENDING_PROVISION">Provisioning</option>
               <option value="ACTIVE">Active</option>
-              <option value="EXPIRING_SOON">⚠ Expiring Soon (≤60d)</option>
               <option value="SUSPENDED">Suspended</option>
               <option value="EXPIRED">Expired</option>
               <option value="REVOKED">Revoked</option>
               <option value="RENEWED">Renewed</option>
+            </select>
+            <select class="filter-select" id="subFilterProduct" onchange="subFilterTable()">
+              <option value="">Tất cả sản phẩm</option>
+              <option value="CMC_EDR">CMC EDR</option>
+              <option value="C_SHIELD">C-Shield</option>
+              <option value="AV">AV</option>
+              <option value="CA">CA</option>
             </select>
             <select class="filter-select" id="subFilterType" onchange="subFilterTable()">
               <option value="">Tất cả loại HĐ</option>
               <option value="DIRECT">Direct</option>
               <option value="RESELLER">Reseller</option>
             </select>
+            <button id="subChipExpiring" class="sub-quick-chip" onclick="subToggleExpiring(this)">⚠ Sắp hết hạn (≤60d)</button>
             <button class="btn btn-ghost btn-sm" onclick="subClearFilter()">Xoá bộ lọc</button>
           </div>
           <div class="table-wrap">
@@ -627,6 +646,13 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <div class="field-error" id="subErrCrtEndDate">Ngày hết hạn là bắt buộc</div>
         </div>
       </div>
+      <div class="form-row">
+        <div class="field">
+          <label class="field-label">Deal Code</label>
+          <input class="field-input" id="subCrtDealCode" type="text" placeholder="DEAL-2026-XXX-001">
+        </div>
+        <div class="field"></div>
+      </div>
       <div class="form-row full">
         <div class="field">
           <label class="field-label">Ghi chú</label>
@@ -670,11 +696,11 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
   </div>
 </div>
 
-<!-- MODAL PHÊ DUYỆT DRAFT -->
+<!-- MODAL GỬI ĐI (APPROVE DRAFT) -->
 <div class="overlay" id="subModalApprove">
   <div class="modal" style="max-width:480px;">
     <div class="modal-header">
-      <div class="modal-title">✅ Phê duyệt & Gửi Subscription</div>
+      <div class="modal-title">📤 Gửi Subscription đi</div>
       <button class="close-btn" onclick="subCloseModal('subModalApprove')">✕</button>
     </div>
     <div class="modal-body">
@@ -708,6 +734,147 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="subCloseModal('subModalDeleteDraft')">Hủy</button>
       <button class="btn btn-danger" onclick="subConfirmDeleteDraft()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg> Xóa</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TẠM DỪNG SUBSCRIPTION -->
+<div class="overlay" id="subModalSuspend">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title">⏸ Tạm dừng Subscription</div>
+      <button class="close-btn" onclick="subCloseModal('subModalSuspend')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="subSuspendInfoBox" style="background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;line-height:2;margin-bottom:14px;"></div>
+      <div class="alert alert-warn" style="margin-bottom:14px;align-items:flex-start;">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-body"><div class="alert-text">Subscription sẽ bị <strong>tạm dừng</strong>. Webhook <code>subscription.suspended</code> sẽ được publish để Product Module xử lý.</div></div>
+      </div>
+      <div class="field">
+        <label class="field-label">Lý do tạm dừng <span class="required">*</span></label>
+        <textarea class="field-input" id="subSuspendReason" rows="3" placeholder="VD: KH chưa thanh toán · vi phạm điều khoản sử dụng..." oninput="subOnSuspendReasonChange()" style="resize:vertical;"></textarea>
+        <div class="field-error" id="subErrSuspendReason" style="display:none;">Vui lòng nhập lý do</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="subCloseModal('subModalSuspend')">Hủy</button>
+      <button class="btn" id="subBtnConfirmSuspend" disabled onclick="subConfirmSuspend()" style="background:#F59E0B;color:white;border-color:#F59E0B;">⏸ Tạm dừng</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL KHÔI PHỤC SUBSCRIPTION -->
+<div class="overlay" id="subModalResume">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title">▶ Khôi phục Subscription</div>
+      <button class="close-btn" onclick="subCloseModal('subModalResume')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="subResumeInfoBox" style="background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;line-height:2;margin-bottom:14px;"></div>
+      <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:8px;padding:12px 16px;display:flex;gap:10px;font-size:13px;color:#065F46;">
+        <div>✅</div>
+        <div>Subscription sẽ được <strong>khôi phục về ACTIVE</strong>. Webhook <code>subscription.resumed</code> sẽ được publish.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="subCloseModal('subModalResume')">Hủy</button>
+      <button class="btn btn-primary" onclick="subConfirmResume()">▶ Khôi phục</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GIA HẠN / TẠO SUCCESSOR -->
+<div class="overlay" id="subModalRenew">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title">🔄 Gia hạn Subscription</div>
+      <button class="close-btn" onclick="subCloseModal('subModalRenew')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="subRenewInfoBox" style="background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;line-height:2;margin-bottom:14px;"></div>
+      <div class="alert alert-info" style="margin-bottom:16px;">
+        <span class="alert-icon">ℹ️</span>
+        <div class="alert-body"><div class="alert-title">Về Gia hạn</div><div class="alert-text">Gia hạn tạo <strong>Subscription mới (DRAFT)</strong> kế tiếp với <code>previous_subscription_id</code> trỏ về sub hiện tại. Sub hiện tại sẽ chuyển trạng thái <strong>RENEWED</strong>.</div></div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label class="field-label">Ngày hết hạn mới <span class="required">*</span></label>
+          <input class="field-input" id="subRenewEndDate" type="date">
+          <div class="field-error" id="subErrRenewEndDate" style="display:none;">Ngày hết hạn là bắt buộc và phải sau hôm nay</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Deal Code</label>
+          <input class="field-input" id="subRenewDealCode" type="text" placeholder="VD: DEAL-2027-001">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label class="field-label">Ghi chú</label>
+          <textarea class="field-input" id="subRenewNote" rows="2" placeholder="Ghi chú cho subscription gia hạn..." style="resize:vertical;"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="subCloseModal('subModalRenew')">Hủy</button>
+      <button class="btn btn-primary" onclick="subConfirmRenew()">🔄 Tạo gia hạn (Draft)</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CHỈNH SỬA SUBSCRIPTION -->
+<div class="overlay" id="subModalEditSub">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Chỉnh sửa Subscription</div>
+      <button class="close-btn" onclick="subCloseModal('subModalEditSub')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="subEditSubStatusNote" class="alert alert-info" style="margin-bottom:14px;display:none;">
+        <span class="alert-icon">ℹ️</span>
+        <div class="alert-body"><div class="alert-text" id="subEditSubStatusNoteText"></div></div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label class="field-label">Mã Subscription</label>
+          <input class="field-input" id="subEditSubId" readonly>
+          <div class="immutable-note">🔒 Không thể thay đổi</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Gói sản phẩm</label>
+          <input class="field-input" id="subEditSubPackage" readonly>
+          <div class="immutable-note" id="subEditSubPackageNote">🔒 Không thể thay đổi sau khi tạo</div>
+        </div>
+      </div>
+      <div class="form-row" id="subEditSubDateRow">
+        <div class="field">
+          <label class="field-label">Ngày bắt đầu (dự kiến)</label>
+          <input class="field-input" id="subEditSubStartDate" type="date">
+        </div>
+        <div class="field">
+          <label class="field-label">Ngày hết hạn (dự kiến) <span class="required">*</span></label>
+          <input class="field-input" id="subEditSubEndDate" type="date">
+          <div class="field-error" id="subErrEditSubEndDate" style="display:none;">Ngày hết hạn là bắt buộc</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label class="field-label">Deal Code</label>
+          <input class="field-input" id="subEditSubDealCode" type="text" placeholder="VD: DEAL-2026-001">
+        </div>
+        <div class="field"></div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label class="field-label">Ghi chú</label>
+          <textarea class="field-input" id="subEditSubNote" rows="3" placeholder="Ghi chú về subscription..." style="resize:vertical;"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="subCloseModal('subModalEditSub')">Hủy</button>
+      <button class="btn btn-primary" onclick="subSubmitEditSub()">💾 Lưu</button>
     </div>
   </div>
 </div>
@@ -1577,6 +1744,9 @@ function showModule(mod){
   } else if(mod==='subscription'){
     subShowView('list');
     document.getElementById('breadcrumbCurrent').textContent='Subscription';
+    const sf=document.getElementById('subFilterStatus');if(sf&&!sf.value)sf.value='ACTIVE_GROUP';
+    _subExpiringFilter=false;
+    const chip=document.getElementById('subChipExpiring');if(chip)chip.classList.remove('active');
     subRenderTable();
   } else {
     conShowView('list');
@@ -1632,7 +1802,8 @@ let conContracts = [
       {id:'SUB-2026-001',contractId:'con-001',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EDR-03',packageName:'CMC EDR',
        startDate:'2025-01-20',endDate:'2026-01-19',licenseQty:null,seatCount:500,
-       status:'ACTIVE',note:'Triển khai SaaS multi-tenant',
+       status:'ACTIVE',note:'Triển khai SaaS multi-tenant',dealCode:'DEAL-2025-FPT-001',
+       previousSubId:null,
        licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-01-19',lastSync:'8 phút trước',
        createdBy:'Sales A',createdAt:'2025-01-15T10:00:00',
        timeline:[
@@ -1841,7 +2012,7 @@ let conContracts = [
       {id:'SUB-2026-010',contractId:'con-008',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EDR-01',packageName:'CMC EDR Standard',
        startDate:'2026-04-15',endDate:'2027-04-14',licenseQty:null,seatCount:100,
-       status:'SUSPENDED',note:'Tạm dừng do chưa thanh toán đúng hạn.',
+       status:'SUSPENDED',note:'Tạm dừng do chưa thanh toán đúng hạn.',dealCode:null,suspendReason:'Chưa thanh toán quá hạn 30 ngày.',previousSubId:null,
        licMirrorStatus:'SUSPENDED',licMirrorExpiry:'2027-04-14',lastSync:'1 ngày trước',
        createdBy:'Sales A',createdAt:'2026-04-12T11:30:00',
        timeline:[
@@ -1907,7 +2078,7 @@ let conContracts = [
       {id:'SUB-2026-013',contractId:'con-010',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR Enterprise',
        startDate:'2026-03-21',endDate:'2027-03-20',licenseQty:null,seatCount:300,
-       status:'RENEWED',note:'Gia hạn từ HĐ cũ năm 2025.',
+       status:'RENEWED',note:'Gia hạn từ HĐ cũ năm 2025.',dealCode:'DEAL-2026-SCB-001',previousSubId:null,
        licMirrorStatus:'EXPIRED',licMirrorExpiry:'2027-03-20',lastSync:'3 giờ trước',
        createdBy:'Sales B',createdAt:'2026-03-14T10:00:00',
        timeline:[
@@ -1919,6 +2090,20 @@ let conContracts = [
          {time:'2026-03-21 09:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển RENEWED',detail:'license.renewed event · 300 seat',result:'SUCCESS'},
          {time:'2026-03-21 09:00',source:'UI',actor:'Sales B',action:'Gia hạn Subscription',detail:'endDate: 2027-03-20 · note: gia hạn lần 1',result:'SUCCESS'},
          {time:'2026-03-14 10:00',source:'UI',actor:'Sales B',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · EDR Enterprise 300 seat',result:'SUCCESS'},
+       ]},
+      {id:'SUB-2026-016',contractId:'con-010',beneficiaryId:null,beneficiaryName:null,
+       productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR Enterprise',
+       startDate:'2027-03-21',endDate:'2028-03-20',licenseQty:null,seatCount:300,
+       status:'ACTIVE',note:'Gia hạn lần 2 — đã active.',dealCode:'DEAL-2027-SCB-001',previousSubId:'SUB-2026-013',
+       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2028-03-20',lastSync:'5 phút trước',
+       createdBy:'Sales B',createdAt:'2027-03-01T09:00:00',
+       timeline:[
+         {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active (gia hạn lần 2)',time:'2027-03-21 09:30',detail:'Hiệu lực → 2028-03-20 · 300 seat'},
+         {icon:'🔄',cls:'tl-dot-blue',source:'UI',actor:'Sales B',title:'Subscription gia hạn được tạo',time:'2027-03-01 09:00',detail:'HĐ: HD-CMC-2026-006 · EDR Enterprise 300 seat · predecessor: SUB-2026-013'},
+       ],
+       audit:[
+         {time:'2027-03-21 09:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · gia hạn lần 2 · 300 seat',result:'SUCCESS'},
+         {time:'2027-03-01 09:00',source:'UI',actor:'Sales B',action:'Tạo Subscription (Gia hạn)',detail:'status: DRAFT · predecessor: SUB-2026-013 · EDR Enterprise 300 seat',result:'SUCCESS'},
        ]},
     ]
   },
@@ -3015,6 +3200,7 @@ function subFmtDateTime(s){
   return`${d}/${m}/${y}${timePart?' '+timePart:''}`;
 }
 function subCanRevoke(s){
+  if(!currentUser||currentUser.role!=='Manager')return false;
   return s&&!['REVOKED','EXPIRED','DRAFT','RENEWED'].includes(s.status);
 }
 function subRevokeTooltip(s){
@@ -3022,9 +3208,14 @@ function subRevokeTooltip(s){
   if(s.status==='REVOKED')return'Đã thu hồi trước đó';
   if(s.status==='EXPIRED')return'Subscription đã hết hạn';
   if(s.status==='DRAFT')return'Draft chưa được kích hoạt';
-  if(currentUser&&currentUser.role!=='Manager')return'Chỉ Manager mới có quyền thu hồi';
+  if(s.status==='RENEWED')return'Subscription đã được gia hạn';
+  if(!currentUser||currentUser.role!=='Manager')return'Chỉ Manager mới có quyền thu hồi';
   return'';
 }
+function subCanSuspend(s){return s&&s.status==='ACTIVE'&&currentUser&&(currentUser.role==='Sales'||currentUser.role==='Manager');}
+function subCanResume(s){return s&&s.status==='SUSPENDED'&&currentUser&&(currentUser.role==='Sales'||currentUser.role==='Manager');}
+function subCanRenew(s){return s&&['ACTIVE','SUSPENDED','EXPIRED'].includes(s.status);}
+function subCanEdit(s){return s&&!['REVOKED','RENEWED','EXPIRED'].includes(s.status);}
 
 // ── VIEW ROUTING
 function subShowView(v){
@@ -3063,26 +3254,40 @@ function subFilterTable(){
   subCurrentPage=1;
   subRenderTable();
 }
+let _subExpiringFilter=false;
+function subToggleExpiring(btn){
+  _subExpiringFilter=!_subExpiringFilter;
+  btn.classList.toggle('active',_subExpiringFilter);
+  subFilterTable();
+}
 function subClearFilter(){
   const si=document.getElementById('subSearchInput');if(si)si.value='';
-  const sf=document.getElementById('subFilterStatus');if(sf)sf.value='';
+  const sf=document.getElementById('subFilterStatus');if(sf)sf.value='ACTIVE_GROUP';
+  const pf=document.getElementById('subFilterProduct');if(pf)pf.value='';
   const tf=document.getElementById('subFilterType');if(tf)tf.value='';
+  _subExpiringFilter=false;
+  const chip=document.getElementById('subChipExpiring');if(chip)chip.classList.remove('active');
   subRenderTable();
 }
 function subRenderTable(data,page){
+  const ACTIVE_GROUP_STATUSES=['DRAFT','PENDING_PROVISION','ACTIVE','SUSPENDED'];
   const allSubs=data||subApplySort(subGetAllSubs().filter(s=>{
     const q=(document.getElementById('subSearchInput')?.value||'').trim().toLowerCase();
     const st=document.getElementById('subFilterStatus')?.value||'';
+    const pr=document.getElementById('subFilterProduct')?.value||'';
     const tp=document.getElementById('subFilterType')?.value||'';
-    const matchQ=!q||(s.id||'').toLowerCase().includes(q)||(s.packageName||'').toLowerCase().includes(q)||(s.customerName||'').toLowerCase().includes(q)||(s.beneficiaryName||'').toLowerCase().includes(q)||(s.contractCode||'').toLowerCase().includes(q);
+    const matchQ=!q||(s.id||'').toLowerCase().includes(q)||(s.packageName||'').toLowerCase().includes(q)||(s.customerName||'').toLowerCase().includes(q)||(s.beneficiaryName||'').toLowerCase().includes(q)||(s.contractCode||'').toLowerCase().includes(q)||(s.dealCode||'').toLowerCase().includes(q);
     let matchSt=true;
-    if(st==='EXPIRING_SOON'){
+    if(st==='ACTIVE_GROUP'){matchSt=ACTIVE_GROUP_STATUSES.includes(s.status);}
+    else if(st){matchSt=s.status===st;}
+    let matchExpiring=true;
+    if(_subExpiringFilter){
       const today=new Date();today.setHours(0,0,0,0);
       const in60=new Date(today);in60.setDate(in60.getDate()+60);
       const ed=s.endDate?new Date(s.endDate):null;
-      matchSt=s.status==='ACTIVE'&&ed&&ed>=today&&ed<=in60;
-    }else if(st){matchSt=s.status===st;}
-    return matchQ&&matchSt&&(!tp||s.contractType===tp);
+      matchExpiring=s.status==='ACTIVE'&&ed&&ed>=today&&ed<=in60;
+    }
+    return matchQ&&matchSt&&matchExpiring&&(!pr||s.productId===pr)&&(!tp||s.contractType===tp);
   }));
   const tbody=document.getElementById('subTable'),empty=document.getElementById('subTableEmpty');
   if(!tbody)return;
@@ -3098,12 +3303,20 @@ function subRenderTable(data,page){
   tbody.innerHTML=rows.map(sub=>{
     const isDraftRow=sub.status==='DRAFT';
     const canRevokeRow=!isDraftRow&&subCanRevoke(sub);
+    const canSuspendRow=subCanSuspend(sub);
+    const canResumeRow=subCanResume(sub);
+    const canRenewRow=subCanRenew(sub);
+    const canEditRow=subCanEdit(sub);
     const isTerminal=['REVOKED','EXPIRED','RENEWED'].includes(sub.status);
     const deleteDraftRowBtn=isDraftRow
       ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Xóa">${TRASH_ICON}</button>`:'';
     const revokeRowBtn=!isDraftRow?(canRevokeRow
       ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenRevoke('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Thu hồi">${TRASH_ICON}</button>`
       :(isTerminal?`<button class="btn btn-ghost btn-sm" disabled title="${subRevokeTooltip(sub)}" style="opacity:.4;cursor:not-allowed;gap:4px;">${TRASH_ICON}</button>`:'')):''
+    const suspendRowBtn=canSuspendRow?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenSuspend('${sub.id}')" style="color:#D97706;border-color:#D97706;font-size:11px;" title="Tạm dừng">⏸</button>`:'';
+    const resumeRowBtn=canResumeRow?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenResume('${sub.id}')" style="color:#059669;border-color:#059669;font-size:11px;" title="Khôi phục">▶</button>`:'';
+    const renewRowBtn=canRenewRow?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenRenew('${sub.id}')" style="font-size:11px;" title="Gia hạn">🔄</button>`:'';
+    const editRowBtn=(!isDraftRow&&canEditRow)?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenEditSub('${sub.id}')" style="font-size:11px;" title="Sửa">✏️</button>`:'';
     const beneficiary=sub.contractType==='RESELLER'&&sub.beneficiaryName
       ?`<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">→ ${sub.beneficiaryName}</div>`:''
     return`<tr onclick="subOpenDetail('${sub.id}')">
@@ -3115,8 +3328,8 @@ function subRenderTable(data,page){
           <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">${sub.contractType==='DIRECT'?(sub.seatCount||0)+' seats':(sub.licenseQty||0)+' license'}</div></td>
       <td style="font-size:13px;">${sub.endDate?subFmtDate(sub.endDate):'<em style="color:var(--gray-400)">Chưa xác định</em>'}</td>
       <td>${subStatusBadge(sub.status)}</td>
-      <td onclick="event.stopPropagation()"><div style="display:flex;gap:4px;">
-        ${deleteDraftRowBtn}${revokeRowBtn}
+      <td onclick="event.stopPropagation()"><div style="display:flex;gap:4px;flex-wrap:wrap;">
+        ${deleteDraftRowBtn}${editRowBtn}${suspendRowBtn}${resumeRowBtn}${renewRowBtn}${revokeRowBtn}
       </div></td>
     </tr>`;
   }).join('');
@@ -3131,8 +3344,9 @@ function subRenderTable(data,page){
 // ── MODAL OPEN/CLOSE
 function subOpenModal(id){const el=document.getElementById(id);if(el)el.classList.add('open');}
 function subCloseModal(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){['subModalCreate','subModalRevoke','subModalApprove','subModalDeleteDraft'].forEach(id=>subCloseModal(id));}});
-document.addEventListener('click',e=>{['subModalCreate','subModalRevoke','subModalApprove','subModalDeleteDraft'].forEach(id=>{const ov=document.getElementById(id);if(ov&&e.target===ov)subCloseModal(id);});});
+const _SUB_MODALS=['subModalCreate','subModalRevoke','subModalApprove','subModalDeleteDraft','subModalSuspend','subModalResume','subModalRenew','subModalEditSub'];
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){_SUB_MODALS.forEach(id=>subCloseModal(id));}});
+document.addEventListener('click',e=>{_SUB_MODALS.forEach(id=>{const ov=document.getElementById(id);if(ov&&e.target===ov)subCloseModal(id);});});
 
 // ── CREATE
 function subGenId(){
@@ -3145,6 +3359,7 @@ function subGenId(){
 function subOpenCreate(){
   document.getElementById('subCrtId').value=subGenId();
   document.getElementById('subCrtNote').value='';
+  document.getElementById('subCrtDealCode').value='';
   document.getElementById('subCrtSeats').value='';
   document.getElementById('subCrtLic').value='';
   document.getElementById('subCrtStartDate').value='';
@@ -3277,14 +3492,17 @@ function subSubmitCreate(){
   const packageName=selectedOpt.textContent||pkgId;
   const startDate=document.getElementById('subCrtStartDate').value||null;
   const note=document.getElementById('subCrtNote').value.trim();
+  const dealCode=(document.getElementById('subCrtDealCode')?.value||'').trim()||null;
   const now=new Date().toISOString();
 
   const newSub={
-    id,contractId:cid,beneficiaryId:benId,beneficiaryName:benName,
+    id,contractId:cid,contractCode:c.code,contractType:c.type,
+    customerId:c.customerId,customerName:c.customerName,
+    beneficiaryId:benId,beneficiaryName:benName,
     productId,packageId:pkgId,packageName,
     startDate,endDate,
     licenseQty:isReseller?lic:null,seatCount:isReseller?null:seats,
-    status:'DRAFT',note,
+    status:'DRAFT',note,dealCode,previousSubId:null,
     licMirrorStatus:null,licMirrorExpiry:null,lastSync:'—',
     createdBy:currentUser?.name||'Sales A',createdAt:now,
     timeline:[{icon:'📝',cls:'tl-dot-gray',source:'UI',actor:currentUser?.name||'Sales A',title:'Subscription được tạo (Draft)',time:now.replace('T',' ').slice(0,16),detail:`HĐ: ${c.code} · ${packageName}${isReseller?' · '+benName:' · '+seats+' seat'} · Chờ phê duyệt`}],
@@ -3309,11 +3527,20 @@ function subOpenDetail(id){
 function subRenderHero(sub){
   const isDraft=sub.status==='DRAFT';
   const canRevoke=subCanRevoke(sub);
+  const canSuspend=subCanSuspend(sub);
+  const canResume=subCanResume(sub);
+  const canRenew=subCanRenew(sub);
+  const canEdit=subCanEdit(sub);
   const backBtn=`<button class="btn btn-ghost" onclick="subShowView('list');subRenderTable();document.getElementById('breadcrumbCurrent').textContent='Subscription';">← Quay lại</button>`;
-  const approveBtn=isDraft?`<button class="btn btn-primary" onclick="subOpenApproveDraft('${sub.id}')">📤 Phê duyệt & Gửi</button>`:'';
+  const approveBtn=isDraft?`<button class="btn btn-primary" onclick="subOpenApproveDraft('${sub.id}')">📤 Gửi đi</button>`:'';
   const deleteDraftBtn=isDraft?`<button class="btn btn-danger" onclick="subOpenDeleteDraft('${sub.id}')">Xóa</button>`:'';
-  const revokeBtn=canRevoke?`<button class="btn btn-danger" onclick="subOpenRevoke('${sub.id}')">Thu hồi</button>`:'';
+  const editBtn=(!isDraft&&canEdit)?`<button class="btn btn-secondary btn-sm" onclick="subOpenEditSub('${sub.id}')">✏️ Sửa</button>`:'';
+  const suspendBtn=canSuspend?`<button class="btn btn-ghost btn-sm" onclick="subOpenSuspend('${sub.id}')" style="color:#D97706;border-color:#D97706;">⏸ Tạm dừng</button>`:'';
+  const resumeBtn=canResume?`<button class="btn btn-ghost btn-sm" onclick="subOpenResume('${sub.id}')" style="color:#059669;border-color:#059669;">▶ Khôi phục</button>`:'';
+  const renewBtn=canRenew?`<button class="btn btn-secondary btn-sm" onclick="subOpenRenew('${sub.id}')">🔄 Gia hạn</button>`:'';
+  const revokeBtn=(canRevoke&&!isDraft)?`<button class="btn btn-danger btn-sm" onclick="subOpenRevoke('${sub.id}')">⊘ Thu hồi</button>`:'';
   const draftBanner=isDraft?`<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:10px 16px;display:flex;gap:10px;align-items:center;font-size:13px;color:#92400E;margin-bottom:12px;"><span>⏳</span><span>Subscription đang ở trạng thái <strong>Draft</strong> — chờ phê duyệt trước khi gửi provisioning.</span></div>`:'';
+  const isManagerOnlyRevoke=(!canRevoke&&!isDraft&&!['REVOKED','EXPIRED','RENEWED'].includes(sub.status)&&currentUser?.role!=='Manager')?`<div style="font-size:11px;color:var(--text-secondary);margin-top:6px;text-align:right;">⊘ Thu hồi — chỉ Manager</div>`:'';
   document.getElementById('subDetailHero').innerHTML=`
     ${draftBanner}
     <div class="profile-header">
@@ -3330,9 +3557,9 @@ function subRenderHero(sub){
         </div>
       </div>
       <div class="profile-actions">
-        ${approveBtn}${deleteDraftBtn}${revokeBtn}${backBtn}
+        ${approveBtn}${deleteDraftBtn}${editBtn}${suspendBtn}${resumeBtn}${renewBtn}${revokeBtn}${backBtn}
       </div>
-    </div>`;
+    </div>${isManagerOnlyRevoke}`;
 }
 function subSwitchTab(el,subOrPanel,panelId){
   // Support 2-arg call from onclick: subSwitchTab(el,'sub-tp-info')
@@ -3365,7 +3592,34 @@ function subRenderInfo(sub){
     ?cell('Đơn vị thụ hưởng',sub.beneficiaryName?`<span style="font-weight:500;">${sub.beneficiaryName}</span>`:null)
     :`<div></div>`;
   const noteCell=sub.note?cell('Ghi chú',`<em style="color:var(--text-secondary)">${sub.note}</em>`):`<div></div>`;
+  const dealCodeCell=cell('Deal Code',sub.dealCode?`<span style="font-family:monospace;font-size:12px;background:#F1F5F9;padding:2px 7px;border-radius:4px;">${sub.dealCode}</span>`:null);
+  /* Sub Chain */
+  const allSubs=subGetAllSubs();
+  const predecessor=sub.previousSubId?allSubs.find(s=>s.id===sub.previousSubId):null;
+  const successors=allSubs.filter(s=>s.previousSubId===sub.id);
+  const chainNodes=[];
+  if(predecessor)chainNodes.push({s:predecessor,role:'predecessor'});
+  chainNodes.push({s:sub,role:'current'});
+  successors.forEach(s=>chainNodes.push({s,role:'successor'}));
+  const chainHtml=chainNodes.length>1?`
+  <div class="card" style="padding:20px;margin-bottom:16px;">
+    <div class="section-hdr">🔗 Chuỗi Subscription</div>
+    <div class="sub-chain-wrap">
+      ${chainNodes.map((n,i)=>`
+        ${i>0?`<div class="sub-chain-arrow">→</div>`:''}
+        <div class="sub-chain-node">
+          <div class="sub-chain-box ${n.role}" onclick="subOpenDetail('${n.s.id}')">
+            <div style="font-family:monospace;font-size:11px;font-weight:700;">${n.s.id}</div>
+            <div style="margin:3px 0;">${subStatusBadge(n.s.status)}</div>
+            <div style="font-size:11px;color:var(--text-secondary);">${subFmtDate(n.s.startDate)} →</div>
+            <div style="font-size:11px;color:var(--text-secondary);">${subFmtDate(n.s.endDate)}</div>
+          </div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-top:4px;">${n.role==='predecessor'?'Trước':''}${n.role==='current'?'◀ Hiện tại ▶':''}${n.role==='successor'?'Gia hạn':''}</div>
+        </div>`).join('')}
+    </div>
+  </div>`:'';
   el.innerHTML=`
+  ${chainHtml}
   <div class="card" style="padding:20px;margin-bottom:16px;">
     <div class="section-hdr">1. Thông tin chung</div>
     <div class="sub-field-row">
@@ -3381,7 +3635,12 @@ function subRenderInfo(sub){
     <div class="sub-field-row">
       ${cell('Ngày tạo',subFmtDate(sub.createdAt?.slice(0,10)))}
       ${cell('Người tạo',sub.createdBy)}
+      ${dealCodeCell}
+    </div>
+    <div class="sub-field-row">
       ${noteCell}
+      <div></div>
+      <div></div>
     </div>
   </div>
   <div class="card" style="padding:20px;">
@@ -3550,6 +3809,185 @@ function subConfirmDeleteDraft(){
   if(subCurrentId){subCurrentId=null;subShowView('list');}
   subRenderTable();
   document.getElementById('breadcrumbCurrent').textContent='Subscription';
+}
+
+// ── SUSPEND
+let _subSuspendingId=null;
+function subOpenSuspend(id){
+  const sub=subFindById(id);if(!sub||!subCanSuspend(sub))return;
+  _subSuspendingId=id;
+  const box=document.getElementById('subSuspendInfoBox');
+  if(box)box.innerHTML=`<div style="font-size:13px;line-height:1.8;">
+    <div><strong>Mã Subscription:</strong> ${sub.id}</div>
+    <div><strong>Khách hàng:</strong> ${sub.customerName}${sub.beneficiaryName?' → '+sub.beneficiaryName:''}</div>
+    <div><strong>Gói:</strong> ${sub.packageName}</div>
+    <div><strong>Hết hạn:</strong> ${subFmtDate(sub.endDate)}</div>
+  </div>`;
+  const ta=document.getElementById('subSuspendReason');if(ta)ta.value='';
+  const btn=document.getElementById('subBtnConfirmSuspend');if(btn)btn.disabled=true;
+  subOpenModal('subModalSuspend');
+}
+function subOnSuspendReasonChange(){
+  const v=(document.getElementById('subSuspendReason')?.value||'').trim();
+  const btn=document.getElementById('subBtnConfirmSuspend');if(btn)btn.disabled=!v;
+}
+function subConfirmSuspend(){
+  const reason=(document.getElementById('subSuspendReason')?.value||'').trim();
+  if(!reason)return;
+  const found=subFindRaw(_subSuspendingId);if(!found)return;
+  const sub=found.sub;
+  sub.status='SUSPENDED';
+  sub.suspendReason=reason;
+  const now=new Date().toISOString();
+  (sub.timeline=sub.timeline||[]).push({time:now,title:'Tạm dừng subscription',icon:'⏸',cls:'tl-dot-orange',actor:currentUser?.name||'Sales',detail:`Lý do: ${reason}`});
+  (sub.audit=sub.audit||[]).push({time:now,src:'CRM',actor:currentUser?.name||'Sales',action:'SUSPEND',detail:`Lý do: ${reason}`,result:'success'});
+  subCloseModal('subModalSuspend');
+  toast('warning','Đã tạm dừng',`${_subSuspendingId} chuyển sang Suspended`);
+  _subSuspendingId=null;
+  if(subCurrentId)subOpenDetail(subCurrentId);
+  subRenderTable();
+}
+
+// ── RESUME
+let _subResumingId=null;
+function subOpenResume(id){
+  const sub=subFindById(id);if(!sub||!subCanResume(sub))return;
+  _subResumingId=id;
+  const box=document.getElementById('subResumeInfoBox');
+  if(box)box.innerHTML=`<div style="font-size:13px;line-height:1.8;">
+    <div><strong>Mã Subscription:</strong> ${sub.id}</div>
+    <div><strong>Khách hàng:</strong> ${sub.customerName}${sub.beneficiaryName?' → '+sub.beneficiaryName:''}</div>
+    <div><strong>Gói:</strong> ${sub.packageName}</div>
+    ${sub.suspendReason?`<div><strong>Lý do tạm dừng:</strong> <em>${sub.suspendReason}</em></div>`:''}
+  </div>`;
+  subOpenModal('subModalResume');
+}
+function subConfirmResume(){
+  const found=subFindRaw(_subResumingId);if(!found)return;
+  const sub=found.sub;
+  sub.status='ACTIVE';
+  delete sub.suspendReason;
+  const now=new Date().toISOString();
+  (sub.timeline=sub.timeline||[]).push({time:now,title:'Khôi phục subscription',icon:'▶',cls:'tl-dot-green',actor:currentUser?.name||'Sales',detail:'Subscription được khôi phục về Active'});
+  (sub.audit=sub.audit||[]).push({time:now,src:'CRM',actor:currentUser?.name||'Sales',action:'RESUME',detail:'Khôi phục từ Suspended',result:'success'});
+  subCloseModal('subModalResume');
+  toast('success','Đã khôi phục',`${_subResumingId} trở về Active`);
+  _subResumingId=null;
+  if(subCurrentId)subOpenDetail(subCurrentId);
+  subRenderTable();
+}
+
+// ── RENEW
+let _subRenewingId=null;
+function subOpenRenew(id){
+  const sub=subFindById(id);if(!sub||!subCanRenew(sub))return;
+  _subRenewingId=id;
+  const box=document.getElementById('subRenewInfoBox');
+  if(box)box.innerHTML=`<div style="font-size:13px;line-height:1.8;">
+    <div><strong>Gia hạn từ:</strong> <span style="font-family:monospace;">${sub.id}</span></div>
+    <div><strong>Gói:</strong> ${sub.packageName}</div>
+    <div><strong>Hết hạn hiện tại:</strong> ${subFmtDate(sub.endDate)}</div>
+    <div><strong>Trạng thái:</strong> ${subStatusBadge(sub.status)}</div>
+  </div>`;
+  const ed=document.getElementById('subRenewEndDate');if(ed)ed.value='';
+  const dc=document.getElementById('subRenewDealCode');if(dc)dc.value='';
+  const nt=document.getElementById('subRenewNote');if(nt)nt.value='';
+  subOpenModal('subModalRenew');
+}
+function subConfirmRenew(){
+  const endDate=(document.getElementById('subRenewEndDate')?.value||'').trim();
+  if(!endDate){toast('error','Thiếu thông tin','Ngày hết hạn là bắt buộc');return;}
+  const dealCode=(document.getElementById('subRenewDealCode')?.value||'').trim();
+  const note=(document.getElementById('subRenewNote')?.value||'').trim();
+  const found=subFindRaw(_subRenewingId);if(!found)return;
+  const predecessor=found.sub;
+  const contract=found.contract;
+  const now=new Date().toISOString();
+  const newId=subGenId();
+  const newSub={
+    id:newId,
+    contractId:predecessor.contractId,
+    contractCode:predecessor.contractCode,
+    contractType:predecessor.contractType,
+    customerId:predecessor.customerId,
+    customerName:predecessor.customerName,
+    beneficiaryName:predecessor.beneficiaryName||null,
+    packageId:predecessor.packageId,
+    packageName:predecessor.packageName,
+    productId:predecessor.productId,
+    seatCount:predecessor.seatCount||null,
+    licenseQty:predecessor.licenseQty||null,
+    status:'DRAFT',
+    startDate:null,
+    endDate:endDate,
+    dealCode:dealCode||null,
+    note:note||null,
+    previousSubId:_subRenewingId,
+    createdAt:now,
+    createdBy:currentUser?.name||'Sales',
+    licMirrorStatus:'N/A',
+    lastSync:null,
+    timeline:[{time:now,title:'DRAFT tạo để gia hạn',icon:'🔄',cls:'tl-dot-blue',actor:currentUser?.name||'Sales',detail:`Gia hạn từ ${_subRenewingId}`}],
+    audit:[{time:now,src:'CRM',actor:currentUser?.name||'Sales',action:'RENEW_CREATE',detail:`Gia hạn từ ${_subRenewingId}`,result:'success'}]
+  };
+  predecessor.status='RENEWED';
+  (predecessor.timeline=predecessor.timeline||[]).push({time:now,title:'Đã được gia hạn',icon:'🔄',cls:'tl-dot-blue',actor:currentUser?.name||'Sales',detail:`Subscription kế tiếp: ${newId}`});
+  (predecessor.audit=predecessor.audit||[]).push({time:now,src:'CRM',actor:currentUser?.name||'Sales',action:'RENEWED',detail:`Tạo successor ${newId}`,result:'success'});
+  (contract.subs=contract.subs||[]).push(newSub);
+  subCloseModal('subModalRenew');
+  toast('success','Đã tạo Subscription gia hạn',`${newId} ở trạng thái Draft`);
+  _subRenewingId=null;
+  subRenderTable();
+  subOpenDetail(newId);
+}
+
+// ── EDIT SUB
+let _subEditingId=null;
+function subOpenEditSub(id){
+  const sub=subFindById(id);if(!sub||!subCanEdit(sub))return;
+  _subEditingId=id;
+  const isDraft=sub.status==='DRAFT';
+  const fullEdit=isDraft;
+  document.getElementById('subEditSubId').value=sub.id;
+  document.getElementById('subEditSubPackage').value=sub.packageName;
+  const dateRow=document.getElementById('subEditSubDateRow');
+  if(dateRow)dateRow.style.display=fullEdit?'':'none';
+  if(fullEdit){
+    const sd=document.getElementById('subEditSubStartDate');if(sd)sd.value=sub.startDate||'';
+    const ed=document.getElementById('subEditSubEndDate');if(ed)ed.value=sub.endDate||'';
+  }
+  document.getElementById('subEditSubDealCode').value=sub.dealCode||'';
+  document.getElementById('subEditSubNote').value=sub.note||'';
+  const banner=document.getElementById('subEditSubStatusNote');
+  if(banner){
+    if(fullEdit){banner.style.display='none';}
+    else{
+      banner.style.display='';
+      const nt=document.getElementById('subEditSubStatusNoteText');
+      if(nt)nt.innerHTML=`Subscription đang ở trạng thái <strong>${sub.status}</strong> — chỉ có thể sửa <strong>Deal Code</strong> và <strong>Ghi chú</strong>.`;
+    }
+  }
+  subOpenModal('subModalEditSub');
+}
+function subSubmitEditSub(){
+  const found=subFindRaw(_subEditingId);if(!found)return;
+  const sub=found.sub;
+  const isDraft=sub.status==='DRAFT';
+  if(isDraft){
+    const sd=(document.getElementById('subEditSubStartDate')?.value||'').trim();
+    const ed=(document.getElementById('subEditSubEndDate')?.value||'').trim();
+    if(sd)sub.startDate=sd;
+    if(ed)sub.endDate=ed;
+  }
+  sub.dealCode=(document.getElementById('subEditSubDealCode')?.value||'').trim()||null;
+  sub.note=(document.getElementById('subEditSubNote')?.value||'').trim()||null;
+  const now=new Date().toISOString();
+  (sub.audit=sub.audit||[]).push({time:now,src:'CRM',actor:currentUser?.name||'Sales',action:'EDIT',detail:`Cập nhật thông tin sub`,result:'success'});
+  subCloseModal('subModalEditSub');
+  toast('success','Đã cập nhật',`${_subEditingId} đã được lưu`);
+  _subEditingId=null;
+  if(subCurrentId)subOpenDetail(subCurrentId);
+  subRenderTable();
 }
 
 init();
