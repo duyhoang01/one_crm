@@ -599,18 +599,19 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <select class="field-select" id="subCrtPackage">
             <option value="">▾ Chọn gói sản phẩm...</option>
           </select>
+          <div class="field-hint">🔒 Không thể thay đổi sau khi tạo</div>
           <div class="field-error" id="subErrCrtPackage">Vui lòng chọn gói sản phẩm</div>
         </div>
         <div class="field" id="subCrtSeatsField">
           <label class="field-label">Số seats <span class="required">*</span></label>
           <input class="field-input" id="subCrtSeats" type="text" inputmode="numeric" placeholder="VD: 100">
-
+          <div class="field-hint">🔒 Không thể thay đổi sau khi tạo</div>
           <div class="field-error" id="subErrCrtSeats">Số seats là bắt buộc và phải > 0</div>
         </div>
         <div class="field" id="subCrtLicField" style="display:none;">
           <label class="field-label">Số license <span class="required">*</span></label>
           <input class="field-input" id="subCrtLic" type="text" inputmode="numeric" placeholder="VD: 50">
-
+          <div class="field-hint">🔒 Không thể thay đổi sau khi tạo</div>
           <div class="field-error" id="subErrCrtLic">Số license là bắt buộc và phải > 0</div>
         </div>
       </div>
@@ -639,52 +640,6 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
   </div>
 </div>
 
-<!-- MODAL CHỈNH SỬA SUBSCRIPTION -->
-<div class="overlay" id="subModalEdit">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <div class="modal-title">✏️ Chỉnh sửa Subscription</div>
-      <button class="close-btn" onclick="subCloseModal('subModalEdit')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="field">
-          <label class="field-label">Mã Subscription</label>
-          <input class="field-input" id="subEditId" readonly>
-        </div>
-        <div class="field">
-          <label class="field-label">Gói sản phẩm</label>
-          <input class="field-input" id="subEditPackage" readonly>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="field" id="subEditSeatsRow">
-          <label class="field-label">Số seats</label>
-          <input class="field-input" id="subEditSeats" readonly>
-        </div>
-        <div class="field" id="subEditLicRow" style="display:none;">
-          <label class="field-label">Số license</label>
-          <input class="field-input" id="subEditLic" readonly>
-        </div>
-        <div class="field">
-          <label class="field-label">Ngày hết hạn (dự kiến) <span class="required">*</span></label>
-          <input class="field-input" id="subEditEndDate" type="date">
-          <div class="field-error" id="subErrEditEndDate">Ngày hết hạn là bắt buộc</div>
-        </div>
-      </div>
-      <div class="form-row full">
-        <div class="field">
-          <label class="field-label">Ghi chú</label>
-          <textarea class="field-input" id="subEditNote" rows="2" style="resize:vertical;"></textarea>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="subCloseModal('subModalEdit')">Hủy</button>
-      <button class="btn btn-primary" onclick="subSubmitEdit()">💾 Lưu</button>
-    </div>
-  </div>
-</div>
 
 <!-- MODAL THU HỒI SUBSCRIPTION -->
 <div class="overlay" id="subModalRevoke">
@@ -739,19 +694,19 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
 <div class="overlay" id="subModalDeleteDraft">
   <div class="modal" style="max-width:480px;">
     <div class="modal-header">
-      <div class="modal-title">Xóa Subscription Draft</div>
+      <div class="modal-title">Xóa Subscription</div>
       <button class="close-btn" onclick="subCloseModal('subModalDeleteDraft')">✕</button>
     </div>
     <div class="modal-body">
       <div id="subDeleteDraftInfoBox" style="background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;line-height:2;margin-bottom:14px;"></div>
       <div class="alert alert-warn" style="margin-bottom:0;align-items:flex-start;">
         <div class="alert-icon">⚠️</div>
-        <div class="alert-body"><div class="alert-text">Sub Draft sẽ bị <strong>xóa vĩnh viễn</strong>. Hành động này không thể hoàn tác.</div></div>
+        <div class="alert-body"><div class="alert-text">Subscription này sẽ bị <strong>xóa vĩnh viễn</strong>. Hành động này không thể hoàn tác.</div></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="subCloseModal('subModalDeleteDraft')">Hủy</button>
-      <button class="btn btn-danger" onclick="subConfirmDeleteDraft()">🗑 Xóa vĩnh viễn</button>
+      <button class="btn btn-danger" onclick="subConfirmDeleteDraft()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg> Xóa</button>
     </div>
   </div>
 </div>
@@ -2985,7 +2940,6 @@ const SUB_PER_PAGE=10;
 let subSortField='createdAt';
 let subSortDir='desc';
 let subCurrentId=null;
-let subEditingId=null;
 let subRevokingId=null;
 let subApprovingId=null;
 let subDeletingDraftId=null;
@@ -3019,13 +2973,13 @@ function subFindRaw(id){
 
 // ── STATUS HELPERS
 const SUB_STATUS_META={
-  DRAFT:{label:'Draft',cls:'sub-s-draft',dot:''},
-  PENDING_PROVISION:{label:'Provisioning',cls:'sub-s-pending',dot:''},
-  ACTIVE:{label:'Active',cls:'sub-s-active',dot:''},
-  SUSPENDED:{label:'Suspended',cls:'sub-s-suspended',dot:''},
-  EXPIRED:{label:'Expired',cls:'sub-s-expired',dot:''},
-  REVOKED:{label:'Revoked',cls:'sub-s-revoked',dot:''},
-  RENEWED:{label:'Renewed',cls:'sub-s-renewed',dot:''},
+  DRAFT:{label:'Bản nháp',cls:'sub-s-draft',dot:''},
+  PENDING_PROVISION:{label:'Đang triển khai',cls:'sub-s-pending',dot:''},
+  ACTIVE:{label:'Đang hoạt động',cls:'sub-s-active',dot:''},
+  SUSPENDED:{label:'Tạm dừng',cls:'sub-s-suspended',dot:''},
+  EXPIRED:{label:'Hết hạn',cls:'sub-s-expired',dot:''},
+  REVOKED:{label:'Đã thu hồi',cls:'sub-s-revoked',dot:''},
+  RENEWED:{label:'Đã gia hạn',cls:'sub-s-renewed',dot:''},
 };
 function subStatusBadge(status){
   const m=SUB_STATUS_META[status]||{label:status,cls:'sub-s-draft',dot:''};
@@ -3038,8 +2992,15 @@ function subTypeBadge(type){
 }
 function subMirrorBadge(status){
   if(!status||status==='N/A')return`<span class="sub-mirror-badge sub-mirror-na">—</span>`;
-  const map={ACTIVE:'sub-mirror-active',PENDING:'sub-mirror-pending',SUSPENDED:'sub-mirror-suspended',EXPIRED:'sub-mirror-expired',REVOKED:'sub-mirror-revoked'};
-  return`<span class="sub-mirror-badge ${map[status]||'sub-mirror-na'}">${status}</span>`;
+  const map={
+    ACTIVE:{cls:'sub-mirror-active',label:'Đang hoạt động'},
+    PENDING:{cls:'sub-mirror-pending',label:'Đang triển khai'},
+    SUSPENDED:{cls:'sub-mirror-suspended',label:'Tạm dừng'},
+    EXPIRED:{cls:'sub-mirror-expired',label:'Hết hạn'},
+    REVOKED:{cls:'sub-mirror-revoked',label:'Đã thu hồi'},
+  };
+  const m=map[status]||{cls:'sub-mirror-na',label:status};
+  return`<span class="sub-mirror-badge ${m.cls}">${m.label}</span>`;
 }
 function subFmtDate(d){
   if(!d)return'<em style="color:var(--gray-400)">—</em>';
@@ -3053,7 +3014,7 @@ function subFmtDateTime(s){
   return`${d}/${m}/${y}${timePart?' '+timePart:''}`;
 }
 function subCanRevoke(s){
-  return s&&!['REVOKED','EXPIRED','DRAFT'].includes(s.status);
+  return s&&!['REVOKED','EXPIRED','DRAFT','RENEWED'].includes(s.status);
 }
 function subRevokeTooltip(s){
   if(!s)return'';
@@ -3129,11 +3090,12 @@ function subRenderTable(data,page){
   tbody.innerHTML=rows.map(sub=>{
     const isDraftRow=sub.status==='DRAFT';
     const canRevokeRow=!isDraftRow&&subCanRevoke(sub);
+    const isTerminal=['REVOKED','EXPIRED','RENEWED'].includes(sub.status);
     const deleteDraftRowBtn=isDraftRow
       ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Xóa">${TRASH_ICON}</button>`:'';
-    const revokeRowBtn=canRevokeRow
+    const revokeRowBtn=!isDraftRow?(canRevokeRow
       ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenRevoke('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Thu hồi">${TRASH_ICON}</button>`
-      :''
+      :(isTerminal?`<button class="btn btn-ghost btn-sm" disabled title="${subRevokeTooltip(sub)}" style="opacity:.4;cursor:not-allowed;gap:4px;">${TRASH_ICON}</button>`:'')):''
     const beneficiary=sub.contractType==='RESELLER'&&sub.beneficiaryName
       ?`<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">→ ${sub.beneficiaryName}</div>`:''
     return`<tr onclick="subOpenDetail('${sub.id}')">
@@ -3161,8 +3123,8 @@ function subRenderTable(data,page){
 // ── MODAL OPEN/CLOSE
 function subOpenModal(id){const el=document.getElementById(id);if(el)el.classList.add('open');}
 function subCloseModal(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){['subModalCreate','subModalEdit','subModalRevoke','subModalApprove','subModalDeleteDraft'].forEach(id=>subCloseModal(id));}});
-document.addEventListener('click',e=>{['subModalCreate','subModalEdit','subModalRevoke','subModalApprove','subModalDeleteDraft'].forEach(id=>{const ov=document.getElementById(id);if(ov&&e.target===ov)subCloseModal(id);});});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){['subModalCreate','subModalRevoke','subModalApprove','subModalDeleteDraft'].forEach(id=>subCloseModal(id));}});
+document.addEventListener('click',e=>{['subModalCreate','subModalRevoke','subModalApprove','subModalDeleteDraft'].forEach(id=>{const ov=document.getElementById(id);if(ov&&e.target===ov)subCloseModal(id);});});
 
 // ── CREATE
 function subGenId(){
@@ -3317,12 +3279,12 @@ function subSubmitCreate(){
     status:'DRAFT',note,
     licMirrorStatus:null,licMirrorExpiry:null,lastSync:'—',
     createdBy:currentUser?.name||'Sales A',createdAt:now,
-    timeline:[{icon:'📝',cls:'tl-dot-gray',source:'UI',actor:currentUser?.name||'Sales A',title:'Subscription được tạo (Draft)',time:now.replace('T',' ').slice(0,16),detail:`HĐ: ${c.code} · ${packageName}${isReseller?' · '+benName:' · '+seats+' seat'} · Chờ CSKH phê duyệt`}],
+    timeline:[{icon:'📝',cls:'tl-dot-gray',source:'UI',actor:currentUser?.name||'Sales A',title:'Subscription được tạo (Draft)',time:now.replace('T',' ').slice(0,16),detail:`HĐ: ${c.code} · ${packageName}${isReseller?' · '+benName:' · '+seats+' seat'} · Chờ phê duyệt`}],
     audit:[{time:now.replace('T',' ').slice(0,16),source:'UI',actor:currentUser?.name||'Sales A',action:'Tạo Subscription (Draft)',detail:`status: DRAFT · ${packageName} · chờ CSKH phê duyệt`,result:'SUCCESS'}],
   };
   c.subs.push(newSub);
   subCloseModal('subModalCreate');
-  toast('success','Đã tạo Subscription (Draft)',`${id} — ${packageName} · Chờ CSKH phê duyệt`);
+  toast('success','Đã tạo Subscription (Draft)',`${id} — ${packageName} · Chờ phê duyệt`);
   subOpenDetail(id);
 }
 
@@ -3491,51 +3453,9 @@ function subOnAuditSearch(){
   },300);
 }
 
-// ── EDIT
-function subOpenEdit(id){
-  const sub=subFindById(id);if(!sub)return;
-  subEditingId=id;
-  document.getElementById('subEditId').value=sub.id;
-  document.getElementById('subEditPackage').value=sub.packageName;
-  document.getElementById('subEditEndDate').value=sub.endDate||'';
-  document.getElementById('subEditNote').value=sub.note||'';
-  if(sub.contractType==='RESELLER'){
-    document.getElementById('subEditSeatsRow').style.display='none';
-    document.getElementById('subEditLicRow').style.display='';
-    document.getElementById('subEditLic').value=sub.licenseQty||'';
-  } else {
-    document.getElementById('subEditSeatsRow').style.display='';
-    document.getElementById('subEditLicRow').style.display='none';
-    document.getElementById('subEditSeats').value=sub.seatCount||'';
-  }
-  document.getElementById('subErrEditEndDate').style.display='none';
-  subOpenModal('subModalEdit');
-}
-function subSubmitEdit(){
-  const endDate=document.getElementById('subEditEndDate').value;
-  if(!endDate){document.getElementById('subErrEditEndDate').style.display='block';return;}
-  document.getElementById('subErrEditEndDate').style.display='none';
-  const note=document.getElementById('subEditNote').value.trim();
-  const found=subFindRaw(subEditingId);
-  if(!found)return;
-  found.sub.endDate=endDate;
-  found.sub.note=note;
-  (found.sub.audit=found.sub.audit||[]).unshift({
-    time:new Date().toISOString().replace('T',' ').slice(0,16),
-    source:'UI',actor:currentUser?.name||'Sales A',
-    action:'Cập nhật Subscription',
-    detail:`endDate: ${endDate}${note?' · note cập nhật':''}`,result:'SUCCESS'
-  });
-  subCloseModal('subModalEdit');
-  toast('success','Đã cập nhật',`${subEditingId} — endDate: ${subFmtDate(endDate)}`);
-  if(subCurrentId===subEditingId){subRenderHero(subFindById(subEditingId));subRenderInfo(subFindById(subEditingId));}
-  else{subRenderTable();}
-}
-
 // ── REVOKE
 function subOpenRevoke(id){
   const sub=subFindById(id);if(!sub)return;
-  if(currentUser?.role!=='Manager'){toast('error','Không có quyền','Chỉ Manager mới được thu hồi Subscription.');return;}
   subRevokingId=id;
   document.getElementById('subRevokeReason').value='';
   document.getElementById('subBtnConfirmRevoke').disabled=true;
