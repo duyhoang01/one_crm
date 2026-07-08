@@ -3128,11 +3128,7 @@ function subRenderTable(data,page){
 
   tbody.innerHTML=rows.map(sub=>{
     const isDraftRow=sub.status==='DRAFT';
-    const canEditRow=isDraftRow||['ACTIVE','SUSPENDED','PENDING_PROVISION'].includes(sub.status);
     const canRevokeRow=!isDraftRow&&subCanRevoke(sub);
-    const approveRowBtn='';
-    const editRowBtn=canEditRow
-      ?`<button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();subOpenEdit('${sub.id}')">✏️ Sửa</button>`:'';
     const deleteDraftRowBtn=isDraftRow
       ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Xóa">${TRASH_ICON}</button>`:'';
     const revokeRowBtn=canRevokeRow
@@ -3150,7 +3146,7 @@ function subRenderTable(data,page){
       <td style="font-size:13px;">${sub.endDate?subFmtDate(sub.endDate):'<em style="color:var(--gray-400)">Chưa xác định</em>'}</td>
       <td>${subStatusBadge(sub.status)}</td>
       <td onclick="event.stopPropagation()"><div style="display:flex;gap:4px;">
-        ${approveRowBtn}${editRowBtn}${deleteDraftRowBtn}${revokeRowBtn}
+        ${deleteDraftRowBtn}${revokeRowBtn}
       </div></td>
     </tr>`;
   }).join('');
@@ -3342,11 +3338,9 @@ function subOpenDetail(id){
 }
 function subRenderHero(sub){
   const isDraft=sub.status==='DRAFT';
-  const canEdit=isDraft||['ACTIVE','SUSPENDED','PENDING_PROVISION'].includes(sub.status);
   const canRevoke=subCanRevoke(sub);
   const backBtn=`<button class="btn btn-ghost" onclick="subShowView('list');subRenderTable();document.getElementById('breadcrumbCurrent').textContent='Subscription';">← Quay lại</button>`;
   const approveBtn=isDraft?`<button class="btn btn-primary" onclick="subOpenApproveDraft('${sub.id}')">📤 Phê duyệt & Gửi</button>`:'';
-  const editBtn=canEdit?`<button class="btn btn-secondary" onclick="subOpenEdit('${sub.id}')">✏️ Chỉnh sửa</button>`:'';
   const deleteDraftBtn=isDraft?`<button class="btn btn-danger" onclick="subOpenDeleteDraft('${sub.id}')">Xóa</button>`:'';
   const revokeBtn=canRevoke?`<button class="btn btn-danger" onclick="subOpenRevoke('${sub.id}')">Thu hồi</button>`:'';
   const draftBanner=isDraft?`<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:10px 16px;display:flex;gap:10px;align-items:center;font-size:13px;color:#92400E;margin-bottom:12px;"><span>⏳</span><span>Subscription đang ở trạng thái <strong>Draft</strong> — chờ phê duyệt trước khi gửi provisioning.</span></div>`:'';
@@ -3366,7 +3360,7 @@ function subRenderHero(sub){
         </div>
       </div>
       <div class="profile-actions">
-        ${approveBtn}${editBtn}${deleteDraftBtn}${revokeBtn}${backBtn}
+        ${approveBtn}${deleteDraftBtn}${revokeBtn}${backBtn}
       </div>
     </div>`;
 }
