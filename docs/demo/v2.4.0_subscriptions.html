@@ -275,18 +275,22 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
 .con-delete-name{font-size:15px;font-weight:700;color:var(--navy);text-align:center;margin-bottom:16px}
 
 /* ── SUBSCRIPTION MODULE ─────────────────────────────── */
-.sub-status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:12px;font-weight:500;}
-.sub-s-draft{background:var(--gray-100);color:var(--gray-600);}
-.sub-s-pending{background:#FFFBEB;color:#D97706;}
-.sub-s-active{background:#ECFDF5;color:#059669;}
-.sub-s-suspended{background:#FFF7ED;color:#EA580C;}
-.sub-s-expired{background:#FEF2F2;color:var(--red);}
-.sub-s-revoked{background:var(--gray-100);color:var(--gray-600);text-decoration:line-through;}
-.sub-s-renewed{background:#F3EFFE;color:#7C3AED;}
+.sub-status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1.5px solid transparent;}
+.sub-s-draft{background:#F9FAFB;color:#6B7280;border-color:#D1D5DB;}
+.sub-s-pending{background:#EFF6FF;color:#2563EB;border-color:#93C5FD;}
+.sub-s-active{background:#F0FDF4;color:#16A34A;border-color:#86EFAC;}
+.sub-s-suspended{background:#FFF7ED;color:#C2410C;border-color:#FDBA74;}
+.sub-s-expired{background:#FFF7ED;color:#EA580C;border-color:#FED7AA;}
+.sub-s-revoked{background:#FEF2F2;color:#DC2626;border-color:#FCA5A5;}
+.sub-s-renewed{background:#F9FAFB;color:#6B7280;border-color:#D1D5DB;}
 .sub-type-direct{background:#EBF4FD;color:var(--primary);}
 .sub-type-reseller{background:#F3EFFE;color:#7C3AED;}
 .sub-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;}
 .sub-detail-row{display:contents;}
+.sub-info-row{display:flex;flex-direction:column;gap:3px;padding:10px 0;border-bottom:1px solid var(--border);}
+.sub-info-row:last-child{border-bottom:none;}
+.sub-info-label{font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;}
+.sub-info-value{font-size:14px;color:var(--text-primary);}
 .sub-detail-label{padding:11px 16px;font-size:12px;font-weight:600;color:var(--text-secondary);background:var(--gray-50);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.02em;}
 .sub-detail-value{padding:11px 16px;font-size:14px;color:var(--text-primary);background:white;border-bottom:1px solid var(--border);}
 .sub-mirror-badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;}
@@ -563,10 +567,10 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
     <div class="modal-body">
       <div class="form-row">
         <div class="field">
-          <label class="field-label">Mã Subscription <span class="required">*</span></label>
-          <input class="field-input" id="subCrtId" type="text" placeholder="VD: SUB-2026-010" oninput="subCheckIdDup()">
-          <div class="field-hint">Nhập mã theo quy ước công ty, không trùng với subscription khác</div>
-          <div class="field-error" id="subErrCrtId">Mã subscription là bắt buộc / đã tồn tại</div>
+          <label class="field-label">Mã Subscription</label>
+          <input class="field-input" id="subCrtId" readonly style="background:var(--gray-50);color:var(--text-secondary);font-family:monospace;">
+          <div class="field-hint">Mã tự sinh theo hệ thống</div>
+          <div class="field-error" id="subErrCrtId" style="display:none;"></div>
         </div>
         <div class="field">
           <label class="field-label">Hợp đồng <span class="required">*</span></label>
@@ -598,13 +602,13 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
         <div class="field" id="subCrtSeatsField">
           <label class="field-label">Số seats <span class="required">*</span></label>
           <input class="field-input" id="subCrtSeats" type="text" inputmode="numeric" placeholder="VD: 100">
-          <div class="field-hint">⚠️ Không thể thay đổi sau khi lưu</div>
+
           <div class="field-error" id="subErrCrtSeats">Số seats là bắt buộc và phải > 0</div>
         </div>
         <div class="field" id="subCrtLicField" style="display:none;">
           <label class="field-label">Số license <span class="required">*</span></label>
           <input class="field-input" id="subCrtLic" type="text" inputmode="numeric" placeholder="VD: 50">
-          <div class="field-hint">⚠️ Không thể thay đổi sau khi lưu</div>
+
           <div class="field-error" id="subErrCrtLic">Số license là bắt buộc và phải > 0</div>
         </div>
       </div>
@@ -645,24 +649,20 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
         <div class="field">
           <label class="field-label">Mã Subscription</label>
           <input class="field-input" id="subEditId" readonly>
-          <div class="immutable-note">🔒 Không thể thay đổi</div>
         </div>
         <div class="field">
           <label class="field-label">Gói sản phẩm</label>
           <input class="field-input" id="subEditPackage" readonly>
-          <div class="immutable-note">🔒 Không thể thay đổi</div>
         </div>
       </div>
       <div class="form-row">
         <div class="field" id="subEditSeatsRow">
           <label class="field-label">Số seats</label>
           <input class="field-input" id="subEditSeats" readonly>
-          <div class="immutable-note">🔒 Không thể thay đổi</div>
         </div>
         <div class="field" id="subEditLicRow" style="display:none;">
           <label class="field-label">Số license</label>
           <input class="field-input" id="subEditLic" readonly>
-          <div class="immutable-note">🔒 Không thể thay đổi</div>
         </div>
         <div class="field">
           <label class="field-label">Ngày hết hạn (dự kiến) <span class="required">*</span></label>
@@ -1634,7 +1634,20 @@ let conContracts = [
        startDate:'2025-01-20',endDate:'2026-01-19',licenseQty:null,seatCount:500,
        status:'ACTIVE',note:'Triển khai SaaS multi-tenant',
        licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-01-19',lastSync:'8 phút trước',
-       createdBy:'Sales A',createdAt:'2025-01-15T10:00:00'},
+       createdBy:'Sales A',createdAt:'2025-01-15T10:00:00',
+       timeline:[
+         {icon:'📊',cls:'tl-dot-gray',source:'WEBHOOK',actor:'System',title:'Usage snapshot cập nhật',time:'2026-07-08 08:00',detail:'486 / 500 seats đang dùng (97.2%)'},
+         {icon:'✏️',cls:'tl-dot-blue',source:'UI',actor:'Sales A',title:'Cập nhật ngày hết hạn',time:'2025-12-10 14:00',detail:'endDate: 2026-01-19 (phụ lục gia hạn thêm 30 ngày)'},
+         {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2025-01-20 08:30',detail:'Hiệu lực → 2026-01-19 · 500 seats · FPT Software'},
+         {icon:'📤',cls:'tl-dot-gray',source:'SYSTEM',actor:'System',title:'Đã publish provisioning event',time:'2025-01-15 10:30',detail:'Outbox published · subscription.created'},
+         {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales A',title:'Subscription được tạo',time:'2025-01-15 10:00',detail:'HĐ: HD-CMC-2025-001 · CMC EDR 500 seats'},
+       ],
+       audit:[
+         {time:'2026-07-08 08:00',source:'WEBHOOK',actor:'System',action:'Usage snapshot cập nhật',detail:'seats_used: 486 / 500 (97.2%)',result:'SUCCESS'},
+         {time:'2025-12-10 14:00',source:'UI',actor:'Sales A',action:'Cập nhật Subscription',detail:'endDate: 2026-01-19 · phụ lục gia hạn +30 ngày',result:'SUCCESS'},
+         {time:'2025-01-20 08:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · 500 seats',result:'SUCCESS'},
+         {time:'2025-01-15 10:00',source:'UI',actor:'Sales A',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · CMC EDR 500 seats',result:'SUCCESS'},
+       ]},
     ]
   },
   {
@@ -1651,12 +1664,28 @@ let conContracts = [
        productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR',
        startDate:'2025-03-15',endDate:'2026-03-14',licenseQty:80,seatCount:80,
        status:'ACTIVE',note:'',licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-03-14',lastSync:'12 phút trước',
-       createdBy:'Sales B',createdAt:'2025-03-15T09:00:00'},
+       createdBy:'Sales B',createdAt:'2025-03-15T09:00:00',
+       timeline:[
+         {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2025-03-15 10:00',detail:'Beneficiary: Công ty TNHH Văn Phòng · 80 license'},
+         {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales B',title:'Subscription được tạo',time:'2025-03-15 09:00',detail:'HĐ: HD-CMC-2025-002 · CMC EDR 80 license · Công ty TNHH Văn Phòng'},
+       ],
+       audit:[
+         {time:'2025-03-15 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · 80 license',result:'SUCCESS'},
+         {time:'2025-03-15 09:00',source:'UI',actor:'Sales B',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · CMC EDR 80 license',result:'SUCCESS'},
+       ]},
       {id:'sub-003',contractId:'con-002',beneficiaryId:'B002',beneficiaryName:'Trường ĐH Kinh Tế HCM',
        productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR',
        startDate:'2025-04-01',endDate:'2026-03-31',licenseQty:60,seatCount:60,
        status:'ACTIVE',note:'',licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-03-31',lastSync:'12 phút trước',
-       createdBy:'Sales B',createdAt:'2025-04-01T08:00:00'},
+       createdBy:'Sales B',createdAt:'2025-04-01T08:00:00',
+       timeline:[
+         {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2025-04-01 09:30',detail:'Beneficiary: Trường ĐH Kinh Tế HCM · 60 license'},
+         {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales B',title:'Subscription được tạo',time:'2025-04-01 08:00',detail:'HĐ: HD-CMC-2025-002 · CMC EDR 60 license · Trường ĐH Kinh Tế HCM'},
+       ],
+       audit:[
+         {time:'2025-04-01 09:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · 60 license',result:'SUCCESS'},
+         {time:'2025-04-01 08:00',source:'UI',actor:'Sales B',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · CMC EDR 60 license',result:'SUCCESS'},
+       ]},
     ]
   },
   {
@@ -1670,8 +1699,21 @@ let conContracts = [
       {id:'sub-004',contractId:'con-003',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EPP-03',packageName:'CMC EPP',
        startDate:'2025-02-15',endDate:'2025-08-14',licenseQty:null,seatCount:1000,
-       status:'EXPIRED',note:'',licMirrorStatus:'EXPIRED',licMirrorExpiry:'2025-08-14',lastSync:'—',
-       createdBy:'Sales A',createdAt:'2025-02-10T15:00:00'},
+       status:'EXPIRED',note:'KH không gia hạn — chuyển sang gói mới EPR Q4/2025.',
+       licMirrorStatus:'EXPIRED',licMirrorExpiry:'2025-08-14',lastSync:'—',
+       createdBy:'Sales A',createdAt:'2025-02-10T15:00:00',
+       timeline:[
+         {icon:'⏰',cls:'tl-dot-red',source:'WEBHOOK',actor:'System',title:'License hết hạn',time:'2025-08-14 23:59',detail:'license.expired event · CMC EPP 1000 seats · Viettel Solutions'},
+         {icon:'⚠️',cls:'tl-dot-red',source:'SYSTEM',actor:'System',title:'Cảnh báo sắp hết hạn',time:'2025-08-07 09:00',detail:'Còn 7 ngày · ops notified'},
+         {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2025-02-15 09:00',detail:'Hiệu lực → 2025-08-14 · 1.000 seats · Viettel Solutions'},
+         {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales A',title:'Subscription được tạo',time:'2025-02-10 15:00',detail:'HĐ: HD-CMC-2025-003 · CMC EPP 1.000 seats'},
+       ],
+       audit:[
+         {time:'2025-08-14 23:59',source:'WEBHOOK',actor:'System',action:'Sub chuyển EXPIRED',detail:'license.expired event · 1000 seats',result:'SUCCESS'},
+         {time:'2025-08-07 09:00',source:'SYSTEM',actor:'System',action:'Alert sắp hết hạn',detail:'7 ngày còn lại · email gửi ops@cmc.vn',result:'SUCCESS'},
+         {time:'2025-02-15 09:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · CMC EPP 1000 seats',result:'SUCCESS'},
+         {time:'2025-02-10 15:00',source:'UI',actor:'Sales A',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · CMC EPP 1000 seats',result:'SUCCESS'},
+       ]},
     ]
   },
   {
@@ -1689,7 +1731,15 @@ let conContracts = [
        productId:'CA',packageId:'PKG-EPR-02',packageName:'CA Organization',
        startDate:'2025-05-01',endDate:'2026-04-30',licenseQty:120,seatCount:120,
        status:'ACTIVE',note:'',licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-04-30',lastSync:'25 phút trước',
-       createdBy:'Sales C',createdAt:'2025-05-01T09:00:00'},
+       createdBy:'Sales C',createdAt:'2025-05-01T09:00:00',
+       timeline:[
+         {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2025-05-01 10:30',detail:'Beneficiary: Mekong Foods · 120 license · CA Organization'},
+         {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales C',title:'Subscription được tạo',time:'2025-05-01 09:00',detail:'HĐ: HD-CMC-2025-004 · CA Organization 120 license · Mekong Foods'},
+       ],
+       audit:[
+         {time:'2025-05-01 10:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · CA Organization 120 license',result:'SUCCESS'},
+         {time:'2025-05-01 09:00',source:'UI',actor:'Sales C',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · CA Organization 120 license',result:'SUCCESS'},
+       ]},
       {id:'sub-006',contractId:'con-004',beneficiaryId:'B004',beneficiaryName:'Nam Long Group',
        productId:'CA',packageId:'PKG-EPR-02',packageName:'CA Organization',
        startDate:'2025-05-10',endDate:'2026-05-09',licenseQty:100,seatCount:100,
@@ -1769,10 +1819,13 @@ let conContracts = [
        licMirrorStatus:'PENDING',licMirrorExpiry:null,lastSync:'Chưa đồng bộ',
        createdBy:'Sales B',createdAt:'2026-06-23T14:30:00',
        timeline:[
+         {icon:'📞',cls:'tl-dot-gray',source:'UI',actor:'Sales B',title:'Liên hệ IT Bamboo — chờ phản hồi',time:'2026-07-07 10:00',detail:'Gửi email nhắc lần 2 · chờ xác nhận firewall rule'},
          {icon:'⏳',cls:'tl-dot-gray',source:'SYSTEM',actor:'System',title:'Đang chờ provisioning',time:'2026-06-23 15:00',detail:'Chờ xác nhận hạ tầng từ IT Bamboo Airways'},
+         {icon:'📤',cls:'tl-dot-gray',source:'SYSTEM',actor:'System',title:'Đã publish provisioning event',time:'2026-06-23 14:35',detail:'Outbox published · subscription.created · Bamboo Airways'},
          {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales B',title:'Subscription được tạo',time:'2026-06-23 14:30',detail:'HĐ: HD-CMC-2026-003 · EDR Enterprise 400 seat'},
        ],
        audit:[
+         {time:'2026-07-07 10:00',source:'UI',actor:'Sales B',action:'Cập nhật Subscription',detail:'note: gửi email nhắc lần 2 · chờ IT Bamboo',result:'SUCCESS'},
          {time:'2026-06-23 14:30',source:'UI',actor:'Sales B',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · EDR Enterprise 400 seat',result:'SUCCESS'},
        ]},
     ]
@@ -1910,9 +1963,13 @@ let conContracts = [
        licMirrorStatus:'N/A',licMirrorExpiry:null,lastSync:'—',
        createdBy:'Sales B',createdAt:'2026-07-01T10:30:00',
        timeline:[
+         {icon:'✏️',cls:'tl-dot-blue',source:'UI',actor:'Sales B',title:'Cập nhật ngày hết hạn dự kiến',time:'2026-07-08 09:00',detail:'endDate: 2027-09-30 (theo phụ lục khung Q3/2026)'},
+         {icon:'📋',cls:'tl-dot-gray',source:'UI',actor:'Nguyễn Manager',title:'Review nội bộ — chờ approval',time:'2026-07-05 14:00',detail:'Escalate lên PM để xin duyệt ngân sách 1.000 seats'},
          {icon:'📝',cls:'tl-dot-gray',source:'UI',actor:'Sales B',title:'Subscription được tạo (Draft)',time:'2026-07-01 10:30',detail:'HĐ: HD-CMC-2026-008 · EDR Gov 1000 seat · chờ phê duyệt'},
        ],
        audit:[
+         {time:'2026-07-08 09:00',source:'UI',actor:'Sales B',action:'Cập nhật Subscription',detail:'endDate: 2027-09-30 · theo phụ lục khung',result:'SUCCESS'},
+         {time:'2026-07-05 14:00',source:'UI',actor:'Nguyễn Manager',action:'Review Subscription',detail:'Escalate phê duyệt ngân sách · chờ CFO duyệt',result:'SUCCESS'},
          {time:'2026-07-01 10:30',source:'UI',actor:'Sales B',action:'Tạo Subscription (Draft)',detail:'status: DRAFT · EDR Gov 1000 seat · chờ ngân sách Q3',result:'SUCCESS'},
        ]},
     ]
@@ -2917,12 +2974,12 @@ function subFindRaw(id){
 // ── STATUS HELPERS
 const SUB_STATUS_META={
   DRAFT:{label:'Draft',cls:'sub-s-draft',dot:''},
-  PENDING_PROVISION:{label:'Đang triển khai',cls:'sub-s-pending',dot:'⏳'},
-  ACTIVE:{label:'Đang hoạt động',cls:'sub-s-active',dot:'●'},
-  SUSPENDED:{label:'Tạm dừng',cls:'sub-s-suspended',dot:'⏸'},
-  EXPIRED:{label:'Hết hạn',cls:'sub-s-expired',dot:'⏰'},
-  REVOKED:{label:'Đã thu hồi',cls:'sub-s-revoked',dot:'🚫'},
-  RENEWED:{label:'Đã gia hạn',cls:'sub-s-renewed',dot:'🔄'},
+  PENDING_PROVISION:{label:'Provisioning',cls:'sub-s-pending',dot:''},
+  ACTIVE:{label:'Active',cls:'sub-s-active',dot:''},
+  SUSPENDED:{label:'Suspended',cls:'sub-s-suspended',dot:''},
+  EXPIRED:{label:'Expired',cls:'sub-s-expired',dot:''},
+  REVOKED:{label:'Revoked',cls:'sub-s-revoked',dot:''},
+  RENEWED:{label:'Renewed',cls:'sub-s-renewed',dot:''},
 };
 function subStatusBadge(status){
   const m=SUB_STATUS_META[status]||{label:status,cls:'sub-s-draft',dot:''};
@@ -3054,8 +3111,15 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){['subModalCreate','
 document.addEventListener('click',e=>{['subModalCreate','subModalEdit','subModalRevoke'].forEach(id=>{const ov=document.getElementById(id);if(ov&&e.target===ov)subCloseModal(id);});});
 
 // ── CREATE
+function subGenId(){
+  const allIds=subGetAllSubs().map(s=>s.id);
+  const year=new Date().getFullYear();
+  let n=1;
+  while(allIds.includes(`SUB-${year}-${String(n).padStart(3,'0')}`))n++;
+  return`SUB-${year}-${String(n).padStart(3,'0')}`;
+}
 function subOpenCreate(){
-  document.getElementById('subCrtId').value='';
+  document.getElementById('subCrtId').value=subGenId();
   document.getElementById('subCrtNote').value='';
   document.getElementById('subCrtSeats').value='';
   document.getElementById('subCrtLic').value='';
@@ -3116,13 +3180,6 @@ function subOnContractChange(){
     licField.style.display='none';
   }
 }
-function subCheckIdDup(){
-  const val=document.getElementById('subCrtId').value.trim();
-  const errEl=document.getElementById('subErrCrtId');
-  if(!val){errEl.textContent='Mã subscription là bắt buộc';errEl.style.display='block';return;}
-  if(subGetAllSubs().some(s=>s.id===val)){errEl.textContent='Mã subscription đã tồn tại';errEl.style.display='block';}
-  else errEl.style.display='none';
-}
 function subSubmitCreate(){
   let ok=true;
   const id=document.getElementById('subCrtId').value.trim();
@@ -3133,8 +3190,6 @@ function subSubmitCreate(){
   const c=conContracts.find(x=>x.id===cid);
 
   const show=(id,msg)=>{const el=document.getElementById(id);if(el){el.textContent=msg;el.style.display='block';}ok=false;};
-  if(!id||subGetAllSubs().some(s=>s.id===id))show('subErrCrtId',!id?'Mã subscription là bắt buộc':'Mã subscription đã tồn tại');
-  else document.getElementById('subErrCrtId').style.display='none';
   if(!cid)show('subErrCrtContract','Vui lòng chọn hợp đồng');
   else document.getElementById('subErrCrtContract').style.display='none';
   if(!pkgId)show('subErrCrtPackage','Vui lòng chọn gói sản phẩm');
@@ -3236,28 +3291,31 @@ function subSwitchTab(el,subOrPanel,panelId){
 }
 function subRenderInfo(sub){
   const el=document.getElementById('sub-tp-info');if(!el)return;
-  const c=conContracts.find(x=>x.id===sub.contractId);
-  const rows=[
-    ['Mã Subscription',`<span style="font-family:monospace;font-weight:600;">${sub.id}</span>`],
-    ['Hợp đồng',`<span style="font-family:monospace;color:var(--primary);cursor:pointer;text-decoration:underline;" onclick="conOpenDetail('${sub.contractId}');showModule('contract');">${sub.contractCode}</span>`],
-    ['Khách hàng',sub.customerName],
-    ['Loại hợp đồng',subTypeBadge(sub.contractType)],
-    ...(sub.contractType==='RESELLER'?[['Đơn vị thụ hưởng',sub.beneficiaryName||'<em style="color:var(--gray-400)">—</em>']]:[]),
-    ['Gói sản phẩm',`<span style="font-weight:600;">${sub.packageName}</span>`],
-    sub.contractType==='DIRECT'
-      ?['Số seats',`<span style="font-weight:600;">${(sub.seatCount||0).toLocaleString('vi-VN')}</span> <span style="font-size:11px;color:var(--gray-400);margin-left:4px;">🔒 Không thể thay đổi</span>`]
-      :['Số license',`<span style="font-weight:600;">${(sub.licenseQty||0).toLocaleString('vi-VN')}</span> <span style="font-size:11px;color:var(--gray-400);margin-left:4px;">🔒 Không thể thay đổi</span>`],
-    ['Ngày bắt đầu (dự kiến)',subFmtDate(sub.startDate)],
-    ['Ngày hết hạn (dự kiến)',`<span style="font-weight:500;">${subFmtDate(sub.endDate)}</span>`],
-    ['Trạng thái',subStatusBadge(sub.status)],
-    ['License Mirror',`${subMirrorBadge(sub.licMirrorStatus)}<span style="font-size:12px;color:var(--text-secondary);margin-left:8px;">Đồng bộ: ${sub.lastSync||'—'}</span>`],
-    ['Ngày tạo',`${subFmtDate(sub.createdAt?.slice(0,10))} — ${sub.createdBy}`],
-    ...(sub.note?[['Ghi chú',`<em>${sub.note}</em>`]]:[]),
-  ];
-  el.innerHTML=`<div class="card" style="padding:20px;">
-    <div class="section-hdr">Chi tiết Subscription</div>
-    <div class="sub-detail-grid">
-      ${rows.map(([l,v])=>`<div class="sub-detail-label">${l}</div><div class="sub-detail-value">${v}</div>`).join('')}
+  const row=(label,value)=>`<div class="sub-info-row"><div class="sub-info-label">${label}</div><div class="sub-info-value">${value}</div></div>`;
+  const qtyLabel=sub.contractType==='DIRECT'?'Số seats':'Số license';
+  const qtyVal=sub.contractType==='DIRECT'
+    ?`<span style="font-weight:700;font-size:16px;color:var(--navy)">${(sub.seatCount||0).toLocaleString('vi-VN')}</span> <span style="font-size:12px;color:var(--text-secondary)">seats</span>`
+    :`<span style="font-weight:700;font-size:16px;color:var(--navy)">${(sub.licenseQty||0).toLocaleString('vi-VN')}</span> <span style="font-size:12px;color:var(--text-secondary)">license</span>`;
+  el.innerHTML=`
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="card" style="padding:20px;">
+      <div class="section-hdr" style="margin-bottom:14px;">Hợp đồng & Khách hàng</div>
+      ${row('Mã Subscription',`<span style="font-family:monospace;font-weight:600;font-size:14px;">${sub.id}</span>`)}
+      ${row('Hợp đồng',`<span style="font-family:monospace;color:var(--primary);cursor:pointer;text-decoration:underline;font-weight:600;" onclick="conOpenDetail('${sub.contractId}');showModule('contract');">${sub.contractCode}</span>`)}
+      ${row('Khách hàng',`<span style="font-weight:500;">${sub.customerName}</span>`)}
+      ${row('Loại HĐ',subTypeBadge(sub.contractType))}
+      ${sub.contractType==='RESELLER'?row('Đơn vị thụ hưởng',`<span style="font-weight:500;">${sub.beneficiaryName||'<em style="color:var(--gray-400)">—</em>'}</span>`):''}
+      ${row('Người tạo',`${sub.createdBy} <span style="color:var(--text-secondary);font-size:12px;">· ${subFmtDate(sub.createdAt?.slice(0,10))}</span>`)}
+      ${sub.note?row('Ghi chú',`<em style="color:var(--text-secondary);">${sub.note}</em>`):''}
+    </div>
+    <div class="card" style="padding:20px;">
+      <div class="section-hdr" style="margin-bottom:14px;">Gói sản phẩm & License</div>
+      ${row('Gói sản phẩm',`<span style="font-weight:600;font-size:14px;">${sub.packageName}</span>`)}
+      ${row(qtyLabel,qtyVal)}
+      ${row('Ngày bắt đầu (dự kiến)',subFmtDate(sub.startDate))}
+      ${row('Ngày hết hạn (dự kiến)',`<span style="font-weight:600;">${subFmtDate(sub.endDate)}</span>`)}
+      ${row('Trạng thái',subStatusBadge(sub.status))}
+      ${row('License Mirror',`${subMirrorBadge(sub.licMirrorStatus)} <span style="font-size:12px;color:var(--text-secondary);margin-left:6px;">Đồng bộ: ${sub.lastSync||'—'}</span>`)}
     </div>
   </div>`;
 }
