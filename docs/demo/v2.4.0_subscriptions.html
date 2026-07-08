@@ -1862,6 +1862,25 @@ let conContracts = [
     createdBy:'Sales A', createdAt:'2025-02-10T14:00:00',
     poolItems:[],
     subs:[
+      {id:'SUB-2026-017',contractId:'con-003',beneficiaryId:null,beneficiaryName:null,
+       productId:'CMC_EDR',packageId:'PKG-EDR-01',packageName:'CMC EDR Standard',
+       startDate:'2025-09-01',endDate:'2026-08-31',licenseQty:null,seatCount:200,
+       status:'REVOKED',note:'Vi phạm điều khoản sử dụng — cài trên máy ngoài phạm vi hợp đồng.',
+       dealCode:'DEAL-2025-VTS-002',previousSubId:null,
+       licMirrorStatus:'REVOKED',licMirrorExpiry:'2025-11-15',lastSync:'—',
+       createdBy:'Sales A',createdAt:'2025-09-01T09:00:00',
+       timeline:[
+         {icon:'⊘',cls:'tl-dot-red',source:'UI',actor:'Nguyễn Manager',title:'Subscription bị thu hồi',time:'2025-11-15 14:00',detail:'Lý do: cài đặt vượt phạm vi hợp đồng · 200 seats bị vô hiệu hoá'},
+         {icon:'⚠️',cls:'tl-dot-red',source:'UI',actor:'Sales A',title:'Phát hiện vi phạm sử dụng',time:'2025-11-10 10:00',detail:'KH cài agent trên 312 máy thay vì 200 · báo Manager'},
+         {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2025-09-01 10:00',detail:'Hiệu lực → 2026-08-31 · 200 seats · Viettel Solutions'},
+         {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales A',title:'Subscription được tạo',time:'2025-09-01 09:00',detail:'HĐ: HD-CMC-2025-003 · EDR Standard 200 seat'},
+       ],
+       audit:[
+         {time:'2025-11-15 14:00',source:'UI',actor:'Nguyễn Manager',action:'Thu hồi Subscription',detail:'Lý do: vi phạm điều khoản · 200 seats bị revoke · license.revoke event published',result:'SUCCESS'},
+         {time:'2025-11-10 10:00',source:'UI',actor:'Sales A',action:'Ghi nhận vi phạm',detail:'KH triển khai trên 312 endpoints thay vì 200 · đề xuất revoke',result:'SUCCESS'},
+         {time:'2025-09-01 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · EDR Standard 200 seat',result:'SUCCESS'},
+         {time:'2025-09-01 09:00',source:'UI',actor:'Sales A',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · EDR Standard 200 seat',result:'SUCCESS'},
+       ]},
       {id:'SUB-2026-004',contractId:'con-003',beneficiaryId:null,beneficiaryName:null,
        productId:'CMC_EDR',packageId:'PKG-EPP-03',packageName:'CMC EPP',
        startDate:'2025-02-15',endDate:'2025-08-14',licenseQty:null,seatCount:1000,
@@ -3296,21 +3315,8 @@ function subRenderTable(data,page){
 
   tbody.innerHTML=rows.map(sub=>{
     const isDraftRow=sub.status==='DRAFT';
-    const canRevokeRow=!isDraftRow&&subCanRevoke(sub);
-    const canSuspendRow=subCanSuspend(sub);
-    const canResumeRow=subCanResume(sub);
-    const canRenewRow=subCanRenew(sub);
-    const canEditRow=subCanEdit(sub);
-    const isTerminal=['REVOKED','EXPIRED','RENEWED'].includes(sub.status);
     const deleteDraftRowBtn=isDraftRow
-      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Xóa">${TRASH_ICON}</button>`:'';
-    const revokeRowBtn=!isDraftRow?(canRevokeRow
-      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenRevoke('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Thu hồi">${TRASH_ICON}</button>`
-      :(isTerminal?`<button class="btn btn-ghost btn-sm" disabled title="${subRevokeTooltip(sub)}" style="opacity:.4;cursor:not-allowed;gap:4px;">${TRASH_ICON}</button>`:'')):''
-    const suspendRowBtn=canSuspendRow?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenSuspend('${sub.id}')" style="color:#D97706;border-color:#D97706;font-size:11px;" title="Tạm dừng">⏸</button>`:'';
-    const resumeRowBtn=canResumeRow?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenResume('${sub.id}')" style="color:#059669;border-color:#059669;font-size:11px;" title="Khôi phục">▶</button>`:'';
-    const renewRowBtn=canRenewRow?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenRenew('${sub.id}')" style="font-size:11px;" title="Gia hạn">🔄</button>`:'';
-    const editRowBtn=(!isDraftRow&&canEditRow)?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenEditSub('${sub.id}')" style="font-size:11px;" title="Sửa">✏️</button>`:'';
+      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Xóa Draft">${TRASH_ICON}</button>`:'';
     const beneficiary=sub.contractType==='RESELLER'&&sub.beneficiaryName
       ?`<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">→ ${sub.beneficiaryName}</div>`:''
     return`<tr onclick="subOpenDetail('${sub.id}')">
@@ -3322,9 +3328,7 @@ function subRenderTable(data,page){
           <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">${sub.contractType==='DIRECT'?(sub.seatCount||0)+' seats':(sub.licenseQty||0)+' license'}</div></td>
       <td style="font-size:13px;">${sub.endDate?subFmtDate(sub.endDate):'<em style="color:var(--gray-400)">Chưa xác định</em>'}</td>
       <td>${subStatusBadge(sub.status)}</td>
-      <td onclick="event.stopPropagation()"><div style="display:flex;gap:4px;flex-wrap:wrap;">
-        ${deleteDraftRowBtn}${editRowBtn}${suspendRowBtn}${resumeRowBtn}${renewRowBtn}${revokeRowBtn}
-      </div></td>
+      <td onclick="event.stopPropagation()">${deleteDraftRowBtn}</td>
     </tr>`;
   }).join('');
 
