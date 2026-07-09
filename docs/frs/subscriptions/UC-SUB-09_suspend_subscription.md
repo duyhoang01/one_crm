@@ -29,7 +29,7 @@
 | **BR-05** | Hệ thống ghi timeline entry: icon ⏸, nội dung "Tạm dừng subscription", `Lý do: [reason]`, `tl-dot-orange`, actor = người dùng hiện tại. |
 | **BR-06** | Hệ thống ghi audit entry: action `SUSPEND`, detail = lý do, result = SUCCESS. |
 | **BR-07** | Sau khi tạm dừng: toast "⏸ Đã tạm dừng — [sub.id] chuyển sang Suspended". Hệ thống cập nhật ngay hero section và tab Thông tin chung — **không điều hướng** khỏi trang UC-SUB-03. |
-| **BR-08** | OneCRM là passive observer (YT-3) — không gửi lệnh kỹ thuật tạm dừng license về Product Module. Chỉ ghi nhận trạng thái nội bộ. |
+| **BR-08** | CRM publish event `subscription.suspended` qua Outbox → RabbitMQ. Product Module nhận và xử lý (tạm dừng license phía kỹ thuật). CRM không gọi API Product trực tiếp (YT-3: publish outbound event, không command trực tiếp). |
 | **BR-09** | Lý do tạm dừng (`suspendReason`) được hiển thị lại trong modal Khôi phục (UC-SUB-10) để người dùng tham khảo. |
 
 ---
@@ -196,7 +196,7 @@ Nút "⏸ Tạm dừng" chuyển sang **active** sau khi người dùng nhập l
 - ✅ Luồng chính bao phủ happy path đầy đủ 10 bước
 - ✅ Luồng phụ đã định nghĩa: AF-01 (Hủy tạm dừng)
 - ✅ Luồng ngoại lệ đã định nghĩa: EF-01 (Không đủ điều kiện)
-- ✅ BR đã định nghĩa rõ (BR-01 đến BR-09), phân biệt rõ passive observer (BR-08) và liên kết UC-SUB-10 (BR-09)
+- ✅ BR đã định nghĩa rõ (BR-01 đến BR-09); BR-08 ghi rõ CRM publish outbound event (không passive)
 - ✅ AC bao phủ 4 nhóm, 15 AC (vượt yêu cầu tối thiểu 10 AC)
 - ✅ Phân biệt rõ: Sales VÀ Manager có quyền tạm dừng; CSKH và License Admin ẩn hoàn toàn
 

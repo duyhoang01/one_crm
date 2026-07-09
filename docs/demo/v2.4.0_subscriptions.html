@@ -98,6 +98,14 @@ th:hover .con-sort-icon{color:var(--text-secondary);}
 .search-input{width:100%;padding:9px 12px 9px 36px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:14px;background:white;transition:border .15s;}
 .search-input:focus{border-color:var(--border-active);box-shadow:0 0 0 3px rgba(2,104,197,.1);}.search-input::placeholder{color:var(--gray-400);}
 .filter-select{padding:9px 32px 9px 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:14px;background:white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;cursor:pointer;}
+.sub-status-wrap{position:relative;}
+.sub-status-btn{padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:14px;background:white;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;min-width:170px;justify-content:space-between;color:var(--text-primary);}
+.sub-status-btn:hover{border-color:var(--primary);}
+.sub-status-panel{display:none;position:absolute;top:calc(100% + 2px);left:0;background:white;border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--shadow-md);z-index:200;min-width:200px;padding:6px 0;}
+.sub-status-panel.open{display:block;}
+.sub-status-opt{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:13px;cursor:pointer;user-select:none;}
+.sub-status-opt:hover{background:var(--gray-50);}
+.sub-status-opt input[type="checkbox"]{cursor:pointer;width:15px;height:15px;accent-color:var(--primary);flex-shrink:0;}
 .table-wrap{overflow-x:auto;border-radius:var(--r-md);border:1px solid var(--border);}
 table{width:100%;border-collapse:collapse;background:white;}
 thead th{padding:11px 16px;text-align:left;font-size:12px;font-weight:600;color:var(--text-secondary);background:rgba(39,39,42,.04);border-bottom:1px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:.02em;}
@@ -516,17 +524,20 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           </div>
           <div class="toolbar">
             <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="subSearchInput" type="text" placeholder="Tìm theo mã sub, gói sản phẩm, khách hàng, đơn vị thụ hưởng..." oninput="subFilterTable()"></div>
-            <select class="filter-select" id="subFilterStatus" onchange="subFilterTable()">
-              <option value="ACTIVE_GROUP">Đang hoạt động</option>
-              <option value="">Tất cả trạng thái</option>
-              <option value="DRAFT">Draft</option>
-              <option value="PENDING_PROVISION">Provisioning</option>
-              <option value="ACTIVE">Active</option>
-              <option value="SUSPENDED">Suspended</option>
-              <option value="EXPIRED">Expired</option>
-              <option value="REVOKED">Revoked</option>
-              <option value="RENEWED">Renewed</option>
-            </select>
+            <div class="sub-status-wrap" id="subStatusWrap">
+              <button type="button" class="sub-status-btn" id="subStatusBtn" onclick="subToggleStatusDropdown(event)">
+                <span id="subStatusLabel">Tất cả trạng thái</span><span style="color:var(--gray-400);font-size:11px;">▾</span>
+              </button>
+              <div class="sub-status-panel" id="subStatusPanel">
+                <label class="sub-status-opt"><input type="checkbox" value="DRAFT" onchange="subFilterTable();subUpdateStatusLabel()"> Draft</label>
+                <label class="sub-status-opt"><input type="checkbox" value="PENDING_PROVISION" onchange="subFilterTable();subUpdateStatusLabel()"> Provisioning</label>
+                <label class="sub-status-opt"><input type="checkbox" value="ACTIVE" onchange="subFilterTable();subUpdateStatusLabel()"> Active</label>
+                <label class="sub-status-opt"><input type="checkbox" value="SUSPENDED" onchange="subFilterTable();subUpdateStatusLabel()"> Suspended</label>
+                <label class="sub-status-opt"><input type="checkbox" value="EXPIRED" onchange="subFilterTable();subUpdateStatusLabel()"> Expired</label>
+                <label class="sub-status-opt"><input type="checkbox" value="REVOKED" onchange="subFilterTable();subUpdateStatusLabel()"> Revoked</label>
+                <label class="sub-status-opt"><input type="checkbox" value="RENEWED" onchange="subFilterTable();subUpdateStatusLabel()"> Renewed</label>
+              </div>
+            </div>
             <select class="filter-select" id="subFilterProduct" onchange="subFilterTable()">
               <option value="">Tất cả sản phẩm</option>
               <option value="CMC_EDR">CMC EDR</option>
@@ -724,7 +735,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
 <div class="overlay" id="subModalApprove">
   <div class="modal" style="max-width:480px;">
     <div class="modal-header">
-      <div class="modal-title">📤 Gửi Subscription đi</div>
+      <div class="modal-title">Xác nhận Subscription</div>
       <button class="close-btn" onclick="subCloseModal('subModalApprove')">✕</button>
     </div>
     <div class="modal-body">
@@ -736,7 +747,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="subCloseModal('subModalApprove')">Hủy</button>
-      <button class="btn btn-primary" onclick="subConfirmApproveDraft()">📤 Xác nhận gửi</button>
+      <button class="btn btn-primary" onclick="subConfirmApproveDraft()">✅ Xác nhận</button>
     </div>
   </div>
 </div>
@@ -1268,6 +1279,7 @@ const DEMO_USERS=[
   {email:'sales.a@cmc.vn',password:'demo123',name:'Sales A',role:'Sales',initials:'SA',avatarBg:'#0268C5'},
   {email:'sales.b@cmc.vn',password:'demo123',name:'Sales B',role:'Sales',initials:'SB',avatarBg:'#0268C5'},
   {email:'manager@cmc.vn',password:'demo123',name:'Nguyễn Manager',role:'Manager',initials:'MG',avatarBg:'#7C3AED'},
+  {email:'licadmin@cmc.vn',password:'demo123',name:'License Admin',role:'LicenseAdmin',initials:'LA',avatarBg:'#059669'},
 ];
 let currentUser=null;
 
@@ -1809,7 +1821,6 @@ function showModule(mod){
   } else if(mod==='subscription'){
     subShowView('list');
     document.getElementById('breadcrumbCurrent').textContent='Subscription';
-    const sf=document.getElementById('subFilterStatus');if(sf&&!sf.value)sf.value='ACTIVE_GROUP';
     _subExpiringFilter=false;
     const chip=document.getElementById('subChipExpiring');if(chip)chip.classList.remove('active');
     subRenderTable();
@@ -3302,7 +3313,7 @@ function subFmtDateTime(s){
   return`${d}/${m}/${y}${timePart?' '+timePart:''}`;
 }
 function subCanRevoke(s){
-  if(!currentUser||currentUser.role!=='Manager')return false;
+  if(!currentUser||!['Manager','LicenseAdmin'].includes(currentUser.role))return false;
   return s&&!['REVOKED','EXPIRED','DRAFT','RENEWED'].includes(s.status);
 }
 function subRevokeTooltip(s){
@@ -3364,24 +3375,40 @@ function subToggleExpiring(btn){
 }
 function subClearFilter(){
   const si=document.getElementById('subSearchInput');if(si)si.value='';
-  const sf=document.getElementById('subFilterStatus');if(sf)sf.value='ACTIVE_GROUP';
+  document.querySelectorAll('#subStatusPanel input[type="checkbox"]').forEach(cb=>cb.checked=false);
+  subUpdateStatusLabel();
   const pf=document.getElementById('subFilterProduct');if(pf)pf.value='';
   const tf=document.getElementById('subFilterType');if(tf)tf.value='';
   _subExpiringFilter=false;
   const chip=document.getElementById('subChipExpiring');if(chip)chip.classList.remove('active');
   subRenderTable();
 }
+function subGetSelectedStatuses(){
+  return Array.from(document.querySelectorAll('#subStatusPanel input[type="checkbox"]:checked')).map(cb=>cb.value);
+}
+function subToggleStatusDropdown(e){
+  if(e)e.stopPropagation();
+  const panel=document.getElementById('subStatusPanel');
+  if(panel)panel.classList.toggle('open');
+}
+function subUpdateStatusLabel(){
+  const sel=subGetSelectedStatuses();
+  const lbl=document.getElementById('subStatusLabel');
+  if(!lbl)return;
+  const NAMES={DRAFT:'Draft',PENDING_PROVISION:'Provisioning',ACTIVE:'Active',SUSPENDED:'Suspended',EXPIRED:'Expired',REVOKED:'Revoked',RENEWED:'Renewed'};
+  if(!sel.length)lbl.textContent='Tất cả trạng thái';
+  else if(sel.length===1)lbl.textContent=NAMES[sel[0]]||sel[0];
+  else lbl.textContent=`${sel.length} trạng thái`;
+}
 function subRenderTable(data,page){
-  const ACTIVE_GROUP_STATUSES=['DRAFT','PENDING_PROVISION','ACTIVE','SUSPENDED'];
   const allSubs=data||subApplySort(subGetAllSubs().filter(s=>{
     const q=(document.getElementById('subSearchInput')?.value||'').trim().toLowerCase();
-    const st=document.getElementById('subFilterStatus')?.value||'';
+    const selectedStatuses=subGetSelectedStatuses();
     const pr=document.getElementById('subFilterProduct')?.value||'';
     const tp=document.getElementById('subFilterType')?.value||'';
     const matchQ=!q||(s.id||'').toLowerCase().includes(q)||(s.packageName||'').toLowerCase().includes(q)||(s.customerName||'').toLowerCase().includes(q)||(s.beneficiaryName||'').toLowerCase().includes(q)||(s.contractCode||'').toLowerCase().includes(q)||(s.dealCode||'').toLowerCase().includes(q);
     let matchSt=true;
-    if(st==='ACTIVE_GROUP'){matchSt=ACTIVE_GROUP_STATUSES.includes(s.status);}
-    else if(st){matchSt=s.status===st;}
+    if(selectedStatuses.length>0){matchSt=selectedStatuses.includes(s.status);}
     let matchExpiring=true;
     if(_subExpiringFilter){
       const today=new Date();today.setHours(0,0,0,0);
@@ -3407,7 +3434,8 @@ function subRenderTable(data,page){
     const editDraftRowBtn=isDraftRow
       ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenEditSub('${sub.id}')" title="Sửa Draft" style="font-size:13px;">✏️</button>`:'';
     const deleteDraftRowBtn=isDraftRow
-      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Xóa Draft">${TRASH_ICON}</button>`:'';
+      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Xóa Draft">${TRASH_ICON}</button>`
+      :`<button class="btn btn-ghost btn-sm" disabled title="Chỉ được xóa khi ở trạng thái Draft" style="opacity:0.35;cursor:not-allowed;gap:4px;">${TRASH_ICON}</button>`;
     const beneficiary=sub.contractType==='RESELLER'&&sub.beneficiaryName
       ?`<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">→ ${sub.beneficiaryName}</div>`:''
     return`<tr onclick="subOpenDetail('${sub.id}')">
@@ -3436,6 +3464,7 @@ function subCloseModal(id){const el=document.getElementById(id);if(el)el.classLi
 const _SUB_MODALS=['subModalCreate','subModalRevoke','subModalApprove','subModalDeleteDraft','subModalSuspend','subModalResume','subModalRenew','subModalEditSub'];
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){_SUB_MODALS.forEach(id=>subCloseModal(id));}});
 document.addEventListener('click',e=>{_SUB_MODALS.forEach(id=>{const ov=document.getElementById(id);if(ov&&e.target===ov)subCloseModal(id);});});
+document.addEventListener('click',e=>{const wrap=document.getElementById('subStatusWrap');if(wrap&&!wrap.contains(e.target)){const panel=document.getElementById('subStatusPanel');if(panel)panel.classList.remove('open');}});
 
 // ── CREATE
 function subGenId(){
@@ -4068,7 +4097,8 @@ function subOpenRevoke(id){
   document.getElementById('subBtnConfirmRevoke').disabled=true;
   document.getElementById('subRevokeInfoBox').innerHTML=`
     <div><span style="font-weight:600;color:var(--text-secondary);font-size:11px;text-transform:uppercase;">Mã Sub</span><span style="float:right;font-family:monospace;font-weight:600;">${sub.id}</span></div>
-    <div><span style="font-weight:600;color:var(--text-secondary);font-size:11px;text-transform:uppercase;">Khách hàng</span><span style="float:right;">${sub.customerName}${sub.beneficiaryName?' → '+sub.beneficiaryName:''}</span></div>
+    <div><span style="font-weight:600;color:var(--text-secondary);font-size:11px;text-transform:uppercase;">Khách hàng</span><span style="float:right;">${sub.customerName}</span></div>
+    ${sub.beneficiaryName?`<div><span style="font-weight:600;color:var(--text-secondary);font-size:11px;text-transform:uppercase;">Đơn vị thụ hưởng</span><span style="float:right;">${sub.beneficiaryName}</span></div>`:''}
     <div><span style="font-weight:600;color:var(--text-secondary);font-size:11px;text-transform:uppercase;">Gói</span><span style="float:right;">${sub.packageName}</span></div>
     <div><span style="font-weight:600;color:var(--text-secondary);font-size:11px;text-transform:uppercase;">Trạng thái hiện tại</span><span style="float:right;">${subStatusBadge(sub.status)}</span></div>`;
   subOpenModal('subModalRevoke');
@@ -4106,7 +4136,8 @@ function subOpenApproveDraft(id){
   const con=found.contract;
   if(box)box.innerHTML=`<div style="font-size:13px;line-height:1.8;">
     <div><strong>Mã Subscription:</strong> ${sub.id}</div>
-    <div><strong>Khách hàng:</strong> ${con.customerName}${sub.beneficiaryName?' → '+sub.beneficiaryName:''}</div>
+    <div><strong>Khách hàng:</strong> ${con.customerName}</div>
+    ${sub.beneficiaryName?`<div><strong>Đơn vị thụ hưởng:</strong> ${sub.beneficiaryName}</div>`:''}
     <div><strong>Gói:</strong> ${sub.packageName} · ${sub.licenseQty||sub.seatCount||0} license</div>
     <div><strong>Hợp đồng:</strong> ${con.code}</div>
   </div>`;
@@ -4133,7 +4164,7 @@ function subOpenDeleteDraft(id){
   subDeletingDraftId=id;
   const box=document.getElementById('subDeleteDraftInfoBox');
   const con=found.contract;
-  if(box)box.innerHTML=`• Mã Sub: <b>${sub.id}</b><br>• Khách hàng: <b>${con.customerName}${sub.beneficiaryName?' → '+sub.beneficiaryName:''}</b><br>• Gói: <b>${sub.packageName}</b>`;
+  if(box)box.innerHTML=`• Mã Sub: <b>${sub.id}</b><br>• Khách hàng: <b>${con.customerName}</b>${sub.beneficiaryName?`<br>• Đơn vị thụ hưởng: <b>${sub.beneficiaryName}</b>`:''}<br>• Gói: <b>${sub.packageName}</b>`;
   document.getElementById('subModalDeleteDraft').classList.add('open');
 }
 function subConfirmDeleteDraft(){
@@ -4157,7 +4188,8 @@ function subOpenSuspend(id){
   const box=document.getElementById('subSuspendInfoBox');
   if(box)box.innerHTML=`<div style="font-size:13px;line-height:1.8;">
     <div><strong>Mã Subscription:</strong> ${sub.id}</div>
-    <div><strong>Khách hàng:</strong> ${sub.customerName}${sub.beneficiaryName?' → '+sub.beneficiaryName:''}</div>
+    <div><strong>Khách hàng:</strong> ${sub.customerName}</div>
+    ${sub.beneficiaryName?`<div><strong>Đơn vị thụ hưởng:</strong> ${sub.beneficiaryName}</div>`:''}
     <div><strong>Gói:</strong> ${sub.packageName}</div>
     <div><strong>Hết hạn:</strong> ${subFmtDate(sub.endDate)}</div>
   </div>`;
@@ -4194,7 +4226,8 @@ function subOpenResume(id){
   const box=document.getElementById('subResumeInfoBox');
   if(box)box.innerHTML=`<div style="font-size:13px;line-height:1.8;">
     <div><strong>Mã Subscription:</strong> ${sub.id}</div>
-    <div><strong>Khách hàng:</strong> ${sub.customerName}${sub.beneficiaryName?' → '+sub.beneficiaryName:''}</div>
+    <div><strong>Khách hàng:</strong> ${sub.customerName}</div>
+    ${sub.beneficiaryName?`<div><strong>Đơn vị thụ hưởng:</strong> ${sub.beneficiaryName}</div>`:''}
     <div><strong>Gói:</strong> ${sub.packageName}</div>
     ${sub.suspendReason?`<div><strong>Lý do tạm dừng:</strong> <em>${sub.suspendReason}</em></div>`:''}
   </div>`;
@@ -4246,11 +4279,14 @@ function subOpenRenew(id){
   const ed=document.getElementById('subRenewEndDate');if(ed)ed.value=newEndStr;
   const dc=document.getElementById('subRenewDealCode');if(dc)dc.value='';
   const nt=document.getElementById('subRenewNote');if(nt)nt.value='';
+  const errRenew=document.getElementById('subErrRenewEndDate');if(errRenew)errRenew.style.display='none';
   subOpenModal('subModalRenew');
 }
 function subConfirmRenew(){
   const endDate=(document.getElementById('subRenewEndDate')?.value||'').trim();
-  if(!endDate){toast('error','Thiếu thông tin','Ngày hết hạn là bắt buộc');return;}
+  const errRenew=document.getElementById('subErrRenewEndDate');
+  if(!endDate){if(errRenew)errRenew.style.display='';toast('error','Thiếu thông tin','Ngày hết hạn là bắt buộc');return;}
+  if(errRenew)errRenew.style.display='none';
   const dealCode=(document.getElementById('subRenewDealCode')?.value||'').trim();
   const note=(document.getElementById('subRenewNote')?.value||'').trim();
   const found=subFindRaw(_subRenewingId);if(!found)return;

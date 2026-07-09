@@ -28,7 +28,7 @@
 | **BR-04** | Nút "✅ Xác nhận" chỉ hiện khi `sub.status = DRAFT`; visible với Sales, CSKH, License Admin, Manager. Dẫn sang UC-SUB-05. |
 | **BR-05** | Nút "🗑️ Xóa" chỉ hiện khi `sub.status = DRAFT`. Dẫn sang UC-SUB-06. |
 | **BR-06** | Nút "✏️ Sửa" chỉ hiện khi `sub.status = DRAFT`. Dẫn sang UC-SUB-04. |
-| **BR-07** | Nút "⊘ Thu hồi" chỉ hiện với role Manager. Active khi `sub.status ∈ {ACTIVE, SUSPENDED, PENDING_PROVISION}`; disabled với tooltip "Không thể thu hồi" khi `sub.status ∈ {REVOKED, EXPIRED, DRAFT, RENEWED}`. Dẫn sang UC-SUB-08. |
+| **BR-07** | Nút "⊘ Thu hồi" chỉ hiện với role Manager hoặc License Admin **VÀ** `sub.status ∈ {ACTIVE, SUSPENDED, PENDING_PROVISION}`. Ẩn hoàn toàn với role khác và ẩn hoàn toàn khi `sub.status ∈ {REVOKED, EXPIRED, DRAFT, RENEWED}`. Dẫn sang UC-SUB-08. |
 | **BR-08** | Nút "🔄 Gia hạn" hiển thị với mọi role khi `sub.status ∈ {ACTIVE, SUSPENDED, EXPIRED}`. Dẫn sang UC-SUB-07. |
 | **BR-09** | Nút "⏸ Tạm dừng" hiển thị với Sales, Manager khi `sub.status = ACTIVE`. Dẫn sang UC-SUB-08. |
 | **BR-10** | Nút "▶ Khôi phục" hiển thị với Sales, Manager khi `sub.status = SUSPENDED`. Dẫn sang UC-SUB-08. |
@@ -199,7 +199,7 @@ Trang Chi tiết Subscription gồm 4 khu vực xếp dọc từ trên xuống:
 | ✅ Xác nhận | `status = DRAFT` | Luôn active | Sales, CSKH, License Admin, Manager |
 | ✏️ Sửa | `status = DRAFT` | Luôn active | Mọi role có quyền |
 | 🗑️ Xóa | `status = DRAFT` | Luôn active | Mọi role có quyền |
-| ⊘ Thu hồi | Luôn hiện (Manager only) | Active: `status ∈ {ACTIVE, SUSPENDED, PENDING_PROVISION}`; Disabled + tooltip: `status ∈ {REVOKED, EXPIRED, DRAFT, RENEWED}` | Manager |
+| ⊘ Thu hồi | Chỉ hiện khi role Manager/LicenseAdmin VÀ `status ∈ {ACTIVE, SUSPENDED, PENDING_PROVISION}` | Luôn active khi hiện; ẩn hoàn toàn khi status không đủ điều kiện | Manager, License Admin |
 | 🔄 Gia hạn | `status ∈ {ACTIVE, SUSPENDED, EXPIRED}` | Luôn active | Mọi role |
 | ⏸ Tạm dừng | `status = ACTIVE` | Luôn active | Sales, Manager |
 | ▶ Khôi phục | `status = SUSPENDED` | Luôn active | Sales, Manager |
@@ -293,8 +293,9 @@ Trang Chi tiết Subscription gồm 4 khu vực xếp dọc từ trên xuống:
 | AC-SUB-03-04 | Sub có `status = DRAFT`. | Mở trang chi tiết. | Banner DRAFT hiển thị phía trên hero section: "⏳ Subscription đang ở trạng thái Draft — chờ phê duyệt trước khi gửi provisioning." |
 | AC-SUB-03-05 | Sub có `status = ACTIVE`. | Mở trang chi tiết. | Banner DRAFT không hiển thị. |
 | AC-SUB-03-06 | Sub có `status = DRAFT`. User là Sales. | Mở trang chi tiết. | Các nút hiển thị: ✅ Xác nhận, ✏️ Sửa, 🗑️ Xóa. Nút ⊘ Thu hồi không hiển thị. |
-| AC-SUB-03-07 | Sub có `status = DRAFT`. User là Manager. | Mở trang chi tiết. | Nút ⊘ Thu hồi hiển thị nhưng ở trạng thái disabled. Hover hiển thị tooltip "Không thể thu hồi". |
+| AC-SUB-03-07 | Sub có `status = DRAFT`. User là Manager. | Mở trang chi tiết. | Nút ⊘ Thu hồi **không hiển thị** (ẩn hoàn toàn — status DRAFT không đủ điều kiện). |
 | AC-SUB-03-08 | Sub có `status = ACTIVE`. User là Manager. | Mở trang chi tiết. | Nút ⊘ Thu hồi hiển thị và active. Nút ⏸ Tạm dừng hiển thị. Nút 🔄 Gia hạn hiển thị. Các nút ✅ Xác nhận, ✏️ Sửa, 🗑️ Xóa không hiển thị. |
+| AC-SUB-03-08b | Sub có `status = ACTIVE`. User là License Admin. | Mở trang chi tiết. | Nút ⊘ Thu hồi hiển thị và active (giống Manager). |
 | AC-SUB-03-09 | Sub có `status = SUSPENDED`. User là Sales. | Mở trang chi tiết. | Nút ▶ Khôi phục và 🔄 Gia hạn hiển thị. Nút ⏸ Tạm dừng không hiển thị. |
 | AC-SUB-03-10 | Sub có `status = EXPIRED`. User là Auditor. | Mở trang chi tiết. | Nút 🔄 Gia hạn hiển thị. Các nút ✅ Xác nhận, ✏️ Sửa, 🗑️ Xóa, ⏸ Tạm dừng, ▶ Khôi phục không hiển thị. |
 

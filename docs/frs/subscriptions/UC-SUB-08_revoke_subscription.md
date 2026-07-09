@@ -11,9 +11,9 @@
 |---|---|
 | **Mã Use Case** | UC-SUB-08 |
 | **Tên** | Thu hồi Subscription |
-| **Mô tả** | Manager thu hồi một subscription đang hoạt động, bị treo, hoặc đang chờ cấp phát. Thao tác yêu cầu nhập lý do thu hồi và xác nhận. Sau khi thu hồi, `sub.status` và `sub.licMirrorStatus` đều chuyển sang `REVOKED`. CRM chỉ cập nhật trạng thái nội bộ và ghi nhận — không tự gọi API phía Product Module (YT-3: passive observer). Thu hồi là hành động không thể hoàn tác trong Phase 1. |
-| **Tác nhân** | Manager |
-| **Tiền điều kiện** | (1) Đã đăng nhập với role Manager; có quyền `subscription:revoke`. (2) Subscription tồn tại và `sub.status ∈ {ACTIVE, SUSPENDED, PENDING_PROVISION}`. |
+| **Mô tả** | Manager hoặc License Admin thu hồi một subscription đang hoạt động, bị treo, hoặc đang chờ cấp phát. Thao tác yêu cầu nhập lý do thu hồi và xác nhận. Sau khi thu hồi, `sub.status` và `sub.licMirrorStatus` đều chuyển sang `REVOKED`. CRM chỉ cập nhật trạng thái nội bộ và ghi nhận — không tự gọi API phía Product Module (YT-3: passive observer). Thu hồi là hành động không thể hoàn tác trong Phase 1. |
+| **Tác nhân** | Manager, License Admin |
+| **Tiền điều kiện** | (1) Đã đăng nhập với role Manager hoặc License Admin; có quyền `subscription:revoke`. (2) Subscription tồn tại và `sub.status ∈ {ACTIVE, SUSPENDED, PENDING_PROVISION}`. |
 | **Hậu điều kiện** | (Thành công) `sub.status = REVOKED`, `sub.licMirrorStatus = REVOKED`, `sub.licMirrorExpiry = null`, `sub.lastSync = '—'`. Timeline và Audit ghi nhận hành động. Hệ thống điều hướng về UC-SUB-01. (Thất bại) Trạng thái không thay đổi. |
 | **Trigger** | Manager click "⊘ Thu hồi" trong hero section UC-SUB-03. |
 | **Liên kết** | UC-SUB-01 (Danh sách — điều hướng về sau khi thu hồi), UC-SUB-03 (Chi tiết — nơi trigger hành động) |
@@ -22,9 +22,9 @@
 
 | Mã | Nội dung |
 |---|---|
-| **BR-01** | Chỉ role Manager mới có quyền thực hiện thu hồi. Với các role khác (Sales, v.v.): nút "⊘ Thu hồi" không hiển thị trong hero section. |
+| **BR-01** | Chỉ role Manager hoặc License Admin mới có quyền thực hiện thu hồi. Với các role khác (Sales, CSKH, v.v.): nút "⊘ Thu hồi" không hiển thị trong hero section. |
 | **BR-02** | Subscription có thể bị thu hồi khi `sub.status ∈ {ACTIVE, SUSPENDED, PENDING_PROVISION}`. Nút "⊘ Thu hồi" hiển thị ở trạng thái active với các status này. |
-| **BR-03** | Subscription không thể bị thu hồi khi `sub.status ∈ {REVOKED, EXPIRED, DRAFT, RENEWED}`. Nút "⊘ Thu hồi" hiển thị ở trạng thái `disabled` với tooltip tương ứng: `REVOKED` → "Đã thu hồi trước đó"; `EXPIRED` → "Subscription đã hết hạn"; `DRAFT` → "Draft chưa được kích hoạt"; `RENEWED` → "Subscription đã được gia hạn". |
+| **BR-03** | Subscription không thể bị thu hồi khi `sub.status ∈ {REVOKED, EXPIRED, DRAFT, RENEWED}`. Nút "⊘ Thu hồi" **ẩn hoàn toàn** với các status này (không hiển thị disabled). |
 | **BR-04** | Lý do thu hồi (free text) là **bắt buộc**. Nút "⊘ Thu hồi" trong modal bị disable cho đến khi người dùng nhập ít nhất một ký tự vào textarea lý do. |
 | **BR-05** | Sau khi thu hồi thành công: `sub.status = REVOKED`, `sub.licMirrorStatus = REVOKED`, `sub.licMirrorExpiry = null`, `sub.lastSync = '—'`. |
 | **BR-06** | Hệ thống ghi timeline entry: icon 🔴, nội dung "Subscription bị thu hồi", `Lý do: [reason]`, actor = tên Manager thực hiện. |
@@ -40,12 +40,12 @@
 
 | Bước | Tác nhân | Hành động | Ghi chú |
 |---|---|---|---|
-| 1 | Manager | Click "⊘ Thu hồi" từ hero section trong màn UC-SUB-03. | Nút chỉ hiển thị với role Manager (BR-01). |
-| 2 | System | Kiểm tra role Manager và `sub.status ∈ {ACTIVE, SUSPENDED, PENDING_PROVISION}`. | → **EF-01** nếu không đủ điều kiện. |
+| 1 | Manager / License Admin | Click "⊘ Thu hồi" từ hero section trong màn UC-SUB-03. | Nút chỉ hiển thị với role Manager hoặc License Admin (BR-01). |
+| 2 | System | Kiểm tra role và `sub.status ∈ {ACTIVE, SUSPENDED, PENDING_PROVISION}`. | → **EF-01** nếu không đủ điều kiện. |
 | 3 | System | Mở modal "Thu hồi Subscription" với thông tin tóm tắt sub (Mã Sub, Khách hàng, Gói, Trạng thái hiện tại) và textarea lý do thu hồi. Nút "⊘ Thu hồi" trong modal ở trạng thái disabled. | BR-04 |
-| 4 | Manager | Nhập lý do thu hồi vào textarea (free text, bắt buộc). | — |
+| 4 | Manager / License Admin | Nhập lý do thu hồi vào textarea (free text, bắt buộc). | — |
 | 5 | System | Phát hiện textarea không trống → enable nút "⊘ Thu hồi" trong modal. | BR-04 |
-| 6 | Manager | **[Gateway — Xác nhận thu hồi?]** Nhấn "⊘ Thu hồi" → tiếp bước 7; hoặc nhấn "Hủy" / click ngoài modal → **AF-01**. | — |
+| 6 | Manager / License Admin | **[Gateway — Xác nhận thu hồi?]** Nhấn "⊘ Thu hồi" → tiếp bước 7; hoặc nhấn "Hủy" / click ngoài modal → **AF-01**. | — |
 | 7 | System | Cập nhật: `sub.status = REVOKED`, `sub.licMirrorStatus = REVOKED`, xóa `sub.licMirrorExpiry` (= null), reset `sub.lastSync` (= '—'). | BR-05 |
 | 8 | System | Ghi timeline entry: icon 🔴, "Subscription bị thu hồi", `Lý do: [reason]`, actor = Manager. | BR-06 |
 | 9 | System | Ghi audit entry: action "Thu hồi Subscription", detail = lý do, result = SUCCESS. | BR-07 |
@@ -128,12 +128,9 @@ Nút "⊘ Thu hồi" trong modal chuyển sang **active** sau khi Manager nhập
 
 | Điều kiện | Trạng thái | Tooltip khi hover |
 |---|---|---|
-| Role Manager + `sub.status ∈ {ACTIVE, SUSPENDED, PENDING_PROVISION}` | Active — click được | Không có tooltip |
-| Role Manager + `sub.status = REVOKED` | Disabled | "Đã thu hồi trước đó" |
-| Role Manager + `sub.status = EXPIRED` | Disabled | "Subscription đã hết hạn" |
-| Role Manager + `sub.status = DRAFT` | Disabled | "Draft chưa được kích hoạt" |
-| Role Manager + `sub.status = RENEWED` | Disabled | "Subscription đã được gia hạn" |
-| Role khác (Sales, v.v.) | Ẩn hoàn toàn | — |
+| Role Manager hoặc LicenseAdmin + `sub.status ∈ {ACTIVE, SUSPENDED, PENDING_PROVISION}` | Active — click được | Không có tooltip |
+| Role Manager hoặc LicenseAdmin + `sub.status ∈ {REVOKED, EXPIRED, DRAFT, RENEWED}` | Ẩn hoàn toàn | — |
+| Role khác (Sales, CSKH, v.v.) | Ẩn hoàn toàn | — |
 
 ---
 
@@ -144,8 +141,9 @@ Nút "⊘ Thu hồi" trong modal chuyển sang **active** sau khi Manager nhập
 | Mã | Given | When | Then |
 |---|---|---|---|
 | AC-SUB-08-01 | User đăng nhập với role Manager, sub có `status = ACTIVE`. | Xem hero section UC-SUB-03. | Nút "⊘ Thu hồi" hiển thị và ở trạng thái active (click được). |
+| AC-SUB-08-01b | User đăng nhập với role License Admin, sub có `status = ACTIVE`. | Xem hero section UC-SUB-03. | Nút "⊘ Thu hồi" hiển thị và ở trạng thái active (giống Manager). |
 | AC-SUB-08-02 | User đăng nhập với role Sales, sub có `status = ACTIVE`. | Xem hero section UC-SUB-03. | Nút "⊘ Thu hồi" **không hiển thị** trong hero section. |
-| AC-SUB-08-03 | Role Manager, sub có `status = DRAFT`. | Hover vào nút "⊘ Thu hồi" (disabled). | Tooltip hiển thị "Draft chưa được kích hoạt". |
+| AC-SUB-08-03 | Role Manager, sub có `status = DRAFT`. | Xem hero section UC-SUB-03. | Nút "⊘ Thu hồi" **không hiển thị** (ẩn hoàn toàn — status DRAFT không đủ điều kiện). |
 
 ### Nhóm 2: Điều kiện status
 
@@ -154,15 +152,15 @@ Nút "⊘ Thu hồi" trong modal chuyển sang **active** sau khi Manager nhập
 | AC-SUB-08-04 | Role Manager, `sub.status = ACTIVE`. | Xem hero section. | Nút "⊘ Thu hồi" active, click được. |
 | AC-SUB-08-05 | Role Manager, `sub.status = SUSPENDED`. | Xem hero section. | Nút "⊘ Thu hồi" active, click được. |
 | AC-SUB-08-06 | Role Manager, `sub.status = PENDING_PROVISION`. | Xem hero section. | Nút "⊘ Thu hồi" active, click được. |
-| AC-SUB-08-07 | Role Manager, `sub.status = REVOKED`. | Hover vào nút "⊘ Thu hồi" (disabled). | Tooltip "Đã thu hồi trước đó". Nút không click được. |
-| AC-SUB-08-08 | Role Manager, `sub.status = EXPIRED`. | Hover vào nút "⊘ Thu hồi" (disabled). | Tooltip "Subscription đã hết hạn". Nút không click được. |
-| AC-SUB-08-09 | Role Manager, `sub.status = RENEWED`. | Hover vào nút "⊘ Thu hồi" (disabled). | Tooltip "Subscription đã được gia hạn". Nút không click được. |
+| AC-SUB-08-07 | Role Manager, `sub.status = REVOKED`. | Xem hero section UC-SUB-03. | Nút "⊘ Thu hồi" **không hiển thị** (ẩn hoàn toàn). |
+| AC-SUB-08-08 | Role Manager, `sub.status = EXPIRED`. | Xem hero section UC-SUB-03. | Nút "⊘ Thu hồi" **không hiển thị** (ẩn hoàn toàn). |
+| AC-SUB-08-09 | Role Manager, `sub.status = RENEWED`. | Xem hero section UC-SUB-03. | Nút "⊘ Thu hồi" **không hiển thị** (ẩn hoàn toàn). |
 
 ### Nhóm 3: Modal
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-SUB-08-10 | Role Manager, sub ACTIVE "SUB-2026-001" của "FPT Software", gói "EDR Pro". | Click "⊘ Thu hồi". | Modal mở. Info box hiển thị đúng: Mã Sub = SUB-2026-001, Khách hàng = FPT Software, Gói = EDR Pro, Trạng thái hiện tại = badge ACTIVE. |
+| AC-SUB-08-10 | Role Manager (hoặc License Admin), sub ACTIVE "SUB-2026-001" của "FPT Software", gói "EDR Pro". | Click "⊘ Thu hồi". | Modal mở. Info box hiển thị đúng: Mã Sub = SUB-2026-001, Khách hàng = FPT Software, Gói = EDR Pro, Trạng thái hiện tại = badge ACTIVE. |
 | AC-SUB-08-11 | Modal "Thu hồi Subscription" đang mở, textarea lý do trống. | Xem modal. | Nút "⊘ Thu hồi" trong modal ở trạng thái disabled. |
 | AC-SUB-08-12 | Modal đang mở, textarea lý do trống. | Manager nhập lý do vào textarea. | Nút "⊘ Thu hồi" trong modal chuyển sang active ngay khi có ít nhất 1 ký tự. |
 

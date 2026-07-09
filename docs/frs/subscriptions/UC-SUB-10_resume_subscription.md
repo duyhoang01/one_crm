@@ -30,7 +30,7 @@
 | **BR-06** | Hệ thống ghi timeline entry: icon ▶, "Khôi phục subscription", "Subscription được khôi phục về Active", tl-dot-green, actor = người dùng hiện tại. |
 | **BR-07** | Hệ thống ghi audit entry: action `RESUME`, detail "Khôi phục từ Suspended", result = success. |
 | **BR-08** | Sau khi khôi phục: toast "✅ Đã khôi phục — [sub.id] trở về Active". Hệ thống cập nhật ngay hero section và tab Thông tin chung (không điều hướng khỏi trang chi tiết). |
-| **BR-09** | OneCRM là passive observer (YT-3) — không gửi lệnh kỹ thuật khôi phục license về Product Module. Chỉ ghi nhận trạng thái nội bộ. |
+| **BR-09** | CRM publish event `subscription.resumed` qua Outbox → RabbitMQ. Product Module nhận và xử lý (khôi phục license phía kỹ thuật). CRM không gọi API Product trực tiếp (YT-3: publish outbound event, không command trực tiếp). |
 
 ---
 
@@ -184,7 +184,7 @@
 - ✅ Luồng chính bao phủ happy path đầy đủ 8 bước
 - ✅ Luồng phụ đã định nghĩa: AF-01 (Hủy khôi phục)
 - ✅ Luồng ngoại lệ đã định nghĩa: EF-01 (Không đủ điều kiện)
-- ✅ BR đã định nghĩa rõ (BR-01 đến BR-09), phân biệt rõ passive observer (BR-09)
+- ✅ BR đã định nghĩa rõ (BR-01 đến BR-09); BR-09 ghi rõ CRM publish outbound event (không passive)
 - ✅ AC bao phủ 4 nhóm, 18 AC (vượt yêu cầu tối thiểu 10 AC)
 - ✅ Điều kiện hiển thị nút phân rõ: Sales/Manager thấy khi SUSPENDED; CSKH/LicAdmin ẩn hoàn toàn; ẩn với mọi status khác SUSPENDED
 

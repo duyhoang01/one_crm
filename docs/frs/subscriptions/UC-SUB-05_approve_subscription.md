@@ -128,7 +128,7 @@ Modal "Xác nhận Subscription" xuất hiện từ hero section của màn UC-S
 | 1 | Mã Subscription | `sub.id` | DIRECT + RESELLER |
 | 2 | Khách hàng | `sub.customerName` | DIRECT + RESELLER |
 | 3 | Đơn vị thụ hưởng | `sub.beneficiaryName` | Chỉ RESELLER |
-| 4 | Gói | `sub.packageName` + `sub.licenseQty / sub.deviceQty` | DIRECT: "{tên gói} · {N} thiết bị". RESELLER: "{tên gói} · {N} license". |
+| 4 | Gói | `sub.packageName` + `sub.licenseQty \|\| sub.seatCount` | DIRECT + RESELLER: "{tên gói} · {N} license". |
 | 5 | Hợp đồng | `sub.contractCode` | DIRECT + RESELLER |
 
 *Tất cả field là readonly — không có input nhập liệu trong modal này.*
@@ -150,7 +150,7 @@ Modal "Xác nhận Subscription" xuất hiện từ hero section của màn UC-S
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-SUB-05-05 | Sub DIRECT: mã "SUB-2026-001", khách hàng "FPT Software", gói "EDR Pro · 200 thiết bị", hợp đồng "HĐ-2024-001". | Click "✅ Xác nhận". | Modal mở, hiển thị đúng 4 dòng thông tin. Không có dòng Đơn vị thụ hưởng. |
+| AC-SUB-05-05 | Sub DIRECT: mã "SUB-2026-001", khách hàng "FPT Software", gói "EDR Pro · 200 license", hợp đồng "HĐ-2024-001". | Click "✅ Xác nhận". | Modal mở, hiển thị đúng 4 dòng thông tin. Không có dòng Đơn vị thụ hưởng. |
 | AC-SUB-05-06 | Sub RESELLER có `beneficiaryName = "Mekong Foods"`. | Click "✅ Xác nhận". | Modal mở, hiển thị 5 dòng thông tin bao gồm "Đơn vị thụ hưởng: Mekong Foods". |
 | AC-SUB-05-07 | Modal đang mở. | Nhấn "Hủy". | Modal đóng. `sub.status` vẫn là DRAFT. Không có toast. |
 | AC-SUB-05-08 | Modal đang mở. | Click ra ngoài vùng modal. | Modal đóng. `sub.status` vẫn là DRAFT. |

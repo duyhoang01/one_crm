@@ -27,9 +27,9 @@
 | **BR-03** | Phân trang 10 bản ghi/trang. |
 | **BR-04** | Nút ✏️ Sửa: chỉ hiển thị và active khi `sub.status = DRAFT`. Ẩn hoàn toàn với các trạng thái khác. |
 | **BR-05** | Nút 🗑️ Xóa: chỉ hiển thị và active khi `sub.status = DRAFT`. Với các trạng thái khác: hiển thị ở trạng thái `disabled`, tooltip "Chỉ xóa được khi ở trạng thái Draft". |
-| **BR-06** | Filter "Sắp hết hạn": lọc các sub có `sub.endDate` trong vòng 30 ngày kể từ hôm nay VÀ `sub.status = ACTIVE`. |
+| **BR-06** | Filter "Sắp hết hạn": lọc các sub có `sub.endDate` trong vòng 60 ngày kể từ hôm nay VÀ `sub.status = ACTIVE`. |
 | **BR-07** | Bảy trạng thái subscription: `DRAFT`, `PENDING_PROVISION`, `ACTIVE`, `SUSPENDED`, `EXPIRED`, `REVOKED`, `RENEWED`. Mỗi trạng thái hiển thị badge màu riêng biệt (xem §3.2). |
-| **BR-08** | Tìm kiếm áp dụng đồng thời trên các field: `sub.id`, `sub.customerName`, `sub.packageName`, `sub.beneficiaryName`. Không phân biệt hoa thường. |
+| **BR-08** | Tìm kiếm áp dụng đồng thời trên các field: `sub.id`, `sub.customerName`, `sub.packageName`, `sub.beneficiaryName`, `sub.contractCode`, `sub.dealCode`. Không phân biệt hoa thường. |
 
 ---
 
@@ -62,7 +62,7 @@
 | Bước | Tác nhân | Hành động |
 |---|---|---|
 | 1 | Sales / Manager | Click toggle "Sắp hết hạn". |
-| 2 | System | Lọc danh sách: chỉ giữ sub có `endDate` ≤ 30 ngày kể từ hôm nay VÀ `status = ACTIVE`. Cập nhật counter và danh sách. Các bộ lọc khác vẫn giữ nguyên (kết hợp AND). |
+| 2 | System | Lọc danh sách: chỉ giữ sub có `endDate` ≤ 60 ngày kể từ hôm nay VÀ `status = ACTIVE`. Cập nhật counter và danh sách. Các bộ lọc khác vẫn giữ nguyên (kết hợp AND). |
 | 3 | Sales / Manager | Click lại toggle để tắt. |
 | 4 | System | Bỏ điều kiện "Sắp hết hạn", render lại với các bộ lọc còn lại. |
 
@@ -104,10 +104,10 @@ Màn hình Danh sách Subscription gồm 3 khu vực chính:
 
 | Component | Loại | Mô tả |
 |---|---|---|
-| Ô tìm kiếm | Text input | Tìm theo mã sub, tên khách hàng, gói sản phẩm, đơn vị thụ hưởng. Filter realtime khi gõ. Placeholder: "Tìm theo mã sub, gói sản phẩm, khách hàng, đơn vị thụ hưởng...". |
-| Dropdown Trạng thái | Select | Các giá trị: **Tất cả trạng thái** (mặc định), DRAFT, PENDING_PROVISION, ACTIVE, SUSPENDED, EXPIRED, REVOKED, RENEWED. |
+| Ô tìm kiếm | Text input | Tìm theo mã sub, tên khách hàng, gói sản phẩm, đơn vị thụ hưởng, mã hợp đồng, deal code. Filter realtime khi gõ. Placeholder: "Tìm theo mã sub, gói sản phẩm, khách hàng, đơn vị thụ hưởng...". |
+| Dropdown Trạng thái | Multi-select checkbox | Mặc định: **Tất cả trạng thái** (không chọn gì). Cho phép tích chọn nhiều trạng thái đồng thời. Các option: DRAFT, PENDING_PROVISION, ACTIVE, SUSPENDED, EXPIRED, REVOKED, RENEWED. Khi chọn N option → chỉ hiển thị sub có status thuộc tập đã chọn (OR logic). |
 | Dropdown Loại HĐ | Select | Các giá trị: **Tất cả loại** (mặc định), DIRECT, RESELLER. |
-| Toggle "Sắp hết hạn" | Toggle button | Khi bật: chỉ hiện sub ACTIVE có `endDate` ≤ 30 ngày. Kết hợp AND với các filter khác. |
+| Toggle "Sắp hết hạn" | Toggle button | Khi bật: chỉ hiện sub ACTIVE có `endDate` ≤ 60 ngày. Kết hợp AND với các filter khác. |
 | Nút "Xóa bộ lọc" | Ghost button | Luôn hiển thị. Thực hiện AF-01. |
 | Nút "+ Thêm Subscription" | Primary button | Mở UC-SUB-02. |
 
@@ -172,8 +172,8 @@ Màn hình Danh sách Subscription gồm 3 khu vực chính:
 |---|---|---|---|
 | AC-SUB-01-10 | Danh sách có sub với nhiều trạng thái khác nhau. | Chọn filter "ACTIVE". | Chỉ hiển thị sub có `status = ACTIVE`. |
 | AC-SUB-01-11 | Danh sách có cả sub DIRECT và RESELLER. | Chọn filter "RESELLER". | Chỉ hiển thị sub thuộc hợp đồng RESELLER. |
-| AC-SUB-01-12 | Có 3 sub ACTIVE: 1 hết hạn sau 15 ngày, 1 sau 45 ngày, 1 đã EXPIRED. | Bật toggle "Sắp hết hạn". | Chỉ hiển thị sub ACTIVE hết hạn sau 15 ngày. Sub 45 ngày và EXPIRED không hiển thị. |
-| AC-SUB-01-13 | Đang filter "ACTIVE" + search "FPT" + toggle "Sắp hết hạn" bật. | Nhấn "Xóa bộ lọc". | Tất cả filter reset, toàn bộ subscription hiển thị. |
+| AC-SUB-01-12 | Có 3 sub ACTIVE: 1 hết hạn sau 15 ngày, 1 sau 45 ngày, 1 sau 90 ngày. | Bật toggle "Sắp hết hạn". | Chỉ hiển thị sub ACTIVE hết hạn sau 15 ngày và 45 ngày (cả hai ≤ 60 ngày). Sub 90 ngày không hiển thị. |
+| AC-SUB-01-13 | Đang filter "ACTIVE" (status checkbox) + search "FPT" + toggle "Sắp hết hạn" bật. | Nhấn "Xóa bộ lọc". | Tất cả filter reset (tất cả checkbox bỏ chọn, ô tìm kiếm rỗng, toggle tắt), toàn bộ subscription hiển thị. |
 | AC-SUB-01-14 | Đang filter "RESELLER" + search "CMC". | Kết hợp 2 bộ lọc. | Chỉ hiển thị sub RESELLER có chứa "CMC" trong các field tìm kiếm (AND logic). |
 
 ### Nhóm 4: Sort
