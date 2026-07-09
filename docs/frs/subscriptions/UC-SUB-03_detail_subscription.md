@@ -136,6 +136,50 @@ Trang Chi tiết Subscription gồm 4 khu vực xếp dọc từ trên xuống:
 * = hiển thị có điều kiện theo role và sub.status
 ```
 
+**Screenshot — Tab Thông tin Sub (DIRECT - ACTIVE):**
+
+![Chi tiết Subscription — tab Thông tin Sub (DIRECT)](../../assets/M-03_subscriptions/UC-SUB-03_screen_tab_info_direct.png)
+
+**Screenshot — Tab Thông tin Sub (RESELLER - ACTIVE):**
+
+![Chi tiết Subscription — tab Thông tin Sub (RESELLER)](../../assets/M-03_subscriptions/UC-SUB-03_screen_tab_info_reseller.png)
+
+**Screenshot — Hero DRAFT (với action buttons Xác nhận / Xóa / Sửa):**
+
+![Chi tiết Subscription — hero DRAFT](../../assets/M-03_subscriptions/UC-SUB-03_screen_hero_draft.png)
+
+**Screenshot — Hero SUSPENDED (với action button Khôi phục):**
+
+![Chi tiết Subscription — hero SUSPENDED](../../assets/M-03_subscriptions/UC-SUB-03_screen_hero_suspended.png)
+
+**Screenshot — Tab License (ACTIVE — quota bar):**
+
+![Chi tiết Subscription — tab License ACTIVE](../../assets/M-03_subscriptions/UC-SUB-03_screen_tab_license_active.png)
+
+**Screenshot — Tab License (GRACE — guidance banner):**
+
+![Chi tiết Subscription — tab License GRACE](../../assets/M-03_subscriptions/UC-SUB-03_screen_tab_license_grace.png)
+
+**Screenshot — Tab License (PENDING_PROVISION — đang chờ kích hoạt):**
+
+![Chi tiết Subscription — tab License PENDING](../../assets/M-03_subscriptions/UC-SUB-03_screen_tab_license_pending.png)
+
+**Screenshot — Tab License (REVOKED — guidance đỏ):**
+
+![Chi tiết Subscription — tab License REVOKED](../../assets/M-03_subscriptions/UC-SUB-03_screen_tab_license_revoked.png)
+
+**Screenshot — Tab License (DRAFT — placeholder):**
+
+![Chi tiết Subscription — tab License DRAFT](../../assets/M-03_subscriptions/UC-SUB-03_screen_tab_license_draft.png)
+
+**Screenshot — Tab Timeline:**
+
+![Chi tiết Subscription — tab Timeline](../../assets/M-03_subscriptions/UC-SUB-03_screen_tab_timeline.png)
+
+**Screenshot — Tab Audit Log:**
+
+![Chi tiết Subscription — tab Audit Log](../../assets/M-03_subscriptions/UC-SUB-03_screen_tab_audit.png)
+
 ### 3.2 Hero section
 
 | Component | Mô tả |

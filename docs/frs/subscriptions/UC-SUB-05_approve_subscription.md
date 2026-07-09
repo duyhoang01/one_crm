@@ -105,6 +105,10 @@ Modal "Xác nhận Subscription" xuất hiện từ hero section của màn UC-S
 
 *Lưu ý: Với hợp đồng RESELLER, bổ sung dòng "Đơn vị thụ hưởng" trong bảng thông tin subscription.*
 
+**Screenshot — Modal Gửi Subscription đi (Phê duyệt):**
+
+![Phê duyệt Subscription — modal xác nhận](../../assets/M-03_subscriptions/UC-SUB-05_screen_modal_approve.png)
+
 ### 3.2 Thành phần UI
 
 | Component | Mô tả |

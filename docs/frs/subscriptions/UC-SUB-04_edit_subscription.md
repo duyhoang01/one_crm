@@ -138,6 +138,10 @@ Kích hoạt tại bước 6 khi dữ liệu không hợp lệ.
 └──────────────────────────────────────────────────────────┘
 ```
 
+**Screenshot — Modal Chỉnh sửa Draft Subscription:**
+
+![Chỉnh sửa Subscription — modal](../../assets/M-03_subscriptions/UC-SUB-04_screen_modal_edit.png)
+
 ### 3.2 Thành phần UI
 
 | # | Thành phần | Loại | Mô tả |

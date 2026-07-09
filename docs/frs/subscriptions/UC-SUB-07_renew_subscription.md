@@ -113,6 +113,14 @@ Kích hoạt tại bước 7 (nhánh → Không).
 
 > **Demo HTML:** [docs/demo/v2.4.0_subscriptions.html](../../demo/v2.4.0_subscriptions.html) — hàm `subOpenRenew(id)`, `subConfirmRenew()`
 
+**Screenshot — Modal Gia hạn (sub đang ACTIVE):**
+
+![Gia hạn Subscription — modal ACTIVE](../../assets/M-03_subscriptions/UC-SUB-07_screen_modal_renew_active.png)
+
+**Screenshot — Modal Gia hạn (sub đang SUSPENDED — ngày tính từ hôm nay):**
+
+![Gia hạn Subscription — modal SUSPENDED](../../assets/M-03_subscriptions/UC-SUB-07_screen_modal_renew_suspended.png)
+
 ### 3.2 Thành phần giao diện
 
 | # | Thành phần | Loại | Mô tả |

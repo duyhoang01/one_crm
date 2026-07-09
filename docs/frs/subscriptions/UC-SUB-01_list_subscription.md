@@ -90,6 +90,14 @@ Màn hình Danh sách Subscription gồm 3 khu vực chính:
 2. **Bảng danh sách:** Hiển thị subscription theo bộ lọc và sort hiện tại.
 3. **Thanh phân trang (Pagination):** Counter tổng số kết quả và điều hướng trang.
 
+**Screenshot — Màn hình mặc định:**
+
+![Danh sách Subscription — mặc định](../../assets/M-03_subscriptions/UC-SUB-01_screen_list_default.png)
+
+**Screenshot — Filter "Sắp hết hạn" đang bật:**
+
+![Danh sách Subscription — filter Sắp hết hạn](../../assets/M-03_subscriptions/UC-SUB-01_screen_list_expiring.png)
+
 ### 3.2 Mô tả component
 
 #### Thanh công cụ

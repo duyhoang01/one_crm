@@ -139,6 +139,18 @@ Modal "Thêm Subscription mới" gồm 5 phần theo thứ tự từ trên xuố
 4. **Thời gian** — ngày bắt đầu (dự kiến) và ngày hết hạn (dự kiến, readonly).
 5. **Bổ sung** — Deal Code và Ghi chú (tuỳ chọn).
 
+**Screenshot — Form khởi đầu (chưa chọn hợp đồng):**
+
+![Tạo Subscription — form khởi đầu](../../assets/M-03_subscriptions/UC-SUB-02_screen_form_initial.png)
+
+**Screenshot — Form sau khi chọn hợp đồng DIRECT:**
+
+![Tạo Subscription — DIRECT form](../../assets/M-03_subscriptions/UC-SUB-02_screen_form_direct.png)
+
+**Screenshot — Form sau khi chọn hợp đồng RESELLER:**
+
+![Tạo Subscription — RESELLER form](../../assets/M-03_subscriptions/UC-SUB-02_screen_form_reseller.png)
+
 ### 3.2 Mô tả các field
 
 | # | Field | Bắt buộc | Loại | Mô tả & Validation |

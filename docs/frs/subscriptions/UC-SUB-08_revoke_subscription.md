@@ -103,6 +103,14 @@
 
 Nút "⊘ Thu hồi" trong modal chuyển sang **active** sau khi Manager nhập lý do (BR-04).
 
+**Screenshot — Modal Thu hồi (chưa nhập lý do — nút disabled):**
+
+![Thu hồi Subscription — modal trống](../../assets/M-03_subscriptions/UC-SUB-08_screen_modal_revoke_empty.png)
+
+**Screenshot — Modal Thu hồi (đã nhập lý do — nút enabled):**
+
+![Thu hồi Subscription — modal đã nhập lý do](../../assets/M-03_subscriptions/UC-SUB-08_screen_modal_revoke_ready.png)
+
 ### 3.2 Thành phần UI
 
 | # | Thành phần | Loại | Mô tả |

@@ -103,6 +103,10 @@
 
 > Với hợp đồng RESELLER: bổ sung dòng `• Đơn vị thụ hưởng: {beneficiaryName}` ngay sau dòng Khách hàng.
 
+**Screenshot — Modal Xóa Subscription:**
+
+![Xóa Draft Subscription — modal xác nhận](../../assets/M-03_subscriptions/UC-SUB-06_screen_modal_delete.png)
+
 ### 3.2 Thành phần giao diện
 
 | # | Thành phần | Loại | Mô tả |
