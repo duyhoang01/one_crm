@@ -304,6 +304,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
 .sub-detail-value{padding:11px 16px;font-size:14px;color:var(--text-primary);background:white;border-bottom:1px solid var(--border);}
 .sub-mirror-badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;}
 .sub-mirror-active{background:#ECFDF5;color:#059669;}
+.sub-mirror-grace{background:#FFF7ED;color:#C2410C;border-color:#FED7AA;}
 .sub-mirror-pending{background:#FFFBEB;color:#D97706;}
 .sub-mirror-suspended{background:#FFF7ED;color:#EA580C;}
 .sub-mirror-expired,.sub-mirror-revoked{background:#FEF2F2;color:var(--red);}
@@ -573,10 +574,12 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <div class="profile-hero" id="subDetailHero"></div>
           <div class="tabs" id="subDetailTabs">
             <div class="tab active" onclick="subSwitchTab(this,'sub-tp-info')">📋 Thông tin Sub</div>
+            <div class="tab" onclick="subSwitchTab(this,'sub-tp-license')">🔑 License</div>
             <div class="tab" onclick="subSwitchTab(this,'sub-tp-timeline')">📅 Timeline</div>
             <div class="tab" onclick="subSwitchTab(this,'sub-tp-audit')">📋 Audit Log</div>
           </div>
           <div class="tab-panel active" id="sub-tp-info"></div>
+          <div class="tab-panel" id="sub-tp-license"></div>
           <div class="tab-panel" id="sub-tp-timeline"></div>
           <div class="tab-panel" id="sub-tp-audit"></div>
         </div>
@@ -1866,7 +1869,9 @@ let conContracts = [
        startDate:'2025-01-20',endDate:'2026-01-19',licenseQty:null,seatCount:500,
        status:'EXPIRED',note:'Triển khai SaaS multi-tenant',dealCode:'DEAL-2025-FPT-001',
        previousSubId:null,
-       licMirrorStatus:'EXPIRED',licMirrorExpiry:'2026-01-19',lastSync:'—',
+       licMirrorStatus:'EXPIRED',licMirrorExpiry:'2026-01-19',lastSync:'—',quotaUsed:486,
+       activationDate:'2025-01-20',
+       licMetadata:[{label:'Tenant ID',value:'FPT-TENANT-001'},{label:'Loại triển khai',value:'SaaS'},{label:'Khu vực',value:'VN-HCM'}],
        createdBy:'Sales A',createdAt:'2025-01-15T10:00:00',
        timeline:[
          {icon:'📊',cls:'tl-dot-gray',source:'WEBHOOK',actor:'System',title:'Usage snapshot cập nhật',time:'2026-07-08 08:00',detail:'486 / 500 seats đang dùng (97.2%)'},
@@ -1909,7 +1914,7 @@ let conContracts = [
       {id:'SUB-2026-003',contractId:'con-002',beneficiaryId:'B002',beneficiaryName:'Trường ĐH Kinh Tế HCM',
        productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR',
        startDate:'2025-04-01',endDate:'2026-03-31',licenseQty:60,seatCount:60,
-       status:'ACTIVE',note:'',licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-03-31',lastSync:'12 phút trước',
+       status:'ACTIVE',note:'',licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-03-31',lastSync:'12 phút trước',activationDate:'2025-04-01',usedQty:48,
        createdBy:'Sales B',createdAt:'2025-04-01T08:00:00',
        timeline:[
          {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2025-04-01 09:30',detail:'Beneficiary: Trường ĐH Kinh Tế HCM · 60 license'},
@@ -2019,7 +2024,9 @@ let conContracts = [
        productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR Enterprise',
        startDate:'2026-04-10',endDate:'2026-09-05',licenseQty:null,seatCount:500,
        status:'ACTIVE',note:'Triển khai trên hạ tầng VNPT Cloud.',
-       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-09-05',lastSync:'2 giờ trước',
+       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-09-05',lastSync:'2 giờ trước',quotaUsed:423,
+       activationDate:'2026-04-10',
+       licMetadata:[{label:'Tenant ID',value:'VNPT-TENANT-007'},{label:'Loại triển khai',value:'SaaS'},{label:'Khu vực',value:'VN-HCM'},{label:'Nền tảng cloud',value:'VNPT Cloud'}],
        createdBy:'Sales B',createdAt:'2026-04-03T11:00:00',
        timeline:[
          {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2026-04-10 09:00',detail:'Hiệu lực → 2026-09-05 · 500 seats'},
@@ -2044,7 +2051,9 @@ let conContracts = [
        productId:'CMC_EDR',packageId:'PKG-EDR-01',packageName:'CMC EDR Standard',
        startDate:'2026-06-05',endDate:'2026-08-05',licenseQty:null,seatCount:50,
        status:'ACTIVE',note:'',
-       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-08-05',lastSync:'45 phút trước',
+       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-08-05',lastSync:'45 phút trước',quotaUsed:38,
+       activationDate:'2026-06-05',
+       licMetadata:[{label:'Tenant ID',value:'CMC-TENANT-008'},{label:'Loại triển khai',value:'SaaS'},{label:'Khu vực',value:'VN-HN'}],
        createdBy:'Sales A',createdAt:'2026-06-01T09:30:00',
        timeline:[
          {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2026-06-05 10:00',detail:'Hiệu lực → 2026-08-05 · 50 seats'},
@@ -2120,7 +2129,9 @@ let conContracts = [
        productId:'CMC_EDR',packageId:'PKG-EDR-01',packageName:'CMC EDR Standard',
        startDate:'2026-03-20',endDate:'2026-07-20',licenseQty:150,seatCount:150,
        status:'ACTIVE',note:'',
-       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2026-07-20',lastSync:'30 phút trước',
+       licMirrorStatus:'GRACE',licMirrorExpiry:'2026-07-20',lastSync:'30 phút trước',
+       activationDate:'2026-03-20',usedQty:122,
+       licMetadata:[{label:'Tenant ID',value:'VIETTEL-TENANT-011'},{label:'Đơn vị',value:'Alpha Technology JSC'},{label:'Loại triển khai',value:'SaaS'},{label:'Khu vực',value:'VN-HCM'}],
        createdBy:'Sales B',createdAt:'2026-03-20T09:00:00',
        timeline:[
          {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2026-03-20 10:00',detail:'Beneficiary: Alpha Technology JSC · 150 license · Hiệu lực → 2026-07-20'},
@@ -2176,7 +2187,9 @@ let conContracts = [
        productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR Enterprise',
        startDate:'2027-03-21',endDate:'2028-03-20',licenseQty:null,seatCount:300,
        status:'ACTIVE',note:'Gia hạn lần 2 — đã active.',dealCode:'DEAL-2027-SCB-001',previousSubId:'SUB-2026-013',
-       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2028-03-20',lastSync:'5 phút trước',
+       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2028-03-20',lastSync:'5 phút trước',quotaUsed:287,
+       activationDate:'2027-03-21',
+       licMetadata:[{label:'Tenant ID',value:'SCB-TENANT-016'},{label:'Loại triển khai',value:'SaaS'},{label:'Khu vực',value:'VN-HCM'},{label:'Số hợp đồng phụ lục',value:'02'}],
        createdBy:'Sales B',createdAt:'2027-03-01T09:00:00',
        timeline:[
          {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active (gia hạn lần 2)',time:'2027-03-21 09:30',detail:'Hiệu lực → 2028-03-20 · 300 seat'},
@@ -3026,6 +3039,12 @@ function conFmtInputNum(el){const raw=conParseNum(el.value);if(!raw||isNaN(raw))
     {pId:'CA',pkg:'CA Organization',pool:null},
   ];
   const STATUSES_SUB=['ACTIVE','ACTIVE','PENDING_PROVISION','EXPIRED','ACTIVE','SUSPENDED'];
+  const DEMO_META={
+    CMC_EDR:(i)=>[{label:'Tenant ID',value:`TENANT-${String(i+1).padStart(3,'0')}`},{label:'Loại triển khai',value:'SaaS'},{label:'Khu vực',value:i%2===0?'VN-HCM':'VN-HN'}],
+    C_SHIELD:(i)=>[{label:'App Bundle ID',value:`vn.cmc.cshield.${i+1}`},{label:'Nền tảng',value:'iOS & Android'},{label:'Phiên bản SDK',value:'3.2.1'}],
+    AV:(i)=>[{label:'License Key',value:`AV-2026-${String(i+1).padStart(4,'0')}`},{label:'Loại cài đặt',value:'Online'}],
+    CA:(i)=>[{label:'Certificate CN',value:`cn${i+1}.cmc.vn`},{label:'Loại chứng chỉ',value:'OV SSL'},{label:'Tổ chức CA',value:'CMC CA Root G2'}],
+  };
   const SALES=['Sales A','Sales B','Sales C','Sales A','Sales B'];
   const BASE_YEAR=2024;
 
@@ -3064,6 +3083,8 @@ function conFmtInputNum(el){const raw=conParseNum(el.value);if(!raw||isNaN(raw))
         status:subStatus,note:'',
         licMirrorStatus:mirrorStatus,licMirrorExpiry:subStatus==='EXPIRED'?subEndDate:null,
         lastSync:subStatus==='ACTIVE'?`${10+i} phút trước`:subStatus==='PENDING_PROVISION'?'Chưa đồng bộ':'—',
+        activationDate:subStatus==='ACTIVE'?subStartDate:null,
+        licMetadata:subStatus==='ACTIVE'?(DEMO_META[prod.pId]||DEMO_META.CMC_EDR)(i):null,
         createdBy:SALES[i%5],createdAt:`${yr}-${mo}-${day}T0${(i%9)+1}:30:00`
       }]
     });
@@ -3260,6 +3281,7 @@ function subMirrorBadge(status){
   if(!status||status==='N/A')return`<span class="sub-mirror-badge sub-mirror-na">—</span>`;
   const map={
     ACTIVE:{cls:'sub-mirror-active',label:'Active'},
+    GRACE:{cls:'sub-mirror-grace',label:'Trong gia hạn'},
     PENDING:{cls:'sub-mirror-pending',label:'Pending'},
     SUSPENDED:{cls:'sub-mirror-suspended',label:'Suspended'},
     EXPIRED:{cls:'sub-mirror-expired',label:'Expired'},
@@ -3720,7 +3742,6 @@ function subRenderHero(sub){
   const renewBtn=canRenew?`<button class="btn btn-secondary btn-sm" onclick="subOpenRenew('${sub.id}')">🔄 Gia hạn</button>`:'';
   const revokeBtn=(canRevoke&&!isDraft)?`<button class="btn btn-danger btn-sm" onclick="subOpenRevoke('${sub.id}')">⊘ Thu hồi</button>`:'';
   const draftBanner=isDraft?`<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:10px 16px;display:flex;gap:10px;align-items:center;font-size:13px;color:#92400E;margin-bottom:12px;"><span>⏳</span><span>Subscription đang ở trạng thái <strong>Draft</strong> — chờ phê duyệt trước khi gửi provisioning.</span></div>`:'';
-  const isManagerOnlyRevoke=(!canRevoke&&!isDraft&&!['REVOKED','EXPIRED','RENEWED'].includes(sub.status)&&currentUser?.role!=='Manager')?`<div style="font-size:11px;color:var(--text-secondary);margin-top:6px;text-align:right;">⊘ Thu hồi — chỉ Manager</div>`:'';
   document.getElementById('subDetailHero').innerHTML=`
     ${draftBanner}
     <div class="profile-header">
@@ -3739,7 +3760,7 @@ function subRenderHero(sub){
       <div class="profile-actions">
         ${approveBtn}${deleteDraftBtn}${editBtn}${suspendBtn}${resumeBtn}${renewBtn}${revokeBtn}${backBtn}
       </div>
-    </div>${isManagerOnlyRevoke}`;
+    </div>`;
 }
 function subSwitchTab(el,subOrPanel,panelId){
   // Support 2-arg call from onclick: subSwitchTab(el,'sub-tp-info')
@@ -3755,6 +3776,7 @@ function subSwitchTab(el,subOrPanel,panelId){
   if(panel)panel.classList.add('active');
   if(!sub)return;
   if(panelId==='sub-tp-info')subRenderInfo(sub);
+  else if(panelId==='sub-tp-license')subRenderLicense(sub);
   else if(panelId==='sub-tp-timeline')subRenderTimeline(sub);
   else if(panelId==='sub-tp-audit')subRenderAuditLog(sub);
 }
@@ -3867,6 +3889,144 @@ function subRenderAuditLog(sub){
     subRemoveAuditFooter();subAppendAuditRows(items,'');subUpdateAuditCount();
     if(_lazy['subAudit']?.done)subAppendAuditEnd(_subAuditData.length);
   });
+}
+function subRenderLicense(sub){
+  const el=document.getElementById('sub-tp-license');if(!el)return;
+  const noMirror=!sub.licMirrorStatus||['N/A',null,undefined].includes(sub.licMirrorStatus);
+  const isPending=sub.licMirrorStatus==='PENDING';
+  if(sub.status==='DRAFT'||noMirror){
+    el.innerHTML=`<div class="card" style="padding:48px;text-align:center;color:var(--text-secondary);">
+      <div style="font-size:36px;margin-bottom:12px;">&#128273;</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Chưa có thông tin license</div>
+      <div style="font-size:13px;">Subscription chưa được xác nhận hoặc chưa nhận webhook từ Product Module.</div>
+    </div>`;return;
+  }
+  if(isPending){
+    el.innerHTML=`<div class="card" style="padding:48px;text-align:center;color:var(--text-secondary);">
+      <div style="font-size:36px;margin-bottom:12px;">&#9203;</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Đang chờ kích hoạt</div>
+      <div style="font-size:13px;">Hệ thống đang xử lý provisioning — chưa nhận webhook từ Product Module.</div>
+    </div>`;return;
+  }
+  // Fix 1: GRACE detection (sub.status=ACTIVE + licMirrorStatus=GRACE — trạng thái hợp lệ, không phải mismatch)
+  const isGrace=sub.status==='ACTIVE'&&sub.licMirrorStatus==='GRACE';
+  // Mismatch: GRACE excluded vì là trạng thái dự kiến trong giai đoạn gia hạn
+  const mirrorMap={ACTIVE:'ACTIVE',SUSPENDED:'SUSPENDED',EXPIRED:'EXPIRED',REVOKED:'REVOKED'};
+  const expectedFromMirror=mirrorMap[sub.licMirrorStatus];
+  const hasMismatch=!isGrace&&expectedFromMirror&&sub.status!==expectedFromMirror&&!['DRAFT','PENDING_PROVISION','RENEWED'].includes(sub.status);
+  // Fix 4: Contextual guidance theo trạng thái
+  const guidanceMap={
+    SUSPENDED:{icon:'&#9208;',bg:'#FFF7ED',border:'#FB923C',text:'#C2410C',msg:'License đang tạm dừng — liên hệ License Admin để khôi phục dịch vụ.'},
+    EXPIRED:{icon:'&#9200;',bg:'#FEF2F2',border:'#FCA5A5',text:'#B91C1C',msg:'License đã hết hạn — tạo subscription gia hạn để KH tiếp tục sử dụng.'},
+    REVOKED:{icon:'&#8856;',bg:'#FEF2F2',border:'#FCA5A5',text:'#B91C1C',msg:'License đã bị thu hồi — không thể khôi phục. Cần tạo subscription mới nếu KH muốn tiếp tục.'},
+    GRACE:{icon:'&#9888;',bg:'#FFFBEB',border:'#FCD34D',text:'#92400E',msg:'License đang trong giai đoạn gia hạn — KH vẫn sử dụng được nhưng cần gia hạn sớm để tránh gián đoạn dịch vụ.'},
+  };
+  const guidanceKey=isGrace?'GRACE':(guidanceMap[sub.licMirrorStatus]?sub.licMirrorStatus:null);
+  const guidance=guidanceKey?guidanceMap[guidanceKey]:null;
+  // Fix 5: Quota — DIRECT và RESELLER
+  const isDirect=sub.contractType==='DIRECT';
+  const total=sub.seatCount||sub.licenseQty||0;
+  const usedDirect=sub.quotaUsed;
+  const usedReseller=sub.usedQty;
+  const used=isDirect?usedDirect:usedReseller;
+  const pct=(used!=null&&total)?Math.round(used/total*100):null;
+  const barColor=pct==null?'#94A3B8':pct>=90?'#EF4444':pct>=70?'#F59E0B':'#22C55E';
+  let quotaHtml='';
+  if(isDirect){
+    if(used!=null){
+      quotaHtml=`<div class="card" style="padding:20px;margin-bottom:16px;">
+        <div class="section-hdr">Quota sử dụng</div>
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px;">
+          <span style="font-size:28px;font-weight:700;color:var(--navy)">${used.toLocaleString('vi-VN')}</span>
+          <span style="font-size:15px;color:var(--text-secondary);">/ ${total.toLocaleString('vi-VN')} seats</span>
+          <span style="font-size:13px;font-weight:600;color:${barColor};margin-left:4px;">${pct}%</span>
+        </div>
+        <div style="height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:6px;">${total-used} seats chưa sử dụng</div>
+      </div>`;
+    } else {
+      quotaHtml=`<div class="card" style="padding:20px;margin-bottom:16px;">
+        <div class="section-hdr">Quota sử dụng</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:24px;font-weight:700;color:var(--navy)">${total.toLocaleString('vi-VN')}</span>
+          <span style="font-size:14px;color:var(--text-secondary);">seats phân bổ</span>
+          <span style="font-size:12px;color:var(--gray-400);background:#F8FAFC;border:1px solid #E2E8F0;padding:2px 8px;border-radius:10px;">Sản phẩm chưa gửi thống kê sử dụng</span>
+        </div>
+      </div>`;
+    }
+  } else {
+    if(used!=null){
+      quotaHtml=`<div class="card" style="padding:20px;margin-bottom:16px;">
+        <div class="section-hdr">License phân bổ</div>
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px;">
+          <span style="font-size:28px;font-weight:700;color:var(--navy)">${used.toLocaleString('vi-VN')}</span>
+          <span style="font-size:15px;color:var(--text-secondary);">/ ${total.toLocaleString('vi-VN')} license đang active</span>
+          <span style="font-size:13px;font-weight:600;color:${barColor};margin-left:4px;">${pct}%</span>
+        </div>
+        <div style="height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:6px;">${total-used} license chưa active</div>
+      </div>`;
+    } else {
+      quotaHtml=`<div class="card" style="padding:20px;margin-bottom:16px;">
+        <div class="section-hdr">License phân bổ</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:24px;font-weight:700;color:var(--navy)">${total.toLocaleString('vi-VN')}</span>
+          <span style="font-size:14px;color:var(--text-secondary);">license</span>
+          <span style="font-size:12px;color:var(--gray-400);background:#F8FAFC;border:1px solid #E2E8F0;padding:2px 8px;border-radius:10px;">Số đang active: xem pool tại hợp đồng</span>
+        </div>
+      </div>`;
+    }
+  }
+  // Fix 2 & Metadata
+  const meta=sub.licMetadata;
+  const hasMeta=Array.isArray(meta)&&meta.length;
+  const PRODUCT_NAMES={'CMC_EDR':'EDR','AV':'AV','CA':'CA','C_SHIELD':'C-Shield'};
+  const productDisplayName=PRODUCT_NAMES[sub.productId]||sub.productId||'sản phẩm';
+  const metaHtml=hasMeta?`
+  <div class="card" style="padding:20px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div class="section-hdr" style="margin-bottom:0;">Thông tin bổ sung từ sản phẩm</div>
+      <span style="font-size:11px;color:var(--gray-400);background:#F8FAFC;border:1px solid #E2E8F0;padding:2px 8px;border-radius:10px;">Đồng bộ từ ${productDisplayName} · ${sub.lastSync||'—'}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px 24px;">
+      ${meta.map(m=>`
+      <div>
+        <div class="sub-info-label">${m.label}</div>
+        <div class="sub-info-value">${m.value!=null?m.value:'<em style="color:var(--gray-400)">—</em>'}</div>
+      </div>`).join('')}
+    </div>
+  </div>`:'';
+  el.innerHTML=`
+  ${hasMismatch?`<div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;">
+    <span style="font-size:18px;line-height:1.4;">&#9888;</span>
+    <div><div style="font-weight:600;font-size:13px;color:#92400E;margin-bottom:2px;">Cảnh báo mismatch trạng thái</div>
+    <div style="font-size:12px;color:#92400E;">Sub: <strong>${sub.status}</strong> · License: <strong>${sub.licMirrorStatus}</strong> — lệch quá ngưỡng SLA 15 phút</div></div>
+  </div>`:''}
+  <div class="card" style="padding:20px;margin-bottom:16px;">
+    <div class="section-hdr">Thông tin License</div>
+    <div class="sub-field-row">
+      <div><div class="sub-info-label">Trạng thái</div><div class="sub-info-value">${subMirrorBadge(sub.licMirrorStatus)}</div></div>
+      <div>
+        <div class="sub-info-label">Ngày kích hoạt <span style="font-size:10px;color:var(--gray-400);font-weight:400;">(từ sản phẩm)</span></div>
+        <div class="sub-info-value" style="font-weight:600;">${sub.activationDate?subFmtDate(sub.activationDate):'<em style="color:var(--gray-400)">—</em>'}</div>
+      </div>
+      <div><div class="sub-info-label">Ngày hết hạn</div><div class="sub-info-value" style="font-weight:600;">${sub.licMirrorExpiry?subFmtDate(sub.licMirrorExpiry):'<em style="color:var(--gray-400)">—</em>'}</div></div>
+    </div>
+    ${!hasMeta?`<div class="sub-field-row" style="margin-top:8px;">
+      <div><div class="sub-info-label">Đồng bộ lần cuối</div><div class="sub-info-value">${sub.lastSync||'—'}</div></div>
+      <div></div><div></div>
+    </div>`:''}
+  </div>
+  ${guidance?`<div style="background:${guidance.bg};border:1px solid ${guidance.border};border-radius:8px;padding:11px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;">
+    <span style="font-size:16px;line-height:1.5;">${guidance.icon}</span>
+    <span style="font-size:13px;color:${guidance.text};">${guidance.msg}</span>
+  </div>`:''}
+  ${quotaHtml}
+  ${metaHtml}`;
 }
 function subAppendAuditRows(items,q){
   const tbody=document.getElementById('subAuditBody');if(!tbody)return;
