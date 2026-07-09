@@ -4103,11 +4103,12 @@ function subOpenApproveDraft(id){
   const sub=found.sub;
   subApprovingId=id;
   const box=document.getElementById('subApproveInfoBox');
+  const con=found.contract;
   if(box)box.innerHTML=`<div style="font-size:13px;line-height:1.8;">
     <div><strong>Mã Subscription:</strong> ${sub.id}</div>
-    <div><strong>Khách hàng:</strong> ${sub.customerName}${sub.beneficiaryName?' → '+sub.beneficiaryName:''}</div>
+    <div><strong>Khách hàng:</strong> ${con.customerName}${sub.beneficiaryName?' → '+sub.beneficiaryName:''}</div>
     <div><strong>Gói:</strong> ${sub.packageName} · ${sub.licenseQty||sub.seatCount||0} license</div>
-    <div><strong>Hợp đồng:</strong> ${sub.contractCode}</div>
+    <div><strong>Hợp đồng:</strong> ${con.code}</div>
   </div>`;
   document.getElementById('subModalApprove').classList.add('open');
 }
@@ -4131,7 +4132,8 @@ function subOpenDeleteDraft(id){
   const sub=found.sub;
   subDeletingDraftId=id;
   const box=document.getElementById('subDeleteDraftInfoBox');
-  if(box)box.innerHTML=`• Mã Sub: <b>${sub.id}</b><br>• Khách hàng: <b>${sub.customerName}${sub.beneficiaryName?' → '+sub.beneficiaryName:''}</b><br>• Gói: <b>${sub.packageName}</b>`;
+  const con=found.contract;
+  if(box)box.innerHTML=`• Mã Sub: <b>${sub.id}</b><br>• Khách hàng: <b>${con.customerName}${sub.beneficiaryName?' → '+sub.beneficiaryName:''}</b><br>• Gói: <b>${sub.packageName}</b>`;
   document.getElementById('subModalDeleteDraft').classList.add('open');
 }
 function subConfirmDeleteDraft(){
