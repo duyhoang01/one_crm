@@ -33,49 +33,49 @@
 
 ## 2. Luồng nghiệp vụ
 
+![BPMN 2.0 — UC-SUB-06 Xóa Subscription Draft](../../assets/M-03_subscriptions/UC-SUB-06_bpmn.png)
+
 ### 2.1 Luồng chính
 
-| Bước | Tác nhân | Hành động | Ghi chú |
+> Số bước khớp badge trong ảnh BPMN. Bước **2** và **4** là Gateway (XOR) — điều kiện rẽ nhánh ghi gọn trong cùng ô.
+
+| Bước | Tác nhân | Hành động / Phản hồi | Ghi chú |
 |---|---|---|---|
-| 1 | Sales / CSKH / License Admin / Manager | Click 🗑️ trên row DRAFT tại UC-SUB-01 hoặc nhấn "🗑️ Xóa" trong hero section UC-SUB-03. | Trigger điều kiện: `sub.status = DRAFT` (BR-01, BR-02) |
-| 2 | System | Kiểm tra sub tồn tại và `sub.status = DRAFT` tại thời điểm click. | **[Gateway — Sub hợp lệ để xóa?]** |
-| — | — | Có → tiếp bước 3. | — |
-| — | — | Không → **EF-01**. | Sub không tồn tại hoặc status đã thay đổi |
-| 3 | System | Mở modal xác nhận xóa, hiển thị thông tin sub: Mã Sub, Khách hàng (+ đơn vị thụ hưởng nếu RESELLER), Gói sản phẩm. | BR-04 |
-| 4 | Sales / CSKH / License Admin / Manager | Đọc thông tin xác nhận trong modal. | **[Gateway — Tiếp tục xóa?]** |
-| — | — | Nhấn "🗑️ Xóa vĩnh viễn" → tiếp bước 5. | — |
-| — | — | Nhấn "Hủy" hoặc click ngoài modal → **AF-01**. | — |
-| 5 | System | Thực hiện hard delete: loại subscription khỏi `contract.subs`. | BR-03 |
-| 6 | System | Đóng modal. Hiển thị toast thành công: *"Đã xóa Draft — [sub.id] đã bị xóa vĩnh viễn"*. | BR-05 |
-| 7 | System | Điều hướng về UC-SUB-01; cập nhật danh sách (sub vừa xóa không còn xuất hiện). | BR-05 |
-| → | — | **End 1 (Success)** | — |
+| **1** | User (Sales / CSKH / License Admin / Manager) | Click 🗑️ trên row DRAFT tại UC-SUB-01 hoặc nhấn "🗑️ Xóa" trong hero section UC-SUB-03. | Nút chỉ khả dụng khi `sub.status = DRAFT` — BR-01, BR-02 |
+| **2** | System | **[Gateway — Sub tồn tại VÀ `sub.status = DRAFT`? (tại thời điểm click)]** Có → tiếp bước 3. Không → **EF-01**. | Pre-check tại thời điểm click |
+| **3** | System | Mở modal "Xác nhận xóa" — hiển thị info: Mã Sub, Khách hàng (+ Đơn vị thụ hưởng nếu RESELLER), Gói sản phẩm; kèm cảnh báo ⚠ "Không thể hoàn tác". | BR-04 |
+| **4** | User | **[Gateway — Người dùng quyết định?]** "🗑️ Xóa vĩnh viễn" → tiếp bước 5 (nút chuyển loading, disabled chống double-submit). "Hủy" / click ngoài modal → **AF-01**. | — |
+| **5** | System | HARD delete — loại subscription khỏi `contract.subs`, vĩnh viễn, **KHÔNG** ghi audit trail. | BR-03, BR-06 |
+| **6** | System | Đóng modal; toast thành công "Đã xóa Draft — [sub.id] đã bị xóa vĩnh viễn". | BR-05 |
+| **7** | System | Điều hướng theo nguồn: từ Chi tiết (UC-SUB-03) → về UC-SUB-01; từ Danh sách → ở lại trang & cập nhật bảng (sub vừa xóa không còn xuất hiện). | BR-05 |
+| → | — | **End 1 (Success)** — hard delete hoàn tất, toast hiện, điều hướng về / cập nhật Danh sách theo nguồn thao tác. | — |
 
 ### 2.2 Luồng phụ
 
 **[AF-01: Hủy xóa]** — kích hoạt tại bước 4 khi người dùng không xác nhận.
 
-| Bước | Tác nhân | Hành động | Ghi chú |
-|---|---|---|---|
-| 4a | Sales / CSKH / License Admin / Manager | Nhấn **"Hủy"** hoặc click vùng ngoài modal. | — |
-| 4b | System | Đóng modal. Không thay đổi dữ liệu. Giữ nguyên màn hình hiện tại (Danh sách hoặc Chi tiết). | — |
-| → | — | **End 2 (AF-01 — Hủy thao tác)** | — |
+| Bước | Tác nhân | Hành động / Phản hồi |
+|---|---|---|
+| **AF-01a** | User | Nhấn "Hủy" hoặc click vùng ngoài modal (overlay). |
+| **AF-01b** | System | Đóng modal, **KHÔNG** thay đổi dữ liệu; giữ nguyên màn hình hiện tại (Danh sách hoặc Chi tiết). |
+| → | — | **End 2 (Cancelled)** — sub không bị xóa, giữ nguyên `DRAFT`. |
 
 ### 2.3 Luồng ngoại lệ
 
-**[EF-01: Sub không hợp lệ]** — kích hoạt tại bước 2 khi sub không tồn tại hoặc không ở trạng thái DRAFT.
+**[EF-01: Sub không hợp lệ để xóa]** — kích hoạt tại **bước 2** khi sub không tồn tại hoặc `sub.status ≠ DRAFT` tại thời điểm click.
 
-| Bước | Tác nhân | Hành động | Ghi chú |
-|---|---|---|---|
-| 2a | System | Không mở modal. Hiển thị toast lỗi: *"Không thể xóa subscription này."* | Sub đã bị xóa bởi người khác, hoặc status đã chuyển sang trạng thái khác DRAFT |
-| → | — | **End 3 (EF-01 — Sub không hợp lệ)** | — |
+| Bước | Tác nhân | Hành động / Phản hồi |
+|---|---|---|
+| **EF-01a** | System | **KHÔNG** mở modal; hiển thị toast lỗi "Không thể xóa subscription này."; dữ liệu không đổi. |
+| → | — | **End 3 (Rejected)** — kết thúc luồng, sub giữ nguyên. |
 
 ### 2.4 Điểm kết thúc (End Events)
 
 | # | Tên | Điều kiện |
 |---|---|---|
-| **End 1** | Success — Xóa thành công | Hard delete hoàn tất, toast hiện, điều hướng về Danh sách |
-| **End 2** | AF-01 — Hủy thao tác | Người dùng nhấn Hủy hoặc click ngoài modal |
-| **End 3** | Failure — EF-01 (Sub không hợp lệ) | Sub không tồn tại hoặc status không phải DRAFT tại thời điểm click |
+| **End 1** | Success — Xóa thành công | Hard delete hoàn tất; sub bị loại khỏi `contract.subs`; toast hiện; điều hướng về / cập nhật Danh sách theo nguồn thao tác; không ghi audit |
+| **End 2** | Cancelled — AF-01 | Người dùng nhấn "Hủy" / click ngoài modal; sub không bị xóa, giữ nguyên `DRAFT` |
+| **End 3** | Rejected — EF-01 | Sub không tồn tại hoặc `sub.status ≠ DRAFT` tại thời điểm click; modal không mở, dữ liệu không đổi |
 
 ---
 
@@ -151,24 +151,25 @@
 |---|---|---|---|
 | AC-SUB-06-06 | Sub DRAFT thuộc hợp đồng DIRECT: `sub.id = SUB-2026-001`, `customerName = "FPT Software"`, `packageName = "EDR Pro"`. | Sales click 🗑️ tại UC-SUB-01. | Modal mở hiển thị đúng: Mã Sub "SUB-2026-001", Khách hàng "FPT Software", Gói "EDR Pro". Dòng "Đơn vị thụ hưởng" không xuất hiện. |
 | AC-SUB-06-07 | Sub DRAFT thuộc hợp đồng RESELLER có `beneficiaryName = "Mekong Foods"`. | Sales click 🗑️ tại UC-SUB-01. | Modal hiển thị thêm dòng *"Đơn vị thụ hưởng: Mekong Foods"* ngay sau dòng Khách hàng. |
-| AC-SUB-06-08 | Modal xác nhận xóa đang mở. | Sales nhấn "Hủy". | Modal đóng. Sub không bị xóa. Màn hình hiện tại (Danh sách hoặc Chi tiết) giữ nguyên. |
-| AC-SUB-06-09 | Modal xác nhận xóa đang mở. | Sales click vùng ngoài modal (overlay). | Modal đóng. Sub không bị xóa. |
+| AC-SUB-06-08 | Modal xác nhận xóa đang mở. | Sales nhấn "Hủy" (Gateway **bước 4**). | Modal đóng. Sub không bị xóa, giữ nguyên `DRAFT`. Màn hình hiện tại (Danh sách hoặc Chi tiết) giữ nguyên. Kết thúc tại **End 2 (Cancelled — AF-01)**. |
+| AC-SUB-06-09 | Modal xác nhận xóa đang mở. | Sales click vùng ngoài modal (overlay) (Gateway **bước 4**). | Modal đóng. Sub không bị xóa. Kết thúc tại **End 2 (Cancelled — AF-01)**. |
 
 ### Nhóm 3: Xóa thành công
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-SUB-06-10 | Sub "SUB-2026-001" có `status = DRAFT`. Modal đang hiển thị đúng thông tin. | Sales nhấn "🗑️ Xóa vĩnh viễn". | Sub bị loại khỏi `contract.subs`. Không còn xuất hiện trong danh sách UC-SUB-01. |
-| AC-SUB-06-11 | Xóa thành công từ UC-SUB-01. | — | Toast hiển thị: *"Đã xóa Draft — SUB-2026-001 đã bị xóa vĩnh viễn"*. Trang Danh sách cập nhật ngay, sub vừa xóa không còn trong bảng. |
-| AC-SUB-06-12 | Xóa thành công từ UC-SUB-03 (trang Chi tiết). | — | Modal đóng. Toast hiển thị. Hệ thống điều hướng về UC-SUB-01. |
-| AC-SUB-06-13 | Sales nhấn "🗑️ Xóa vĩnh viễn" trong modal. | Nút đang xử lý. | Nút chuyển sang loading state và bị disabled để ngăn double-submit. |
+| AC-SUB-06-10 | Sub "SUB-2026-001" có `status = DRAFT`. Modal đang hiển thị đúng thông tin. | Sales nhấn "🗑️ Xóa vĩnh viễn" (Gateway **bước 4** → **bước 5**). | Hard delete: sub bị loại khỏi `contract.subs`. Không còn xuất hiện trong danh sách UC-SUB-01. |
+| AC-SUB-06-11 | Xóa thành công từ UC-SUB-01 (**bước 6–7**). | — | Toast hiển thị: *"Đã xóa Draft — SUB-2026-001 đã bị xóa vĩnh viễn"*. Ở lại trang Danh sách, bảng cập nhật ngay, sub vừa xóa không còn trong bảng. Kết thúc tại **End 1 (Success)**. |
+| AC-SUB-06-12 | Xóa thành công từ UC-SUB-03 (trang Chi tiết) (**bước 7**). | — | Modal đóng. Toast hiển thị. Hệ thống điều hướng về UC-SUB-01. Kết thúc tại **End 1 (Success)**. |
+| AC-SUB-06-13 | Sales nhấn "🗑️ Xóa vĩnh viễn" trong modal (**bước 4**). | Nút đang xử lý. | Nút chuyển sang loading state và bị disabled để ngăn double-submit. |
+| AC-SUB-06-16 | Hard delete hoàn tất (**bước 5**). | Sales / Admin kiểm tra Audit Log của hệ thống. | **KHÔNG** có audit entry nào được ghi cho thao tác xóa Draft — bản ghi không còn tồn tại (BR-06). Không phát event/webhook, không kích hoạt provisioning. |
 
 ### Nhóm 4: Luồng ngoại lệ (Exception)
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-SUB-06-14 | Sub đã bị xóa bởi user khác trước khi Sales click. | Sales click 🗑️ trong UC-SUB-01. | Modal không mở. Toast lỗi hiển thị: *"Không thể xóa subscription này."* |
-| AC-SUB-06-15 | Sub có `status` vừa được hệ thống chuyển từ DRAFT sang PENDING_PROVISION (do tác vụ nền). | Sales click 🗑️ trong UC-SUB-01. | System kiểm tra lại status tại thời điểm click, phát hiện status ≠ DRAFT. Modal không mở. Toast lỗi: *"Không thể xóa subscription này."* |
+| AC-SUB-06-14 | Sub đã bị xóa bởi user khác trước khi Sales click. | Sales click 🗑️ trong UC-SUB-01. | Gateway pre-check (**bước 2**) phát hiện sub không tồn tại → Modal không mở. Toast lỗi: *"Không thể xóa subscription này."* Dữ liệu không đổi. Kết thúc tại **End 3 (Rejected — EF-01)**. |
+| AC-SUB-06-15 | Sub có `status` vừa được hệ thống chuyển từ DRAFT sang PENDING_PROVISION (do tác vụ nền). | Sales click 🗑️ trong UC-SUB-01. | Gateway pre-check (**bước 2**) kiểm tra lại status tại thời điểm click, phát hiện `status ≠ DRAFT`. Modal không mở. Toast lỗi: *"Không thể xóa subscription này."* Kết thúc tại **End 3 (Rejected — EF-01)**. |
 
 ---
 
@@ -177,3 +178,4 @@
 | Phiên bản | Ngày | Người cập nhật | Nội dung |
 |---|---|---|---|
 | 1.0 | 09/07/2026 | Claude (AI) | Tạo mới — bóc tách từ PRD v2.3, bám sát spec UC-SUB-06 và demo `v2.4.0_subscriptions.html`. |
+| 1.1 | 09/07/2026 | Claude (AI) | Đồng bộ §2 theo BPMN UC-SUB-06: chuẩn hóa §2.1 sang bảng 4 cột với Gateway (bước 2 & 4) ghi gọn trong 1 ô; đánh lại số bước **1–7** khớp badge; viết lại AF-01 / EF-01 theo style sub-step; chuẩn hóa §2.4 End Events (End 1 Success · End 2 Cancelled · End 3 Rejected). §4: căn lại tham chiếu bước/End Event cho AC-08..15, thêm **AC-16** (không ghi audit / không phát event — BR-06). |

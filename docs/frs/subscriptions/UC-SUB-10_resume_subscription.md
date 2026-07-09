@@ -11,7 +11,7 @@
 |---|---|
 | **Mã Use Case** | UC-SUB-10 |
 | **Tên** | Khôi phục Subscription |
-| **Mô tả** | Sales hoặc Manager khôi phục một subscription đang bị tạm dừng (SUSPENDED) về trạng thái hoạt động (ACTIVE). Thao tác yêu cầu xác nhận qua modal hiển thị tóm tắt thông tin sub và lý do tạm dừng trước đó (nếu có). Không yêu cầu nhập lý do. Sau khi khôi phục, `sub.suspendReason` bị xóa khỏi record. CRM chỉ ghi nhận trạng thái nội bộ — không gửi lệnh kỹ thuật về Product Module (YT-3: passive observer). |
+| **Mô tả** | Sales hoặc Manager khôi phục một subscription đang bị tạm dừng (SUSPENDED) về trạng thái hoạt động (ACTIVE). Thao tác yêu cầu xác nhận qua modal hiển thị tóm tắt thông tin sub và lý do tạm dừng trước đó (nếu có). Không yêu cầu nhập lý do. Sau khi khôi phục, `sub.suspendReason` bị xóa khỏi record. CRM publish event `subscription.reactivated` qua Outbox → RabbitMQ để Product Module khôi phục license kỹ thuật (YT-3). |
 | **Tác nhân** | Sales, Manager |
 | **Tiền điều kiện** | (1) Đã đăng nhập với role Sales hoặc Manager; có quyền `subscription:resume`. (2) Subscription tồn tại và `sub.status = SUSPENDED`. |
 | **Hậu điều kiện** | (Thành công) `sub.status = ACTIVE`, `sub.suspendReason` bị xóa. Timeline và Audit ghi nhận hành động. Hero section và tab Thông tin chung cập nhật ngay trong trang UC-SUB-03 (không điều hướng). (Thất bại) Trạng thái không thay đổi. |
@@ -30,48 +30,60 @@
 | **BR-06** | Hệ thống ghi timeline entry: icon ▶, "Khôi phục subscription", "Subscription được khôi phục về Active", tl-dot-green, actor = người dùng hiện tại. |
 | **BR-07** | Hệ thống ghi audit entry: action `RESUME`, detail "Khôi phục từ Suspended", result = success. |
 | **BR-08** | Sau khi khôi phục: toast "✅ Đã khôi phục — [sub.id] trở về Active". Hệ thống cập nhật ngay hero section và tab Thông tin chung (không điều hướng khỏi trang chi tiết). |
-| **BR-09** | CRM publish event `subscription.resumed` qua Outbox → RabbitMQ. Product Module nhận và xử lý (khôi phục license phía kỹ thuật). CRM không gọi API Product trực tiếp (YT-3: publish outbound event, không command trực tiếp). |
+| **BR-09** | CRM publish event `subscription.reactivated` qua Outbox → RabbitMQ. Product Module nhận và xử lý (khôi phục license phía kỹ thuật). CRM không gọi API Product trực tiếp (YT-3: publish outbound event, không command trực tiếp). |
 
 ---
 
 ## 2. Luồng nghiệp vụ
 
+![BPMN 2.0 — UC-SUB-10 Khôi phục Subscription](../../assets/M-03_subscriptions/UC-SUB-10_bpmn.png)
+
 ### 2.1 Luồng chính
 
-| Bước | Tác nhân | Hành động | Ghi chú |
+> Số bước khớp badge trong ảnh BPMN. Bước **2** và **4** là Gateway (XOR) — điều kiện rẽ nhánh ghi gọn trong cùng ô. Khôi phục **không có** reason-gate: nút "▶ Khôi phục" luôn active khi modal mở.
+
+| Bước | Tác nhân | Hành động / Phản hồi | Ghi chú |
 |---|---|---|---|
-| 1 | Sales / Manager | Click "▶ Khôi phục" trong hero section UC-SUB-03. | Nút chỉ hiển thị với role Sales/Manager khi `sub.status = SUSPENDED` (BR-01, BR-02). |
-| 2 | System | Kiểm tra role (Sales/Manager) và `sub.status = SUSPENDED`. | **[Gateway — Điều kiện hợp lệ?]** |
-| — | — | → [Có]: tiếp bước 3. | — |
-| — | — | → [Không]: **EF-01**. | Role không đủ hoặc status ≠ SUSPENDED |
-| 3 | System | Mở modal "Khôi phục Subscription" hiển thị: Mã Sub, Khách hàng (+ Đơn vị thụ hưởng nếu RESELLER), Gói, và lý do tạm dừng (`sub.suspendReason`) nếu có. | BR-03 |
-| 4 | Sales / Manager | Đọc thông tin tóm tắt trong modal. | **[Gateway — Xác nhận khôi phục?]** |
-| — | — | → [Có]: Nhấn "▶ Khôi phục" → tiếp bước 5. | — |
-| — | — | → [Không]: Nhấn "Hủy" hoặc click ngoài modal → **AF-01**. | — |
-| 5 | System | Cập nhật `sub.status = ACTIVE`, xóa `sub.suspendReason`. | BR-05 |
-| 6 | System | Ghi timeline entry: icon ▶, "Khôi phục subscription", "Subscription được khôi phục về Active", tl-dot-green, actor = người dùng hiện tại. | BR-06 |
-| 7 | System | Ghi audit entry: action `RESUME`, detail "Khôi phục từ Suspended", result = success. | BR-07 |
-| 8 | System | Đóng modal. Hiển thị toast "✅ Đã khôi phục — [sub.id] trở về Active". Cập nhật ngay hero section và tab Thông tin chung trong trang UC-SUB-03. | BR-08 |
-| → | — | **End 1 (Success)** | — |
+| **1** | User (Sales / Manager) | Click "▶ Khôi phục" từ hero section UC-SUB-03. | Nút chỉ hiện với role Sales/Manager khi `sub.status = SUSPENDED` — BR-01, BR-02 |
+| **2** | System | **[Gateway — Role ∈ {Sales, Manager} VÀ `sub.status = SUSPENDED`?]** Có → tiếp bước 3. Không → **EF-01**. | Kiểm tại thời điểm click |
+| **3** | System | Mở modal "Khôi phục Subscription" — tóm tắt readonly: Mã Sub, Khách hàng (+ Đơn vị thụ hưởng nếu RESELLER), Gói, và lý do tạm dừng trước (`sub.suspendReason`) nếu có. **Không** yêu cầu nhập lý do. | BR-03, BR-04 |
+| **4** | User | **[Gateway — Xác nhận khôi phục?]** "▶ Khôi phục" → tiếp bước 5. "Hủy" / click ngoài modal → **AF-01**. | — |
+| **5** | System | Cập nhật `sub.status = ACTIVE`; **xóa** `sub.suspendReason` khỏi record. | BR-05 |
+| **6** | System | Ghi timeline entry (icon ▶ "Khôi phục subscription — về Active", tl-dot-green, actor = người dùng hiện tại). | BR-06 |
+| **7** | System | Ghi audit entry (action `RESUME`, detail "Khôi phục từ Suspended", result = success). | BR-07 |
+| **8** | System | Publish event `subscription.reactivated` qua Outbox → RabbitMQ → Product Module khôi phục license kỹ thuật. | BR-09 |
+| **9** | System | Đóng modal; toast "✅ Đã khôi phục — [sub.id] trở về Active"; cập nhật hero + tab Thông tin chung ngay tại UC-SUB-03 (không điều hướng). | BR-08 |
+| → | — | **End 1 (Success)** — `status = ACTIVE`, `suspendReason` đã xóa, event đã publish, timeline+audit ghi nhận, cập nhật in-place. | — |
 
 ### 2.2 Luồng phụ
 
 **[AF-01: Hủy khôi phục]** — kích hoạt tại bước 4 khi người dùng không xác nhận.
 
-| Bước | Tác nhân | Hành động | Ghi chú |
-|---|---|---|---|
-| 4a | Sales / Manager | Nhấn **"Hủy"** hoặc click vùng ngoài modal. | — |
-| 4b | System | Đóng modal. Không thay đổi dữ liệu. Giữ nguyên màn hình UC-SUB-03. | — |
-| → | — | **End 2 (AF-01 — Hủy thao tác)** | — |
+| Bước | Tác nhân | Hành động / Phản hồi |
+|---|---|---|
+| **AF-01a** | User | Nhấn "Hủy" hoặc click ra ngoài vùng modal. |
+| **AF-01b** | System | Đóng modal. Không thay đổi dữ liệu; `sub.suspendReason` giữ nguyên. Giữ nguyên màn UC-SUB-03. |
+| → | — | **End 2 (Cancelled)** — quay lại UC-SUB-03, trạng thái sub không đổi. |
 
 ### 2.3 Luồng ngoại lệ
 
-**[EF-01: Không đủ điều kiện để khôi phục]** — kích hoạt tại bước 2 khi role không phải Sales/Manager hoặc `sub.status ≠ SUSPENDED`.
+**[EF-01: Không đủ điều kiện để khôi phục]** — kích hoạt tại **bước 2** khi role không thuộc {Sales, Manager} hoặc `sub.status ≠ SUSPENDED`.
 
-| Bước | Tác nhân | Hành động | Ghi chú |
-|---|---|---|---|
-| 2a | System | Không mở modal. Hiển thị toast error: "Không thể khôi phục subscription này". | Nút ẩn hoàn toàn với role/status không hợp lệ (BR-01, BR-02) — đây là guard phòng trường hợp gọi trực tiếp qua hàm JS. |
-| → | — | **End 3 (EF-01 — Failure)** | — |
+| Bước | Tác nhân | Hành động / Phản hồi |
+|---|---|---|
+| **EF-01a** | System | Không mở modal. Hiển thị toast error "Không thể khôi phục subscription này". |
+| **EF-01b** | System | Không thay đổi dữ liệu. Trạng thái sub giữ nguyên. |
+| → | — | **End 3 (Rejected)** — kết thúc luồng. |
+
+> Nút "▶ Khôi phục" đã ẩn hoàn toàn với role/status không hợp lệ (BR-01, BR-02); EF-01 là guard phòng trường hợp gọi trực tiếp qua hàm JS.
+
+### 2.4 Điểm kết thúc (End Events)
+
+| # | Tên | Điều kiện |
+|---|---|---|
+| **End 1** | Success — Khôi phục thành công | `sub.status = ACTIVE`; `sub.suspendReason` đã xóa; timeline + audit ghi nhận; event `subscription.reactivated` đã publish qua Outbox → RabbitMQ; hero + tab Thông tin chung cập nhật in-place tại UC-SUB-03 (không điều hướng) |
+| **End 2** | Cancelled — AF-01 | Người dùng nhấn "Hủy" / click ngoài modal; sub giữ nguyên `SUSPENDED`, `suspendReason` không đổi |
+| **End 3** | Rejected — EF-01 | Role không thuộc {Sales, Manager} hoặc `sub.status ≠ SUSPENDED` |
 
 ---
 
@@ -114,7 +126,7 @@
 | 3 | Văn bản xác nhận | Text | "Subscription sẽ được khôi phục về trạng thái Active." Căn trái, màu chữ mặc định. |
 | 4 | Nút "▶ Khôi phục" | Button (Primary/Success) | Màu xanh lá (`btn-success`). Luôn active khi modal mở (không có field bắt buộc). Sau khi nhấn: loading state, disabled để ngăn double-submit. |
 | 5 | Nút "Hủy" | Button (Ghost) | Đóng modal, không thay đổi dữ liệu. |
-| 6 | Toast thành công | Toast (Success) | "✅ Đã khôi phục — [sub.id] trở về Active". Hiển thị sau khi cập nhật hoàn tất (bước 8). |
+| 6 | Toast thành công | Toast (Success) | "✅ Đã khôi phục — [sub.id] trở về Active". Hiển thị sau khi cập nhật hoàn tất (bước 9). |
 | 7 | Toast lỗi EF-01 | Toast (Error) | "Không thể khôi phục subscription này". Hiển thị khi EF-01. |
 | 8 | Nút "▶ Khôi phục" trong hero UC-SUB-03 | Button (Primary/Success) | Chỉ hiển thị với role Sales/Manager khi `sub.status = SUSPENDED`. Ẩn hoàn toàn với mọi điều kiện khác. |
 
@@ -148,8 +160,8 @@
 | AC-SUB-10-07 | Role Sales, sub SUSPENDED "SUB-2026-001" của "FPT Software", gói "EDR Pro", `sub.suspendReason = "KH yêu cầu tạm ngưng 1 tháng"`. | Click "▶ Khôi phục". | Modal mở. Info box hiển thị đúng: Mã Subscription = SUB-2026-001, Khách hàng = FPT Software, Gói = EDR Pro, Lý do tạm dừng = "KH yêu cầu tạm ngưng 1 tháng". |
 | AC-SUB-10-08 | Role Sales, sub SUSPENDED, `sub.suspendReason` là null hoặc rỗng. | Click "▶ Khôi phục". | Modal mở. Dòng "Lý do tạm dừng" **không hiển thị** trong info box. |
 | AC-SUB-10-09 | Sub SUSPENDED thuộc hợp đồng RESELLER có `beneficiaryName = "Mekong Foods"`. | Click "▶ Khôi phục". | Modal hiển thị thêm dòng "Đơn vị thụ hưởng: Mekong Foods" ngay sau dòng Khách hàng. |
-| AC-SUB-10-10 | Modal "Khôi phục Subscription" đang mở. | Sales nhấn "Hủy". | Modal đóng. `sub.status` không thay đổi. `sub.suspendReason` giữ nguyên. Hệ thống giữ nguyên màn UC-SUB-03. |
-| AC-SUB-10-11 | Modal "Khôi phục Subscription" đang mở. | Sales click vùng ngoài modal (overlay). | Modal đóng. `sub.status` không thay đổi. |
+| AC-SUB-10-10 | Modal "Khôi phục Subscription" đang mở. | Sales nhấn "Hủy". | Modal đóng (**End 2 — AF-01**). `sub.status` không thay đổi. `sub.suspendReason` giữ nguyên. Hệ thống giữ nguyên màn UC-SUB-03. |
+| AC-SUB-10-11 | Modal "Khôi phục Subscription" đang mở. | Sales click vùng ngoài modal (overlay). | Modal đóng (**End 2 — AF-01**). `sub.status` không thay đổi. |
 
 ### Nhóm 3: Khôi phục thành công
 
@@ -158,15 +170,16 @@
 | AC-SUB-10-12 | Modal đang mở, sub "SUB-2026-001" có `sub.suspendReason = "KH yêu cầu tạm ngưng 1 tháng"`. | Sales nhấn "▶ Khôi phục" trong modal. | `sub.status` = ACTIVE. `sub.suspendReason` bị xóa (null / không còn trong record). |
 | AC-SUB-10-13 | Khôi phục thành công. | Xem tab Timeline của sub. | Có entry mới nhất: icon ▶, "Khôi phục subscription", "Subscription được khôi phục về Active", tl-dot-green, actor = tên người dùng hiện tại. |
 | AC-SUB-10-14 | Khôi phục thành công. | Xem tab Audit log của sub. | Có audit entry: action `RESUME`, detail "Khôi phục từ Suspended", result = success. |
-| AC-SUB-10-15 | Khôi phục thành công. | Ngay sau khi xác nhận. | Modal đóng. Toast "✅ Đã khôi phục — SUB-2026-001 trở về Active" hiển thị. Hệ thống **không điều hướng** khỏi trang UC-SUB-03. |
+| AC-SUB-10-15 | Khôi phục thành công. | Ngay sau khi xác nhận. | Modal đóng. Toast "✅ Đã khôi phục — SUB-2026-001 trở về Active" hiển thị. Hệ thống **không điều hướng** khỏi trang UC-SUB-03. Kết thúc tại **End 1 (Success)**. |
 | AC-SUB-10-16 | Khôi phục thành công. | Xem hero section và tab Thông tin chung trong UC-SUB-03. | Hero section cập nhật ngay: badge status hiển thị "ACTIVE". Tab Thông tin chung không còn hiển thị trường "Lý do tạm dừng". Nút "▶ Khôi phục" ẩn. |
+| AC-SUB-10-17 | Khôi phục hợp lệ, đã qua bước 5 (`sub.status = ACTIVE`). | Sau khi cập nhật trạng thái (bước 5–7). | Event `subscription.reactivated` được publish vào Outbox → RabbitMQ (**bước 8**, BR-09) để Product Module khôi phục license kỹ thuật. CRM **không** gọi API product trực tiếp (YT-3). |
 
 ### Nhóm 4: Exception
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-SUB-10-17 | Sub có `sub.status = ACTIVE` (không phải SUSPENDED). | Gọi trực tiếp hàm `subOpenResume(id)` (bỏ qua UI guard). | System hiển thị toast error "Không thể khôi phục subscription này". Modal không mở. |
-| AC-SUB-10-18 | User có role CSKH (không có quyền `subscription:resume`). | Gọi trực tiếp hàm `subOpenResume(id)` (bỏ qua UI guard). | System hiển thị toast error "Không thể khôi phục subscription này". Modal không mở. |
+| AC-SUB-10-18 | Sub có `sub.status = ACTIVE` (không phải SUSPENDED). | Gọi trực tiếp hàm `subOpenResume(id)` (bỏ qua UI guard). | Gateway (**bước 2**) phát hiện status không hợp lệ → **End 3 (EF-01)**: toast error "Không thể khôi phục subscription này". Modal không mở. |
+| AC-SUB-10-19 | User có role CSKH (không có quyền `subscription:resume`). | Gọi trực tiếp hàm `subOpenResume(id)` (bỏ qua UI guard). | Gateway (**bước 2**) phát hiện role không hợp lệ → **End 3 (EF-01)**: toast error "Không thể khôi phục subscription này". Modal không mở. |
 
 ---
 
@@ -175,17 +188,18 @@
 | Phiên bản | Ngày | Người cập nhật | Nội dung |
 |---|---|---|---|
 | 1.0 | 09/07/2026 | Claude (AI) | Tạo mới — bóc tách từ yêu cầu BA, trace về PRD v2.3 (YT-3 passive observer). |
+| 1.1 | 09/07/2026 | Claude (AI) | Đồng bộ §2 theo BPMN UC-SUB-10: nhúng ảnh BPMN; tách bước 2 & 4 thành Gateway riêng (không có reason-gate — nút "▶ Khôi phục" luôn active); đánh lại số bước 1–9 khớp badge; thêm §2.4 End Events (End 1 Success / End 2 Cancelled / End 3 Rejected). AC: căn lại tham chiếu bước/End Event, thêm AC-17 (publish event `subscription.reactivated` qua Outbox — bước 8). |
 
 ### Review Checklist
 
 > Claude tự review — đánh dấu ✅/❌ trước khi submit cho BA review.
 
 #### Nghiệp vụ
-- ✅ Luồng chính bao phủ happy path đầy đủ 8 bước
+- ✅ Luồng chính bao phủ happy path đầy đủ 9 bước (khớp badge BPMN)
 - ✅ Luồng phụ đã định nghĩa: AF-01 (Hủy khôi phục)
 - ✅ Luồng ngoại lệ đã định nghĩa: EF-01 (Không đủ điều kiện)
 - ✅ BR đã định nghĩa rõ (BR-01 đến BR-09); BR-09 ghi rõ CRM publish outbound event (không passive)
-- ✅ AC bao phủ 4 nhóm, 18 AC (vượt yêu cầu tối thiểu 10 AC)
+- ✅ AC bao phủ 4 nhóm, 19 AC (vượt yêu cầu tối thiểu 10 AC), gồm AC-17 kiểm tra publish event qua Outbox
 - ✅ Điều kiện hiển thị nút phân rõ: Sales/Manager thấy khi SUSPENDED; CSKH/LicAdmin ẩn hoàn toàn; ẩn với mọi status khác SUSPENDED
 
 #### Giao diện

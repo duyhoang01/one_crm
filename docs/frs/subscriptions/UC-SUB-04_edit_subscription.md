@@ -36,64 +36,75 @@
 
 ## 2. Luồng nghiệp vụ
 
+![BPMN 2.0 — UC-SUB-04 Chỉnh sửa Subscription](../../assets/M-03_subscriptions/UC-SUB-04_bpmn.png)
+
 ### 2.1 Luồng chính
 
-| Bước | Tác nhân | Hành động | Ghi chú |
+> Số bước khớp badge trong ảnh BPMN. Bước **2** và **6** là Gateway (XOR) — điều kiện rẽ nhánh ghi gọn trong cùng ô.
+
+| Bước | Tác nhân | Hành động / Phản hồi | Ghi chú |
 |---|---|---|---|
-| 1 | Sales / Manager | Click ✏️ tại row subscription trong UC-SUB-01 hoặc click "✏️ Sửa" trong hero section UC-SUB-03. | — |
-| 2 | System | Kiểm tra subscription tồn tại và `sub.status = DRAFT`. | → **EF-01** nếu không hợp lệ. |
-| 3 | System | Mở modal "Chỉnh sửa Subscription". Pre-fill toàn bộ dữ liệu hiện tại vào form. Mã Sub hiển thị trên header modal (readonly). | BR-02, BR-03 |
-| 4 | Sales / Manager | Chỉnh sửa các trường trong form. Tùy chọn: đổi hợp đồng → **AF-01**; nhập ngày bắt đầu → **AF-02**. | — |
-| 5 | Sales / Manager | Click "💾 Lưu thay đổi". | — |
-| 6 | System | Validate toàn bộ form. | — |
-| — | — | **[Gateway — Dữ liệu hợp lệ?]** | — |
-| — | — | → [Không]: Hiển thị lỗi inline bên dưới từng field không hợp lệ. Giữ nguyên form → **EF-02**. | BR-05, BR-06 |
-| — | — | → [Có]: Tiếp tục bước 7. | — |
-| 7 | System | Lưu thay đổi vào cơ sở dữ liệu. Nếu người dùng đổi hợp đồng, dịch chuyển subscription khỏi contract cũ và gắn vào contract mới. | BR-04 |
-| 8 | System | Đóng modal. Hiển thị toast "Đã cập nhật thành công". | — |
-| 9 | System | Cập nhật giao diện: hero + tab Thông tin chung tại UC-SUB-03 (nếu đang mở detail), hoặc dòng tương ứng trong bảng UC-SUB-01. | BR-09 |
+| **1** | User (Sales / CSKH / License Admin / Manager) | Click ✏️ tại row subscription (UC-SUB-01) hoặc click "✏️ Sửa" trong hero section (UC-SUB-03). | Nút chỉ hiện khi `sub.status = DRAFT` — BR-01 |
+| **2** | System | **[Gateway — Sub tồn tại VÀ `sub.status = DRAFT`?]** Có → tiếp bước 3. Không → **EF-01**. | Pre-check tại thời điểm click |
+| **3** | System | Mở modal "Chỉnh sửa Subscription"; pre-fill toàn bộ dữ liệu hiện tại; Mã Sub + Gói sản phẩm + Thời hạn readonly (🔒). | BR-02, BR-03 |
+| **4** | User | Chỉnh sửa field theo loại HĐ — DIRECT: Số seats (>0); RESELLER: Đơn vị thụ hưởng + Số license (>0). Tùy chọn: đổi hợp đồng → **AF-01**; nhập Ngày bắt đầu → **AF-02**. | BR-05, BR-06 |
+| **5** | User | Click "💾 Lưu thay đổi". "Hủy" / ✕ → **AF-C**. | — |
+| **6** | System | **[Gateway — Dữ liệu hợp lệ?]** Có → tiếp bước 7. Không → **EF-02**. | Validate toàn bộ form |
+| **7** | System | Lưu thay đổi vào DB; nếu đổi hợp đồng → dịch chuyển sub khỏi contract cũ, gắn contract mới. | BR-04 |
+| **8** | System | Đóng modal; toast "Đã cập nhật thành công"; cập nhật hero + tab Thông tin chung (UC-SUB-03) hoặc dòng trong Danh sách (UC-SUB-01). | BR-09 |
+| → | — | **End 1 (Success)** — thay đổi lưu thành công, toast hiển thị, cập nhật in-place UC-SUB-03 / UC-SUB-01. | — |
 
 ### 2.2 Luồng phụ
 
-#### AF-01 — Đổi hợp đồng
+**[AF-01: Đổi hợp đồng]** — kích hoạt tại bước 4 khi người dùng chọn hợp đồng khác trong dropdown.
 
-Kích hoạt tại bước 4 khi người dùng chọn hợp đồng khác trong dropdown.
+| Bước | Tác nhân | Hành động / Phản hồi |
+|---|---|---|
+| **AF-01a** | User | Xoá lựa chọn hợp đồng hiện tại, tìm và chọn hợp đồng mới. |
+| **AF-01b** | System | Load loại HĐ / gói sản phẩm / duration mới; reset các field phụ thuộc (seats/license, beneficiary). |
+| → | — | Tiếp tục **bước 4** (BR-04). |
 
-| Bước | Tác nhân | Hành động | Ghi chú |
-|---|---|---|---|
-| 4a | Sales / Manager | Xoá lựa chọn hợp đồng hiện tại, tìm và chọn hợp đồng mới. | — |
-| 4b | System | Load thông tin hợp đồng mới: loại HĐ, gói sản phẩm, duration. Reset các field phụ thuộc (seats/license, beneficiary). | BR-04 |
-| → | — | Tiếp tục từ bước 4. | — |
+**[AF-02: Tính ngày hết hạn tự động]** — kích hoạt tại bước 4 khi người dùng nhập hoặc thay đổi Ngày bắt đầu.
 
-#### AF-02 — Tính toán ngày hết hạn tự động
+| Bước | Tác nhân | Hành động / Phản hồi |
+|---|---|---|
+| **AF-02a** | User | Chọn hoặc nhập Ngày bắt đầu mới. |
+| **AF-02b** | System | Tính lại Ngày hết hạn = Ngày bắt đầu + `duration_months` − 1 ngày; cập nhật realtime (có thể sửa tay ghi đè). |
+| → | — | Tiếp tục **bước 4** (BR-07). |
 
-Kích hoạt tại bước 4 khi người dùng nhập hoặc thay đổi ngày bắt đầu.
+**[AF-C: Hủy chỉnh sửa]** — kích hoạt tại bước 5 khi người dùng nhấn "Hủy" / ✕ (§3.2).
 
-| Bước | Tác nhân | Hành động | Ghi chú |
-|---|---|---|---|
-| 4a | Sales / Manager | Chọn hoặc nhập Ngày bắt đầu mới. | — |
-| 4b | System | Tính lại Ngày hết hạn = Ngày bắt đầu + `duration_months` - 1 ngày. Cập nhật realtime field Ngày hết hạn. | BR-07 |
-| → | — | Tiếp tục từ bước 4. | — |
+| Bước | Tác nhân | Hành động / Phản hồi |
+|---|---|---|
+| **AF-Ca** | User | Nhấn "Hủy" hoặc ✕. |
+| **AF-Cb** | System | Đóng modal, KHÔNG lưu bất kỳ thay đổi nào; sub giữ nguyên `DRAFT`. |
+| → | — | **End 2 (Cancelled)** — quay lại UC-SUB-03 / UC-SUB-01, dữ liệu sub không đổi. |
 
 ### 2.3 Luồng ngoại lệ
 
-#### EF-01 — Subscription không thể chỉnh sửa
+**[EF-01: Subscription không thể chỉnh sửa]** — kích hoạt tại **bước 2** khi sub không tồn tại hoặc `sub.status ≠ DRAFT`.
 
-Kích hoạt tại bước 2 khi subscription không tồn tại hoặc `sub.status ≠ DRAFT`.
+| Bước | Tác nhân | Hành động / Phản hồi |
+|---|---|---|
+| **EF-01a** | System | Đóng modal ngay (nếu đang mở); hiển thị toast lỗi "Không thể chỉnh sửa subscription này". |
+| **EF-01b** | System | Không thay đổi dữ liệu; trạng thái sub giữ nguyên. |
+| → | — | **End 3 (Rejected)** — kết thúc luồng. |
 
-| Bước | Tác nhân | Hành động | Ghi chú |
-|---|---|---|---|
-| 1 | System | Đóng modal ngay (nếu đang mở). Hiển thị toast lỗi: "Không thể chỉnh sửa subscription này". | — |
-| → | — | Kết thúc luồng. | — |
+**[EF-02: Validate thất bại]** — kích hoạt tại **bước 6** khi dữ liệu không hợp lệ (Hợp đồng trống / DIRECT seats ≤ 0 / RESELLER chưa chọn ĐVTH / RESELLER license ≤ 0).
 
-#### EF-02 — Validate thất bại
+| Bước | Tác nhân | Hành động / Phản hồi |
+|---|---|---|
+| **EF-02a** | System | Hiển thị lỗi inline bên dưới từng field không hợp lệ (BR-05, BR-06). |
+| **EF-02b** | System | Giữ nguyên form với dữ liệu đã nhập; không lưu; modal không đóng. |
+| → | — | Sửa lỗi rồi submit lại → **quay bước 5** (KHÔNG phải End Event). |
 
-Kích hoạt tại bước 6 khi dữ liệu không hợp lệ.
+### 2.4 Điểm kết thúc (End Events)
 
-| Bước | Tác nhân | Hành động | Ghi chú |
-|---|---|---|---|
-| 1 | System | Hiển thị lỗi inline bên dưới từng field không hợp lệ. | BR-05, BR-06 |
-| 2 | System | Giữ nguyên form với dữ liệu đã nhập. Không lưu thay đổi. Modal không đóng. | — |
+| # | Tên | Điều kiện |
+|---|---|---|
+| **End 1** | Success — Cập nhật thành công | Thay đổi lưu vào DB; nếu đổi HĐ thì sub dịch chuyển sang contract mới; toast "Đã cập nhật thành công"; hero + tab Thông tin chung (UC-SUB-03) hoặc dòng Danh sách (UC-SUB-01) cập nhật in-place |
+| **End 2** | Cancelled — AF-C | Người dùng nhấn "Hủy" / ✕; modal đóng, không lưu; sub giữ nguyên `DRAFT` |
+| **End 3** | Rejected — EF-01 | Sub không tồn tại hoặc `sub.status ≠ DRAFT` tại pre-check (bước 2); modal đóng, không thay đổi dữ liệu |
 
 ---
 
@@ -196,14 +207,16 @@ Kích hoạt tại bước 6 khi dữ liệu không hợp lệ.
 | AC-SUB-04-06 | HĐ DIRECT, người dùng xóa trắng Số seats. | Click "💾 Lưu thay đổi". | Lỗi inline bên dưới Số seats: "Số seats phải > 0". Modal không đóng. |
 | AC-SUB-04-07 | HĐ DIRECT, người dùng nhập Số seats = 0. | Click "💾 Lưu thay đổi". | Lỗi inline bên dưới Số seats: "Số seats phải > 0". Modal không đóng. |
 | AC-SUB-04-08 | HĐ RESELLER, người dùng xóa lựa chọn Đơn vị thụ hưởng. | Click "💾 Lưu thay đổi". | Lỗi inline bên dưới Đơn vị thụ hưởng: "Vui lòng chọn đơn vị thụ hưởng". Modal không đóng. |
+| AC-SUB-04-16 | HĐ RESELLER, người dùng nhập Số license = 0. | Click "💾 Lưu thay đổi". | Gateway (**bước 6**) phát hiện dữ liệu không hợp lệ → **EF-02**: lỗi inline "Số license phải > 0"; modal giữ nguyên; sau khi sửa, người dùng submit lại (**quay bước 5**), không kết thúc luồng. |
 
 ### Nhóm 3: Lưu thành công
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-SUB-04-09 | Sub DIRECT "SUB-2026-001", `seats = 50`. Sửa Số seats thành 100. | Click "💾 Lưu thay đổi". | `seats` cập nhật thành 100. Modal đóng. Toast "Đã cập nhật thành công". Dòng tại UC-SUB-01 cập nhật ngay, không cần tải lại trang. |
-| AC-SUB-04-10 | Sub RESELLER, sửa Đơn vị thụ hưởng và Số license. | Click "💾 Lưu thay đổi". | `beneficiaryId` và `licenseQty` cập nhật. Modal đóng. Toast "Đã cập nhật thành công". |
-| AC-SUB-04-11 | Sub đang gắn với HĐ "HD-A". Người dùng đổi sang HĐ "HD-B" (cùng loại). | Click "💾 Lưu thay đổi". | Sub bị tách khỏi HD-A và gắn vào HD-B. Modal đóng. Toast "Đã cập nhật thành công". |
+| AC-SUB-04-09 | Sub DIRECT "SUB-2026-001", `seats = 50`. Sửa Số seats thành 100. | Click "💾 Lưu thay đổi". | Gateway (**bước 6**) hợp lệ → `seats` cập nhật thành 100. Modal đóng. Toast "Đã cập nhật thành công". Dòng tại UC-SUB-01 cập nhật ngay, không cần tải lại trang. Kết thúc **End 1 (Success)**. |
+| AC-SUB-04-10 | Sub RESELLER, sửa Đơn vị thụ hưởng và Số license. | Click "💾 Lưu thay đổi". | `beneficiaryId` và `licenseQty` cập nhật. Modal đóng. Toast "Đã cập nhật thành công". Kết thúc **End 1 (Success)**. |
+| AC-SUB-04-11 | Sub đang gắn với HĐ "HD-A". Người dùng đổi sang HĐ "HD-B" (cùng loại). | Click "💾 Lưu thay đổi". | Sub bị tách khỏi HD-A và gắn vào HD-B (**bước 7**, BR-04). Modal đóng. Toast "Đã cập nhật thành công". Kết thúc **End 1 (Success)**. |
+| AC-SUB-04-17 | Sub DIRECT đang mở form edit, người dùng đã sửa Số seats. | Nhấn "Hủy" hoặc ✕ (**AF-C**). | Modal đóng, không lưu bất kỳ thay đổi nào; `seats` giữ nguyên giá trị cũ. Kết thúc **End 2 (Cancelled)**. |
 
 ### Nhóm 4: Tính toán tự động
 
@@ -216,28 +229,14 @@ Kích hoạt tại bước 6 khi dữ liệu không hợp lệ.
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-SUB-04-14 | Sub "SUB-2026-005" có `status = PENDING_PROVISION`. | Gửi request mở form edit (bypass UI). | Hệ thống không mở modal. Hiển thị toast lỗi "Không thể chỉnh sửa subscription này". |
-| AC-SUB-04-15 | Sub "SUB-2026-999" không tồn tại trong hệ thống. | Gửi request chỉnh sửa. | Hệ thống không mở modal. Hiển thị toast lỗi "Không thể chỉnh sửa subscription này". |
+| AC-SUB-04-14 | Sub "SUB-2026-005" có `status = PENDING_PROVISION`. | Gửi request mở form edit (bypass UI). | Gateway pre-check (**bước 2**) phát hiện `status ≠ DRAFT` → **End 3 (EF-01)**: hệ thống không mở modal; toast lỗi "Không thể chỉnh sửa subscription này". |
+| AC-SUB-04-15 | Sub "SUB-2026-999" không tồn tại trong hệ thống. | Gửi request chỉnh sửa. | Gateway pre-check (**bước 2**) phát hiện sub không tồn tại → **End 3 (EF-01)**: hệ thống không mở modal; toast lỗi "Không thể chỉnh sửa subscription này". |
 
 ---
 
-## 5. Review Checklist
+## 5. Lịch sử thay đổi
 
-> Claude tự review — đánh dấu ✅/❌ trước khi submit cho BA review.
-
-### Nghiệp vụ
-- ✅ Luồng chính bao phủ happy path (DIRECT và RESELLER)
-- ✅ Luồng phụ đã định nghĩa: AF-01 (đổi hợp đồng), AF-02 (tính ngày hết hạn tự động)
-- ✅ Luồng ngoại lệ đầy đủ: EF-01 (sub không phải DRAFT hoặc không tồn tại), EF-02 (validate lỗi)
-- ✅ BR đã định nghĩa rõ (BR-01 đến BR-09)
-- ✅ AC bao phủ 5 nhóm, 15 AC (≥ 12 yêu cầu)
-- ✅ Tiền/hậu điều kiện định nghĩa đầy đủ cho cả success lẫn failure
-- ✅ Trigger từ 2 điểm vào (UC-SUB-01 và UC-SUB-03) đều được mô tả
-
-### Giao diện
-- ✅ Wireframe ASCII phản ánh đúng cấu trúc modal với 2 luồng DIRECT/RESELLER
-- ✅ Readonly fields ghi rõ nguồn dữ liệu và icon 🔒
-- ✅ Cột "Điều kiện hiển thị" trong bảng field mô tả rõ từng trường hợp (DIRECT only / RESELLER only / Tất cả)
-- ✅ Footer button order đúng: [Hủy] trái · [💾 Lưu thay đổi] phải
-- ✅ Demo reference và function names đã đính kèm tại §3.1
-- ✅ Gateway format 3 dòng riêng trong luồng chính (bước 6)
+| Phiên bản | Ngày | Tác giả | Mô tả |
+|---|---|---|---|
+| 1.0 | 09/07/2026 | BA Team | Khởi tạo tài liệu — Draft for Review. |
+| 1.1 | 09/07/2026 | Claude (AI) | Đồng bộ §2 theo BPMN UC-SUB-04: đánh lại còn **8 bước** khớp badge; gộp Gateway vào 1 ô tại **bước 2** (pre-check DRAFT) và **bước 6** (validate); thêm §2.4 End Events (End 1 Success / End 2 Cancelled / End 3 Rejected); bổ sung **AF-C (Hủy chỉnh sửa)**; chuẩn hóa AF-01/AF-02/EF-01/EF-02 theo style bảng. §4: căn AC theo bước/End Event, thêm AC-16 (EF-02 loop RESELLER license ≤ 0) và AC-17 (AF-C → End 2). |
