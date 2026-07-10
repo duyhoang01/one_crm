@@ -624,6 +624,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
                   <th onclick="subSort('customerName')" style="cursor:pointer;user-select:none;white-space:nowrap">Khách hàng <span id="subSortIcon-customerName" class="con-sort-icon">↕</span></th>
                   <th onclick="subSort('contractType')" style="cursor:pointer;user-select:none;white-space:nowrap">Loại HĐ <span id="subSortIcon-contractType" class="con-sort-icon">↕</span></th>
                   <th onclick="subSort('packageName')" style="cursor:pointer;user-select:none;white-space:nowrap">Gói sản phẩm <span id="subSortIcon-packageName" class="con-sort-icon">↕</span></th>
+                  <th style="white-space:nowrap">Kiểu tổ chức</th>
                   <th onclick="subSort('endDate')" style="cursor:pointer;user-select:none;white-space:nowrap">Ngày hết hạn <span id="subSortIcon-endDate" class="con-sort-icon">↕</span></th>
                   <th onclick="subSort('status')" style="cursor:pointer;user-select:none;white-space:nowrap">Trạng thái <span id="subSortIcon-status" class="con-sort-icon">↕</span></th>
                   <th>Thao tác</th>
@@ -667,7 +668,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <div class="page-header">
             <div>
               <div class="page-title">Sản phẩm (Product Catalog)</div>
-              <div class="page-subtitle">Danh mục sản phẩm đã đăng ký — mỗi thẻ là 1 sản phẩm, bên trong liệt kê các gói (package). Click thẻ để xem chi tiết. Product do Admin đăng ký 1 lần (read-only).</div>
+              <div class="page-subtitle">Danh mục sản phẩm đã đăng ký.</div>
             </div>
           </div>
           <div class="cat-kanban" id="catKanban"></div>
@@ -683,9 +684,9 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <div class="page-header">
             <div>
               <div class="page-title">Gói sản phẩm (Package)</div>
-              <div class="page-subtitle">Gói bán hàng theo schema Product Module — có versioning (BR-06.3). Danh sách mặc định hiện version hiện hành của mỗi mã gói.</div>
+              <div class="page-subtitle">Danh sách gói bán hàng của từng sản phẩm.</div>
             </div>
-            <button class="btn btn-primary" onclick="pkgOpenCreate()">＋ Tạo gói</button>
+            <button class="btn btn-primary" onclick="pkgOpenCreate()">＋ Thêm gói</button>
           </div>
           <div class="toolbar">
             <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="pkgSearch" placeholder="Tìm theo mã gói, tên gói..." oninput="pkgFilterRender()"></div>
@@ -707,10 +708,9 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
                 <th onclick="pkgSort('version')" style="text-align:center;cursor:pointer">Phiên bản <span class="con-sort-icon" id="pks-version">↕</span></th>
                 <th onclick="pkgSort('duration')" style="text-align:center;cursor:pointer">Thời hạn <span class="con-sort-icon" id="pks-duration">↕</span></th>
                 <th style="text-align:right">Số lượng mặc định</th>
-                <th onclick="pkgSort('price')" style="text-align:right;cursor:pointer">Giá <span class="con-sort-icon" id="pks-price">↕</span></th>
                 <th onclick="pkgSort('status')" style="cursor:pointer">Trạng thái <span class="con-sort-icon" id="pks-status">↕</span></th>
-                <th onclick="pkgSort('sub')" style="text-align:center;cursor:pointer">Sub <span class="con-sort-icon" id="pks-sub">↕</span></th>
-                <th></th>
+                <th onclick="pkgSort('sub')" style="text-align:center;cursor:pointer">Số sub <span class="con-sort-icon" id="pks-sub">↕</span></th>
+                <th>Thao tác</th>
               </tr></thead>
               <tbody id="pkgTbody"></tbody>
             </table>
@@ -794,6 +794,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
             <div class="field-error" id="subErrCrtLic" style="display:none;">Số license là bắt buộc và phải > 0</div>
           </div>
         </div>
+        <div id="subCrtScopeWrap"></div>
       </div>
       <div class="form-row">
         <div class="field">
@@ -1048,6 +1049,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <div class="field-error" id="subErrEditSubLic" style="display:none;">Số license phải > 0</div>
         </div>
       </div>
+      <div id="subEditScopeWrap"></div>
       <div class="form-row">
         <div class="field">
           <label class="field-label">Ngày bắt đầu (dự kiến)</label>
@@ -1409,7 +1411,8 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
 <!-- PACKAGE FORM (create / edit) -->
 <div class="overlay" id="pkgModalForm">
   <div class="modal modal-lg" style="max-width:660px;">
-    <div class="modal-header"><div class="modal-title" id="pkgFormTitle">Tạo gói</div><button class="close-btn" onclick="closeModal('pkgModalForm')">✕</button></div>
+    <div class="modal-header"><div class="modal-title" id="pkgFormTitle">Thêm gói sản phẩm</div><button class="close-btn" onclick="closeModal('pkgModalForm')">✕</button></div>
+    <div id="pkgFormHead" style="flex-shrink:0;padding:14px 24px 16px;border-bottom:1px solid var(--border)"></div>
     <div class="modal-body" id="pkgFormBody"></div>
     <div class="modal-footer" id="pkgFormFooter"></div>
   </div>
@@ -3590,6 +3593,7 @@ function subRenderTable(data,page){
       <td>${subTypeBadge(sub.contractType)}</td>
       <td><div style="font-size:14px;font-weight:500;">${sub.packageName}</div>
           <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">${sub.contractType==='DIRECT'?(sub.seatCount||0)+' seats':(sub.licenseQty||0)+' license'}</div></td>
+      <td style="font-size:13px;">${subStructureCell(sub)}</td>
       <td style="font-size:13px;">${sub.endDate?subFmtDate(sub.endDate):'<em style="color:var(--gray-400)">Chưa xác định</em>'}</td>
       <td>${subStatusBadge(sub.status)}</td>
       <td onclick="event.stopPropagation()"><div style="display:flex;gap:4px;">${editDraftRowBtn}${deleteDraftRowBtn}</div></td>
@@ -3636,6 +3640,7 @@ function subOpenCreate(){
   document.getElementById('subCrtBeneficiaryRow').style.display='none';
   ['subErrCrtContract','subErrCrtPackage','subErrCrtSeats','subErrCrtLic','subErrCrtBeneficiary'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   const hintEl=document.getElementById('subCrtLicHint');if(hintEl)hintEl.style.display='none';
+  const sw=document.getElementById('subCrtScopeWrap');if(sw)sw.innerHTML='';
   document.getElementById('subCrtContractSearch').value='';
   document.getElementById('subCrtContract').value='';
   document.getElementById('subCrtContractDropdown').style.display='none';
@@ -3790,6 +3795,7 @@ function subOnContractChange(){
     seatsRow.style.display='none';
     benRow.style.display='';
   }
+  subCrtRenderScope();
   subCrtCalcEndDate();
 }
 function subCrtOnPackageChange(){
@@ -3814,7 +3820,61 @@ function subCrtOnPackageChange(){
     durHid.value='';durDisp.value='';
     if(hintEl)hintEl.style.display='none';
   }
+  subCrtRenderScope();
   subCrtCalcEndDate();
+}
+// ── SCOPE (cấu hình per-customer, schema khai báo theo product = package_schema)
+const PRODUCT_SCOPE_SCHEMA={
+  CMC_EDR:[{key:'tenant_mode',label:'Kiểu tổ chức',type:'radio',required:true,default:'MULTI',options:[{v:'MULTI',l:'Multi organization',d:'Nhiều đơn vị/chi nhánh tách biệt trong cùng một tenant'},{v:'SINGLE',l:'Single organization',d:'Một đơn vị duy nhất, không phân tách'}]}]
+};
+function subProductOfPkg(pkgId){return Object.keys(CON_PACKAGES_BY_PRODUCT).find(pid=>(CON_PACKAGES_BY_PRODUCT[pid]||[]).some(p=>p.id===pkgId))||'';}
+function subScopeFieldsHtml(productId,scope){
+  const schema=PRODUCT_SCOPE_SCHEMA[productId];
+  if(!schema||!schema.length)return '';
+  scope=scope||{};
+  const hint=f=>f.hint?`<div class="field-hint" style="display:block;color:var(--text-secondary);margin-top:2px;line-height:1.5">${f.hint}</div>`:'';
+  const fld=f=>{
+    const cur=scope[f.key]!=null?scope[f.key]:f.default;
+    if(f.type==='radio')return `<div class="form-row full"><div class="field"><label class="field-label">${f.label}${f.required?' <span class="required">*</span>':''}</label>${hint(f)}<div style="display:grid;grid-template-columns:repeat(${Math.min(f.options.length,2)},1fr);gap:12px;padding-top:6px">${f.options.map(o=>{const on=cur===o.v;return `<label style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;border:1px solid ${on?'#93C5FD':'var(--border)'};border-radius:8px;background:${on?'#EFF6FF':'#fff'};cursor:pointer"><input type="radio" name="subScope_${f.key}" class="sub-scope-fld" data-k="${f.key}" value="${o.v}" ${on?'checked':''} onchange="subScopeCardSync(this)" style="margin-top:2px;flex-shrink:0"><span><span style="font-size:14px;font-weight:600;color:var(--navy)">${o.l}</span>${o.d?`<span style="display:block;font-size:12px;color:var(--text-secondary);margin-top:2px;line-height:1.4">${o.d}</span>`:''}</span></label>`;}).join('')}</div></div></div>`;
+    return `<div class="form-row"><div class="field"><label class="field-label">${f.label}${f.required?' <span class="required">*</span>':''}</label>${hint(f)}<select class="field-select sub-scope-fld" data-k="${f.key}">${f.options.map(o=>`<option value="${o.v}" ${cur===o.v?'selected':''}>${o.l}</option>`).join('')}</select></div><div class="field"></div></div>`;
+  };
+  return schema.map(fld).join('');
+}
+function subScopeCardSync(radio){
+  document.querySelectorAll('input[name="'+radio.name+'"]').forEach(r=>{
+    const card=r.closest('label');if(!card)return;
+    card.style.borderColor=r.checked?'#93C5FD':'var(--border)';
+    card.style.background=r.checked?'#EFF6FF':'#fff';
+  });
+}
+function subCollectScope(containerId){
+  const scope={};
+  document.querySelectorAll('#'+containerId+' .sub-scope-fld').forEach(el=>{
+    if(el.type==='radio'){if(el.checked)scope[el.dataset.k]=el.value;}
+    else if(el.value!=='')scope[el.dataset.k]=el.value;
+  });
+  return Object.keys(scope).length?scope:null;
+}
+function subScopeInfoRows(sub){
+  const schema=PRODUCT_SCOPE_SCHEMA[sub.productId];
+  if(!schema||!schema.length)return '';
+  const scope=sub.scope||{};
+  const cell=(label,value)=>`<div><div class="sub-info-label">${label}</div><div class="sub-info-value">${value!=null&&value!==''?value:'<em style="color:var(--gray-400)">—</em>'}</div></div>`;
+  const cells=schema.map(f=>{const v=scope[f.key]!=null?scope[f.key]:f.default;const opt=(f.options||[]).find(o=>o.v===v);return cell(f.label,opt?opt.l:(v||null));});
+  while(cells.length%3!==0)cells.push('<div></div>');
+  return `<div class="sub-field-row">${cells.join('')}</div>`;
+}
+function subStructureCell(sub){
+  const schema=PRODUCT_SCOPE_SCHEMA[sub.productId];
+  if(!schema||!schema.length)return '<em style="color:var(--gray-400)">—</em>';
+  const f=schema[0];
+  const v=(sub.scope||{})[f.key]!=null?(sub.scope||{})[f.key]:f.default;
+  const opt=(f.options||[]).find(o=>o.v===v);
+  return opt?opt.l:(v||'<em style="color:var(--gray-400)">—</em>');
+}
+function subCrtRenderScope(){
+  const wrap=document.getElementById('subCrtScopeWrap');if(!wrap)return;
+  wrap.innerHTML=subScopeFieldsHtml(subProductOfPkg(document.getElementById('subCrtPackage').value),null);
 }
 function subCrtCalcEndDate(){
   const sdEl=document.getElementById('subCrtStartDate');
@@ -3870,6 +3930,7 @@ function subSubmitCreate(){
   const note=document.getElementById('subCrtNote').value.trim();
   const dealCode=(document.getElementById('subCrtDealCode')?.value||'').trim()||null;
   const now=new Date().toISOString();
+  const scope=subCollectScope('subCrtScopeWrap');
   const newSub={
     id,contractId:cid,contractCode:c.code,contractType:c.type,
     customerId:c.customerId,customerName:c.customerName,
@@ -3877,7 +3938,7 @@ function subSubmitCreate(){
     productId,packageId:pkgId,packageName,
     startDate,endDate,
     licenseQty:isReseller?lic:null,seatCount:isReseller?null:seats,
-    status:'DRAFT',note,dealCode,previousSubId:null,
+    status:'DRAFT',note,dealCode,scope,previousSubId:null,
     licMirrorStatus:null,licMirrorExpiry:null,lastSync:'—',
     createdBy:currentUser?.name||'Sales A',createdAt:now,
     timeline:[{icon:'📝',cls:'tl-dot-gray',source:'UI',actor:currentUser?.name||'Sales A',title:'Subscription được tạo (Draft)',time:now.replace('T',' ').slice(0,16),detail:`HĐ: ${c.code} · ${packageName}${isReseller?' · '+benName:' · '+seats+' seat'} · Chờ phê duyệt`}],
@@ -4030,6 +4091,7 @@ function subRenderInfo(sub){
       ${cell(['PENDING','N/A',null,undefined].includes(sub.licMirrorStatus)?'Ngày hết hạn (dự kiến)':'Ngày hết hạn',`<span style="font-weight:600;">${subFmtDate(sub.endDate)}</span>`)}
       <div></div>
     </div>
+    ${subScopeInfoRows(sub)}
   </div>`;
 }
 function subRenderTimeline(sub){
@@ -4548,6 +4610,7 @@ function subOpenEditSub(id){
   document.getElementById('subEditContractSearch').value=con?`${con.code} · ${con.customerName}`:'';
   const dd=document.getElementById('subEditContractDropdown');if(dd)dd.style.display='none';
   subEditSubOnContractChange(sub);
+  const esw=document.getElementById('subEditScopeWrap');if(esw)esw.innerHTML=subScopeFieldsHtml(sub.productId,sub.scope);
   const sdEl=document.getElementById('subEditSubStartDate');if(sdEl)sdEl.value=sub.startDate||'';
   const edEl=document.getElementById('subEditSubEndDate');if(edEl)edEl.value=sub.endDate||'';
   document.getElementById('subEditSubDealCode').value=sub.dealCode||'';
@@ -4598,6 +4661,7 @@ function subSubmitEditSub(){
   sub.startDate=sd||null;sub.endDate=ed||null;
   sub.dealCode=(document.getElementById('subEditSubDealCode')?.value||'').trim()||null;
   sub.note=(document.getElementById('subEditSubNote')?.value||'').trim()||null;
+  sub.scope=subCollectScope('subEditScopeWrap');
   const now=new Date().toISOString();
   (sub.audit=sub.audit||[]).push({time:now,src:'CRM',actor:currentUser?.name||'Sales',action:'EDIT_DRAFT',
     detail:`HĐ: ${sub.contractCode} · ${isReseller?`${lic} license · ${benName||'—'}`:`${seats} seats`} · ${sub.startDate||'—'} → ${sub.endDate||'—'}`,result:'success'});
@@ -4636,37 +4700,34 @@ const CAT_PRODUCTS=[
       {raw:'grace_expired',display:'Grace expired',subState:'EXPIRED'},
       {raw:'renewed',display:'Renewed',subState:'RENEWED'},
     ],
-    // featureTiers = các gói (tier) của product; featureCatalog: tính năng × tier. EDR mock đại diện từ "EDR Feature List.csv" (200 dòng).
+    // featureCatalog: mức FEATURE (đã cuộn gọn sub-feature CRUD), nhóm Component→Module. Nguồn: "EDR Feature List.csv".
+    // Tạm ẩn tính năng đánh dấu "Chưa/Đang phát triển" hoặc "Đã có nhưng chưa dùng được".
     featureTiers:['EPP','EDR','EPR'],
     featureCatalog:[
-      {component:'Agent',module:'Installer',feature:'Install Agent',type:'Default',epp:true,edr:true,epr:true},
-      {component:'Agent',module:'Updater',feature:'Update Agent',type:'Default',epp:true,edr:true,epr:true},
-      {component:'Agent',module:'Communication',feature:'Communication',type:'Default',epp:true,edr:true,epr:true},
+      {component:'Agent',module:'Installer',feature:'Install Agent',type:'Mặc định',epp:true,edr:true,epr:true},
+      {component:'Agent',module:'Updater',feature:'Update Agent',type:'Mặc định',epp:true,edr:true,epr:true},
+      {component:'Agent',module:'Communication',feature:'Communication',type:'Mặc định',epp:true,edr:true,epr:true},
+      {component:'Agent',module:'Self Protection',feature:'Self-Defense',type:'Mặc định',epp:true,edr:true,epr:true},
       {component:'Agent',module:'Log Collector',feature:'Log Collector',type:'Theo gói',epp:false,edr:true,epr:true},
-      {component:'Agent',module:'Core',feature:'Realtime Scan',type:'Theo gói',epp:true,edr:false,epr:true},
-      {component:'Agent',module:'Core',feature:'Schedule Scan',type:'Theo gói',epp:true,edr:true,epr:true},
-      {component:'Agent',module:'Core',feature:'On-Demand Scan',type:'Theo gói',epp:true,edr:false,epr:true},
-      {component:'Agent',module:'Core',feature:'Cloud Scan',type:'Theo gói',epp:true,edr:true,epr:true},
-      {component:'Agent',module:'Manager',feature:'Live query',type:'Theo gói',epp:false,edr:true,epr:true},
-      {component:'Agent',module:'Manager',feature:'Action Center',type:'Theo gói',epp:false,edr:true,epr:true},
-      {component:'Agent',module:'Manager',feature:'Vulnerability Detection',type:'Add-on',epp:true,edr:true,epr:true},
-      {component:'Agent',module:'Manager',feature:'Application Control',type:'Theo gói',epp:true,edr:false,epr:true},
-      {component:'Agent',module:'Manager',feature:'Device Control',type:'Theo gói',epp:true,edr:false,epr:true},
+      {component:'Agent',module:'Core',feature:'Malware Scan',type:'Theo gói',epp:true,edr:true,epr:true},
       {component:'Agent',module:'Manager',feature:'System Inventory',type:'Theo gói',epp:true,edr:true,epr:true},
+      {component:'Agent',module:'Manager',feature:'Firewall',type:'Theo gói',epp:true,edr:true,epr:true},
       {component:'Agent',module:'GUI',feature:'GUI Agent',type:'Theo gói',epp:true,edr:false,epr:true},
-      {component:'Agent',module:'Self Protection',feature:'Self-Defense',type:'Default',epp:true,edr:true,epr:true},
-      {component:'Security Center',module:'System Management',feature:'Agent Management',type:'Default',epp:true,edr:true,epr:true},
-      {component:'Security Center',module:'Dashboard',feature:'Dashboard EPP Default',type:'Theo gói',epp:true,edr:false,epr:true},
-      {component:'Security Center',module:'Dashboard',feature:'Dashboard EDR Default',type:'Theo gói',epp:false,edr:true,epr:false},
+      {component:'Security Center',module:'System Management',feature:'Agent Management',type:'Mặc định',epp:true,edr:true,epr:true},
+      {component:'Security Center',module:'Authentication',feature:'Single-Factor Authentication',type:'Mặc định',epp:true,edr:true,epr:true},
+      {component:'Security Center',module:'Data Sharing',feature:'Data Sharing',type:'Theo gói',epp:true,edr:true,epr:true},
+      {component:'Security Center',module:'Dashboard',feature:'Dashboard',type:'Theo gói',epp:true,edr:true,epr:true},
+      {component:'Security Center',module:'Widget',feature:'Widget',type:'Theo gói',epp:true,edr:true,epr:true},
       {component:'Security Center',module:'TDIRs',feature:'Event Explorer',type:'Theo gói',epp:false,edr:true,epr:true},
       {component:'Security Center',module:'TDIRs',feature:'Alert Management',type:'Theo gói',epp:false,edr:true,epr:true},
       {component:'Security Center',module:'TDIRs',feature:'Case Management',type:'Theo gói',epp:false,edr:true,epr:true},
+      {component:'Security Center',module:'TDIRs',feature:'Live Queries',type:'Theo gói',epp:false,edr:true,epr:true},
+      {component:'Security Center',module:'TDIRs',feature:'Action Center',type:'Theo gói',epp:false,edr:true,epr:true},
       {component:'Security Center',module:'Security Management',feature:'Rule Management',type:'Theo gói',epp:false,edr:true,epr:true},
+      {component:'Security Center',module:'Security Management',feature:'Context Management',type:'Theo gói',epp:false,edr:true,epr:true},
       {component:'Security Center',module:'Security Management',feature:'Policy',type:'Theo gói',epp:true,edr:true,epr:true},
       {component:'Security Center',module:'MITRE ATT&CK',feature:'Coverage Dashboard',type:'Theo gói',epp:false,edr:true,epr:true},
       {component:'Security Center',module:'Report',feature:'Report Template',type:'Theo gói',epp:true,edr:true,epr:true},
-      {component:'Security Center',module:'Playbook Management',feature:'Playbook List',type:'Theo gói',epp:false,edr:true,epr:true},
-      {component:'Security Center',module:'Authentication',feature:'Multi-Factor Authentication',type:'Theo gói',epp:true,edr:true,epr:true},
     ]},
   {id:'C_SHIELD',code:'C_SHIELD',name:'C-Shield',description:'Bảo mật ứng dụng di động',icon:'📱',integration_type:'EXTERNAL_JWT',has_instances:true,module_class_id:'cshield.mobile.v1',status:'ACTIVE',
     features:[
@@ -4762,22 +4823,22 @@ const CAT_PRODUCTS=[
 // ── PACKAGE (Sales tạo, có versioning). Package = 1 tier của product; feature suy ra từ product.featureCatalog theo tier.
 let CAT_PACKAGES=[
   // EDR — 3 gói = 3 tier EPP/EDR/EPR (khớp CSV). Gói EDR demo versioning: v1 RETIRED + v2 ACTIVE + v3 DRAFT.
-  {id:'PKG-EPP-03',product_id:'CMC_EDR',code:'EPP',tier:'EPP',version:1,name:'CMC EPP',status:'ACTIVE',duration_months:12,default_seat_count:50,default_instance_count:null,scope_template:'{ tenant_mode: "MULTI" }',price:800000,created_by:'Sales A',created_at:'2025-01-20'},
-  {id:'PKG-EDR-01',product_id:'CMC_EDR',code:'EDR',tier:'EDR',version:1,name:'CMC EDR',status:'RETIRED',duration_months:12,default_seat_count:100,default_instance_count:null,scope_template:'{ tenant_mode: "MULTI" }',price:1200000,created_by:'Sales A',created_at:'2024-06-01'},
-  {id:'PKG-EDR-02',product_id:'CMC_EDR',code:'EDR',tier:'EDR',version:2,name:'CMC EDR',status:'ACTIVE',duration_months:12,default_seat_count:100,default_instance_count:null,scope_template:'{ tenant_mode: "MULTI" }',price:1500000,created_by:'Sales A',created_at:'2025-03-10'},
-  {id:'PKG-EDR-STD-V2',product_id:'CMC_EDR',code:'EDR',tier:'EDR',version:3,name:'CMC EDR',status:'DRAFT',duration_months:12,default_seat_count:120,default_instance_count:null,scope_template:'{ tenant_mode: "MULTI" }',price:1650000,created_by:'Sales B',created_at:'2025-06-28'},
-  {id:'PKG-EDR-03',product_id:'CMC_EDR',code:'EPR',tier:'EPR',version:1,name:'CMC EPR',status:'ACTIVE',duration_months:24,default_seat_count:500,default_instance_count:null,scope_template:'{ tenant_mode: "MULTI" }',price:4500000,created_by:'Sales B',created_at:'2024-11-01'},
-  {id:'PKG-EDR-XDR',product_id:'CMC_EDR',code:'EPR',tier:'EPR',version:2,name:'CMC EPR',status:'DRAFT',duration_months:24,default_seat_count:500,default_instance_count:null,scope_template:'{ tenant_mode: "MULTI" }',price:5000000,created_by:'Sales B',created_at:'2025-07-01'},
+  {id:'PKG-EPP-03',product_id:'CMC_EDR',code:'EPP',tier:'EPP',version:1,name:'CMC EPP',status:'ACTIVE',duration_months:12,default_seat_count:50,default_instance_count:null,price:800000,created_by:'Sales A',created_at:'2025-01-20'},
+  {id:'PKG-EDR-01',product_id:'CMC_EDR',code:'EDR',tier:'EDR',version:1,name:'CMC EDR',status:'RETIRED',duration_months:12,default_seat_count:100,default_instance_count:null,price:1200000,created_by:'Sales A',created_at:'2024-06-01'},
+  {id:'PKG-EDR-02',product_id:'CMC_EDR',code:'EDR',tier:'EDR',version:2,name:'CMC EDR',status:'ACTIVE',duration_months:12,default_seat_count:100,default_instance_count:null,price:1500000,created_by:'Sales A',created_at:'2025-03-10'},
+  {id:'PKG-EDR-STD-V2',product_id:'CMC_EDR',code:'EDR',tier:'EDR',version:3,name:'CMC EDR',status:'DRAFT',duration_months:12,default_seat_count:120,default_instance_count:null,price:1650000,created_by:'Sales B',created_at:'2025-06-28'},
+  {id:'PKG-EDR-03',product_id:'CMC_EDR',code:'EPR',tier:'EPR',version:1,name:'CMC EPR',status:'ACTIVE',duration_months:24,default_seat_count:500,default_instance_count:null,price:4500000,created_by:'Sales B',created_at:'2024-11-01'},
+  {id:'PKG-EDR-XDR',product_id:'CMC_EDR',code:'EPR',tier:'EPR',version:2,name:'CMC EPR',status:'DRAFT',duration_months:24,default_seat_count:500,default_instance_count:null,price:5000000,created_by:'Sales B',created_at:'2025-07-01'},
   // C-Shield — tier Basic/Pro/Enterprise
-  {id:'PKG-CS-01',product_id:'C_SHIELD',code:'CS-BASIC',tier:'Basic',version:1,name:'C-Shield Basic',status:'ACTIVE',duration_months:12,default_seat_count:null,default_instance_count:50,scope_template:'',price:600000,created_by:'Sales B',created_at:'2025-02-01'},
-  {id:'PKG-CS-02',product_id:'C_SHIELD',code:'CS-ENT',tier:'Enterprise',version:1,name:'C-Shield Enterprise',status:'ACTIVE',duration_months:12,default_seat_count:null,default_instance_count:500,scope_template:'',price:3200000,created_by:'Sales B',created_at:'2025-02-01'},
-  {id:'PKG-CS-DRAFT',product_id:'C_SHIELD',code:'CS-PRO',tier:'Pro',version:1,name:'C-Shield Pro',status:'DRAFT',duration_months:12,default_seat_count:null,default_instance_count:200,scope_template:'',price:1800000,created_by:'Sales B',created_at:'2025-07-01'},
+  {id:'PKG-CS-01',product_id:'C_SHIELD',code:'CS-BASIC',tier:'Basic',version:1,name:'C-Shield Basic',status:'ACTIVE',duration_months:12,default_seat_count:null,default_instance_count:50,price:600000,created_by:'Sales B',created_at:'2025-02-01'},
+  {id:'PKG-CS-02',product_id:'C_SHIELD',code:'CS-ENT',tier:'Enterprise',version:1,name:'C-Shield Enterprise',status:'ACTIVE',duration_months:12,default_seat_count:null,default_instance_count:500,price:3200000,created_by:'Sales B',created_at:'2025-02-01'},
+  {id:'PKG-CS-DRAFT',product_id:'C_SHIELD',code:'CS-PRO',tier:'Pro',version:1,name:'C-Shield Pro',status:'DRAFT',duration_months:12,default_seat_count:null,default_instance_count:200,price:1800000,created_by:'Sales B',created_at:'2025-07-01'},
   // AV — tier Home/Business
-  {id:'PKG-CA-02',product_id:'AV',code:'AV-BUSINESS',tier:'Business',version:1,name:'AV Business',status:'ACTIVE',duration_months:12,default_seat_count:null,default_instance_count:100,scope_template:'',price:450000,created_by:'Sales B',created_at:'2025-01-10'},
-  {id:'PKG-AV-01',product_id:'AV',code:'AV-HOME',tier:'Home',version:1,name:'AV Home',status:'ACTIVE',duration_months:12,default_seat_count:null,default_instance_count:5,scope_template:'',price:150000,created_by:'Sales B',created_at:'2025-01-10'},
+  {id:'PKG-CA-02',product_id:'AV',code:'AV-BUSINESS',tier:'Business',version:1,name:'AV Business',status:'ACTIVE',duration_months:12,default_seat_count:null,default_instance_count:100,price:450000,created_by:'Sales B',created_at:'2025-01-10'},
+  {id:'PKG-AV-01',product_id:'AV',code:'AV-HOME',tier:'Home',version:1,name:'AV Home',status:'ACTIVE',duration_months:12,default_seat_count:null,default_instance_count:5,price:150000,created_by:'Sales B',created_at:'2025-01-10'},
   // CA — tier Individual/Organization
-  {id:'PKG-EPR-02',product_id:'CA',code:'CA-ORG',tier:'Organization',version:1,name:'CA Organization',status:'ACTIVE',duration_months:12,default_seat_count:null,default_instance_count:null,scope_template:'',price:2000000,created_by:'Sales A',created_at:'2024-12-01'},
-  {id:'PKG-CA-01',product_id:'CA',code:'CA-IND',tier:'Individual',version:1,name:'CA Individual',status:'ACTIVE',duration_months:12,default_seat_count:null,default_instance_count:null,scope_template:'',price:500000,created_by:'Sales A',created_at:'2024-12-01'},
+  {id:'PKG-EPR-02',product_id:'CA',code:'CA-ORG',tier:'Organization',version:1,name:'CA Organization',status:'ACTIVE',duration_months:12,default_seat_count:null,default_instance_count:null,price:2000000,created_by:'Sales A',created_at:'2024-12-01'},
+  {id:'PKG-CA-01',product_id:'CA',code:'CA-IND',tier:'Individual',version:1,name:'CA Individual',status:'ACTIVE',duration_months:12,default_seat_count:null,default_instance_count:null,price:500000,created_by:'Sales A',created_at:'2024-12-01'},
 ];
 // Suy ra feature của 1 package từ product.featureCatalog theo tier
 function pkgTierFeatures(p){
@@ -4853,18 +4914,14 @@ function catRawBadge(m){
 }
 function catFeatureHtml(pr){
   if(pr.featureCatalog&&pr.featureCatalog.length){
-    const tiers=pr.featureTiers||['EPP','EDR','EPR'];
-    const tierVals=f=>f.tiers?f.tiers:[f.epp,f.edr,f.epr]; // hỗ trợ cả 2 format
     const groups={};pr.featureCatalog.forEach(f=>{(groups[f.component]=groups[f.component]||[]).push(f);});
     const typeBadge=t=>{const m={'Mặc định':'badge-other','Theo gói':'badge-b2b','Add-on':'badge-reseller','Default':'badge-other'};return `<span class="badge ${m[t]||'badge-other'}">${t}</span>`;};
-    const chk=b=>b?'<span style="color:#059669;font-weight:700">✓</span>':'<span style="color:var(--gray-400)">—</span>';
-    const thTiers=tiers.map(t=>`<th style="text-align:center">${catEsc(t)}</th>`).join('');
     return Object.entries(groups).map(([comp,rows])=>`
       <div class="cat-feat-group">
         <div class="cat-feat-comp">${catEsc(comp)} <span style="color:var(--gray-400);font-weight:400;font-size:12px">· ${rows.length} tính năng</span></div>
         <div class="table-wrap"><table class="cat-feat-table">
-          <thead><tr><th>Module</th><th>Tính năng</th><th>Loại</th>${thTiers}</tr></thead>
-          <tbody>${rows.map(f=>`<tr><td style="color:var(--text-secondary)">${catEsc(f.module)}</td><td class="col-name">${catEsc(f.feature)}</td><td>${typeBadge(f.type)}</td>${tierVals(f).map(b=>`<td style="text-align:center">${chk(b)}</td>`).join('')}</tr>`).join('')}</tbody>
+          <thead><tr><th>Module</th><th>Tính năng</th><th>Loại</th></tr></thead>
+          <tbody>${rows.map(f=>`<tr><td style="color:var(--text-secondary)">${catEsc(f.module)}</td><td class="col-name">${catEsc(f.feature)}</td><td>${typeBadge(f.type)}</td></tr>`).join('')}</tbody>
         </table></div>
       </div>`).join('');
   }
@@ -4884,14 +4941,14 @@ function catOpenProduct(id){
       <td><span class="badge badge-${(m.subState||'').toLowerCase().includes('active')?'active':'other'}">${CAT_STATE_LABEL[m.subState]||m.subState}</span></td>
     </tr>`).join('');
   document.getElementById('prod-view-detail').innerHTML=`
-    <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="catShowView('list');document.getElementById('breadcrumbCurrent').textContent='Sản phẩm';">← Danh sách sản phẩm</button>
     <div class="profile-hero">
       <div class="profile-header">
         <div class="profile-id">
           <div class="profile-avatar">${pr.icon}</div>
-          <div style="flex:1"><div class="profile-name">${catEsc(pr.name)} <span class="cat-status ${on?'on':'off'}">● ${on?'Đang hoạt động':'Ngừng'}</span></div>
+          <div><div class="profile-name">${catEsc(pr.name)} <span class="cat-status ${on?'on':'off'}">● ${on?'Đang hoạt động':'Ngừng'}</span></div>
           <div class="profile-meta">${catEsc(pr.description||'')} · <span style="font-family:monospace">${catEsc(pr.code)}</span> · ${nActive} gói đang bán · ${prodSubCount(pr.id)} subscription</div></div>
         </div>
+        <div class="profile-actions"><button class="btn btn-ghost" onclick="catShowView('list');document.getElementById('breadcrumbCurrent').textContent='Sản phẩm';">← Quay lại</button></div>
       </div>
     </div>
     <div class="pkg-tab-row">
@@ -4902,27 +4959,25 @@ function catOpenProduct(id){
     <div class="pkg-tabpane active" id="prodtab-info">
       <div class="card" style="padding:20px;margin-bottom:16px">
         <div class="cat-sec-title">📋 Thông tin sản phẩm</div>
-        <div class="cat-kv" style="grid-template-columns:160px 1fr">
+        <div class="cat-kv" style="grid-template-columns:160px 1fr 160px 1fr">
           <div class="k">Tên sản phẩm</div><div class="v">${catEsc(pr.name)}</div>
-          <div class="k">Mô tả</div><div class="v">${catEsc(pr.description||'—')}</div>
           <div class="k">Mã (code)</div><div class="v" style="font-family:monospace">${catEsc(pr.code)}</div>
           <div class="k">Trạng thái</div><div class="v"><span class="cat-status ${on?'on':'off'}">● ${on?'Đang hoạt động':'Ngừng'}</span></div>
           <div class="k">Thống kê</div><div class="v">${nPkg>nActive?`${nActive}/${nPkg}`:nActive} gói đang bán · ${prodSubCount(pr.id)} subscription</div>
+          <div class="k">Mô tả</div><div class="v" style="grid-column:span 3">${catEsc(pr.description||'—')}</div>
         </div>
       </div>
       <div class="card" style="padding:20px">
         <div class="cat-sec-title">⚙️ Thông tin kỹ thuật <span style="font-weight:400;text-transform:none;color:var(--gray-400)">(Admin / tích hợp)</span></div>
-        <div class="cat-kv" style="grid-template-columns:160px 1fr">
+        <div class="cat-kv" style="grid-template-columns:160px 1fr 160px 1fr">
           <div class="k">Integration type</div><div class="v">${pr.integration_type}</div>
-          <div class="k">has_instances</div><div class="v">${pr.has_instances?'true':'false'}</div>
           <div class="k">Module class</div><div class="v" style="font-family:monospace">${catEsc(pr.module_class_id)}</div>
         </div>
       </div>
     </div>
     <div class="pkg-tabpane" id="prodtab-feat">
       <div class="card" style="padding:20px">
-        <div class="cat-sec-title">🧩 Danh sách tính năng theo gói (tier)</div>
-        <p style="font-size:12px;color:var(--text-secondary);margin:-2px 0 14px;line-height:1.5">✓ = có trong gói. <b>Loại:</b> Mặc định (mọi gói) · Theo gói (tùy tier) · Add-on (mua thêm).</p>
+        <div class="cat-sec-title">🧩 Danh sách tính năng</div>
         ${catFeatureHtml(pr)}
       </div>
     </div>
@@ -4932,7 +4987,6 @@ function catOpenProduct(id){
           <span>🔗 Mapping trạng thái License Mirror → Subscription</span>
           ${canCfg?`<button class="btn btn-secondary btn-sm" onclick="catOpenMapEditor('${pr.id}')">✏️ Sửa mapping</button>`:''}
         </div>
-        <p style="font-size:12px;color:var(--text-secondary);margin:-2px 0 12px;line-height:1.5">Cách CRM diễn giải trạng thái gốc từ product thành trạng thái hiển thị của Subscription (license_status_set).${canCfg?'':' <b>Chỉ Manager / License Admin được chỉnh sửa.</b>'}</p>
         <div class="table-wrap" style="border:none"><table class="cat-map"><thead><tr><th>Trạng thái gốc (product)</th><th>Tên hiển thị</th><th>→ Trạng thái Sub (CRM)</th></tr></thead><tbody>${map}</tbody></table></div>
       </div>
     </div>`;
@@ -4948,7 +5002,7 @@ function catOpenMapEditor(id){
     </tr>`).join('');
   document.getElementById('catMapTitle').textContent='Cấu hình mapping — '+pr.name;
   document.getElementById('catMapBody').innerHTML=`
-    <div class="pkg-warn-box" style="margin-bottom:14px"><span>ℹ️</span><div>Thay đổi chỉ áp dụng cho dữ liệu đồng bộ về sau — <b>không viết lại subscription hiện có</b>.</div></div>
+    <div class="pkg-warn-box" style="margin-bottom:14px"><span>ℹ️</span><div>Mapping mới <b>chỉ áp dụng cho các cập nhật trạng thái mà product gửi về (webhook) kể từ sau khi lưu</b>. Các subscription <b>đang tồn tại vẫn giữ nguyên trạng thái hiện tại</b> — chỉ được diễn giải lại theo mapping mới khi product gửi trạng thái tiếp theo. <b>Không hồi tố</b> dữ liệu cũ.</div></div>
     <div class="table-wrap" style="border:none"><table class="cat-map"><thead><tr><th>Trạng thái gốc (product)</th><th>Tên hiển thị</th><th>→ Trạng thái Sub (CRM)</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   document.getElementById('catMapFooter').innerHTML=`<button class="btn btn-ghost" onclick="closeModal('catMapModal')">Hủy</button><button class="btn btn-primary" onclick="catSaveMapping('${pr.id}')">💾 Lưu</button>`;
   openModal('catMapModal');
@@ -5005,7 +5059,7 @@ function pkgRenderTable(){
   const rows=all.slice((_pkgPage-1)*PKG_PAGE_SIZE,_pkgPage*PKG_PAGE_SIZE);
   const tb=document.getElementById('pkgTbody');
   if(!total){
-    tb.innerHTML=`<tr><td colspan="10" class="table-empty"><div style="font-size:32px">🎁</div><div style="margin:8px 0 2px;font-weight:600;color:var(--navy)">Chưa có gói nào khớp bộ lọc</div><div style="font-size:13px">Thử xoá bộ lọc hoặc tạo gói mới.</div><button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="pkgOpenCreate()">＋ Tạo gói</button></td></tr>`;
+    tb.innerHTML=`<tr><td colspan="9" class="table-empty"><div style="font-size:32px">🎁</div><div style="margin:8px 0 2px;font-weight:600;color:var(--navy)">Chưa có gói nào khớp bộ lọc</div><div style="font-size:13px">Thử xoá bộ lọc hoặc tạo gói mới.</div><button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="pkgOpenCreate()">＋ Tạo gói</button></td></tr>`;
     document.getElementById('pkgPager').innerHTML='';pkgUpdateSortIcons();return;
   }
   tb.innerHTML=rows.map(p=>{
@@ -5018,17 +5072,16 @@ function pkgRenderTable(){
       <td style="text-align:center"><span class="badge badge-ver">v${p.version}</span></td>
       <td style="text-align:center">${p.duration_months} tháng</td>
       <td style="text-align:right">${qty}</td>
-      <td style="text-align:right">${pkgMoney(p.price)}</td>
       <td>${pkgStatusBadge(p.status)}</td>
       <td style="text-align:center">${sc}</td>
-      <td style="text-align:right" onclick="event.stopPropagation()">${pkgRowActions(p,sc)}</td>
+      <td onclick="event.stopPropagation()">${pkgRowActions(p,sc)}</td>
     </tr>`;
   }).join('');
   pkgRenderPager(total,pages);
   pkgUpdateSortIcons();
 }
 function pkgUpdateSortIcons(){
-  ['code','name','product','version','duration','price','status','sub'].forEach(f=>{
+  ['code','name','product','version','duration','status','sub'].forEach(f=>{
     const el=document.getElementById('pks-'+f);if(!el)return;
     if(_pkgSort.field===f){el.textContent=_pkgSort.dir==='asc'?'↑':'↓';el.className='con-sort-icon '+_pkgSort.dir;}
     else{el.textContent='↕';el.className='con-sort-icon';}
@@ -5036,28 +5089,27 @@ function pkgUpdateSortIcons(){
 }
 function pkgRenderPager(total,pages){
   const el=document.getElementById('pkgPager');
-  if(pages<=1){el.innerHTML=`<div style="display:flex;margin-top:12px"><span style="font-size:12px;color:var(--text-secondary)">${total} gói</span></div>`;return;}
+  const from=(_pkgPage-1)*PKG_PAGE_SIZE+1, to=Math.min(_pkgPage*PKG_PAGE_SIZE,total);
+  const counter=`Hiển thị ${from}–${to} / ${total} gói`;
+  if(pages<=1){el.innerHTML=`<div style="display:flex;margin-top:12px"><span style="font-size:12px;color:var(--text-secondary)">${counter}</span></div>`;return;}
   let b=`<button class="btn btn-ghost btn-sm" ${_pkgPage<=1?'disabled':''} onclick="pkgGoPage(${_pkgPage-1})">‹</button>`;
   for(let i=1;i<=pages;i++)b+=`<button class="btn ${i===_pkgPage?'btn-primary':'btn-ghost'} btn-sm" onclick="pkgGoPage(${i})">${i}</button>`;
   b+=`<button class="btn btn-ghost btn-sm" ${_pkgPage>=pages?'disabled':''} onclick="pkgGoPage(${_pkgPage+1})">›</button>`;
-  el.innerHTML=`<div style="display:flex;gap:6px;align-items:center;margin-top:12px"><span style="font-size:12px;color:var(--text-secondary);margin-right:auto">${total} gói · trang ${_pkgPage}/${pages}</span>${b}</div>`;
+  el.innerHTML=`<div style="display:flex;gap:6px;align-items:center;margin-top:12px"><span style="font-size:12px;color:var(--text-secondary);margin-right:auto">${counter}</span>${b}</div>`;
 }
 function pkgGoPage(n){_pkgPage=n;pkgRenderTable();}
 function pkgActDisabled(label,tip){return `<button class="btn btn-ghost btn-sm" disabled title="${tip}" style="opacity:.4;cursor:not-allowed">${label}</button>`;}
 function pkgRowActions(p,sc){
-  const a=[];
-  if(p.status==='DRAFT'){
-    a.push(pkgCanPublish(p)?`<button class="btn btn-secondary btn-sm" onclick="pkgConfirm('publish','${p.id}')">Xuất bản</button>`:pkgActDisabled('Xuất bản','Chỉ Sales tạo gói hoặc Manager mới được xuất bản'));
-    a.push(`<button class="btn btn-ghost btn-sm" onclick="pkgOpenEdit('${p.id}')">Sửa</button>`);
-    a.push(pkgCanDelete(p)?`<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red)" onclick="pkgConfirm('delete','${p.id}')">Xóa</button>`:pkgActDisabled('Xóa','Chỉ Sales tạo gói hoặc Manager mới được xóa'));
-  }else if(p.status==='ACTIVE'){
-    a.push(`<button class="btn btn-ghost btn-sm" onclick="pkgOpenEdit('${p.id}')">Sửa</button>`);
-    a.push(pkgCanRetire()?`<button class="btn btn-ghost btn-sm" style="color:var(--amber);border-color:#FDE68A" onclick="pkgConfirm('retire','${p.id}')">Ngừng bán</button>`:pkgActDisabled('Ngừng bán','Chỉ Manager mới được ngừng bán gói'));
-    a.push(pkgActDisabled('Xóa',"Gói đang bán — dùng 'Ngừng bán', không thể xóa"));
-  }else{
-    a.push(pkgActDisabled('Xóa','Gói đã ngừng bán — không thể sửa hoặc xóa'));
-  }
-  return `<div class="pkg-actions-bar" style="justify-content:flex-end">${a.join('')}</div>`;
+  // List row chỉ giữ Sửa + Xóa (đồng bộ các module khác); Xuất bản/Ngừng bán nằm ở hero trang Chi tiết
+  const editBtn=p.status==='RETIRED'
+    ? pkgActDisabled('✏️ Sửa','Gói đã ngừng bán nên không sửa được')
+    : `<button class="btn btn-secondary btn-sm" onclick="pkgOpenEdit('${p.id}')">✏️ Sửa</button>`;
+  let delBtn;
+  if(p.status==='DRAFT'&&pkgCanDelete(p)) delBtn=`<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red)" onclick="pkgConfirm('delete','${p.id}')" title="Xóa gói">🗑️</button>`;
+  else if(p.status==='DRAFT') delBtn=pkgActDisabled('🗑️','Chỉ người tạo gói hoặc Manager mới xóa được');
+  else if(p.status==='ACTIVE') delBtn=pkgActDisabled('🗑️',"Gói đang bán nên không xóa được — muốn dừng, hãy dùng 'Ngừng bán' ở trang chi tiết");
+  else delBtn=pkgActDisabled('🗑️','Gói đã ngừng bán được giữ lại để tra cứu, không xóa');
+  return `<div class="pkg-actions-bar">${editBtn}${delBtn}</div>`;
 }
 
 /* ── CHI TIẾT GÓI (tabs: Thông tin / Version history / Subscriptions) ── */
@@ -5068,12 +5120,13 @@ function pkgOpenDetail(id){
   const pr=catProd(p.product_id);const sc=pkgSubCount(p.id);
   const vers=pkgFamilyVersions(p.product_id,p.code);
   const el=document.getElementById('pkg-view-detail');
-  const tf=pkgTierFeatures(p);
-  const featList=tf.length?(()=>{const g={};tf.forEach(f=>{(g[f.component]=g[f.component]||[]).push(f);});return Object.entries(g).map(([c,rows])=>`<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px">${catEsc(c)}</div>${rows.map(f=>`<div class="cat-feat"><span>${catEsc(f.feature)}</span><span class="cat-feat-code">${catEsc(f.module)}</span><span class="cat-feat-type">${catEsc(f.type)}</span></div>`).join('')}</div>`).join('');})():'<div style="color:var(--gray-400);font-size:13px">Gói chưa gắn tier hoặc tier không có tính năng.</div>';
+  const selKeys=new Set(pkgEnsureFeatures(p));
+  const tf=(pr&&pr.featureCatalog?pr.featureCatalog:[]).filter(f=>selKeys.has(catFeatKey(f)));
+  const featList=tf.length?(()=>{const g={};tf.forEach(f=>{(g[f.component]=g[f.component]||[]).push(f);});return Object.entries(g).map(([c,rows])=>`<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px">${catEsc(c)}</div>${rows.map(f=>`<div class="cat-feat"><span>${catEsc(f.feature)}</span><span class="cat-feat-code">${catEsc(f.module)}</span><span class="cat-feat-type">${catEsc(f.type)}</span></div>`).join('')}</div>`).join('');})():'<div style="color:var(--gray-400);font-size:13px">Gói chưa chọn tính năng nào.</div>';
   const verHist=vers.map(v=>`<div class="pkg-ver-row ${v.id===p.id?'current':''}">
       <span class="badge badge-ver">v${v.version}</span>
       <div style="flex:1"><div style="font-weight:600;color:var(--navy)">${catEsc(v.name)} ${v.id===p.id?'<span style=\"font-size:11px;color:var(--primary)\">(đang xem)</span>':''}</div>
-      <div style="font-size:12px;color:var(--text-secondary)">${pkgMoney(v.price)} · ${v.default_seat_count!=null?v.default_seat_count+' seat':(v.default_instance_count!=null?v.default_instance_count+' thiết bị':'—')} · tạo ${v.created_at} · ${pkgSubCount(v.id)} sub</div></div>
+      <div style="font-size:12px;color:var(--text-secondary)">${v.default_seat_count!=null?v.default_seat_count+' seat':(v.default_instance_count!=null?v.default_instance_count+' thiết bị':'—')} · tạo ${v.created_at} · ${pkgSubCount(v.id)} sub</div></div>
       ${pkgStatusBadge(v.status)}
       ${v.id!==p.id?`<button class="btn btn-ghost btn-sm" onclick="pkgOpenDetail('${v.id}')">Mở</button>`:''}
     </div>`).join('');
@@ -5086,7 +5139,6 @@ function pkgOpenDetail(id){
     </tr>`).join('')}</tbody></table></div>`:'<div style="color:var(--gray-400);font-size:13px;padding:12px">Chưa có subscription nào tham chiếu gói này.</div>';
 
   el.innerHTML=`
-    <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="pkgShowView('list');document.getElementById('breadcrumbCurrent').textContent='Gói sản phẩm';">← Danh sách gói</button>
     <div class="profile-hero">
       <div class="profile-header">
         <div class="profile-id">
@@ -5094,31 +5146,34 @@ function pkgOpenDetail(id){
           <div><div class="profile-name">${catEsc(p.name)} <span class="badge badge-ver">v${p.version}</span> ${pkgStatusBadge(p.status)}</div>
           <div class="profile-meta"><span class="pkg-code">${catEsc(p.code)}</span> · ${pr?catEsc(pr.name):p.product_id} · ${sc} subscription</div></div>
         </div>
-        <div class="profile-actions">${pkgDetailActions(p)}</div>
+        <div class="profile-actions">${pkgDetailActions(p)}<button class="btn btn-ghost" onclick="pkgShowView('list');document.getElementById('breadcrumbCurrent').textContent='Gói sản phẩm';">← Quay lại</button></div>
       </div>
     </div>
     <div class="pkg-tab-row">
-      <div class="pkg-tab active" data-t="info" onclick="pkgSwitchTab('info')">Thông tin</div>
+      <div class="pkg-tab active" data-t="info" onclick="pkgSwitchTab('info')">Thông tin chung</div>
+      <div class="pkg-tab" data-t="feat" onclick="pkgSwitchTab('feat')">Tính năng của gói (${tf.length})</div>
       <div class="pkg-tab" data-t="ver" onclick="pkgSwitchTab('ver')">Version history (${vers.length})</div>
       <div class="pkg-tab" data-t="subs" onclick="pkgSwitchTab('subs')">Subscriptions (${subs.length})</div>
     </div>
     <div class="pkg-tabpane active" id="pkgtab-info">
       <div class="card" style="padding:20px">
-        <div class="cat-kv" style="grid-template-columns:180px 1fr">
+        <div class="cat-sec-title">📋 Thông tin gói</div>
+        <div class="cat-kv" style="grid-template-columns:160px 1fr 160px 1fr">
           <div class="k">Sản phẩm</div><div class="v">${pr?pr.icon+' '+catEsc(pr.name):p.product_id}</div>
           <div class="k">Mã gói (code)</div><div class="v" style="font-family:monospace">${catEsc(p.code)}</div>
-          <div class="k">Gói (tier)</div><div class="v">${p.tier?`<span class="badge badge-b2b">${catEsc(p.tier)}</span>`:'—'}</div>
-          <div class="k">Version</div><div class="v">v${p.version}</div>
+          <div class="k">Phiên bản</div><div class="v"><span class="badge badge-ver">v${p.version}</span></div>
           <div class="k">Trạng thái</div><div class="v">${pkgStatusBadge(p.status)}</div>
           <div class="k">Thời hạn</div><div class="v">${p.duration_months} tháng</div>
-          <div class="k">Seat mặc định</div><div class="v">${p.default_seat_count!=null?p.default_seat_count.toLocaleString('vi-VN'):'—'}</div>
-          <div class="k">Số thiết bị mặc định</div><div class="v">${p.default_instance_count!=null?p.default_instance_count.toLocaleString('vi-VN'):'—'}</div>
-          <div class="k">Giá</div><div class="v">${pkgMoney(p.price)}</div>
-          <div class="k">Scope template</div><div class="v" style="font-family:monospace;font-size:12px">${catEsc(p.scope_template||'—')}</div>
+          <div class="k">Số lượng mặc định</div><div class="v">${p.default_seat_count!=null?p.default_seat_count.toLocaleString('vi-VN')+' seat':(p.default_instance_count!=null?p.default_instance_count.toLocaleString('vi-VN')+' thiết bị':'—')}</div>
           <div class="k">Người tạo</div><div class="v">${catEsc(p.created_by)} · ${p.created_at}</div>
         </div>
       </div>
-      <div class="cat-sec" style="margin-top:16px"><div class="cat-sec-title">🧩 Tính năng của gói <span style="font-weight:400;text-transform:none;color:var(--gray-400)">(suy ra từ tier ${p.tier?catEsc(p.tier):'—'} · ${tf.length} tính năng)</span></div>${featList}</div>
+    </div>
+    <div class="pkg-tabpane" id="pkgtab-feat">
+      <div class="card" style="padding:20px">
+        <div class="cat-sec-title" style="margin-bottom:12px">🧩 Tính năng của gói <span style="font-weight:400;text-transform:none;color:var(--gray-400)">(gói hỗ trợ ${tf.length}/${pr&&pr.featureCatalog?pr.featureCatalog.length:0} tính năng · ✓ = có · ô trống = không hỗ trợ)</span></div>
+        ${pkgFeatureGridHtml(pr,selKeys,true)}
+      </div>
     </div>
     <div class="pkg-tabpane" id="pkgtab-ver">${verHist}</div>
     <div class="pkg-tabpane" id="pkgtab-subs">${subList}</div>`;
@@ -5126,17 +5181,18 @@ function pkgOpenDetail(id){
 }
 function pkgSwitchTab(t){document.querySelectorAll('#pkg-view-detail .pkg-tab').forEach(x=>x.classList.toggle('active',x.dataset.t===t));document.querySelectorAll('#pkg-view-detail .pkg-tabpane').forEach(x=>x.classList.remove('active'));document.getElementById('pkgtab-'+t).classList.add('active');}
 function pkgDetailActions(p){
-  if(p.status==='DRAFT')return `${pkgCanPublish(p)?`<button class="btn btn-secondary btn-sm" onclick="pkgConfirm('publish','${p.id}')">Xuất bản</button>`:pkgActDisabled('Xuất bản','Chỉ Sales tạo gói hoặc Manager mới được xuất bản')}<button class="btn btn-ghost btn-sm" onclick="pkgOpenEdit('${p.id}')">Sửa</button>${pkgCanDelete(p)?`<button class="btn btn-danger btn-sm" onclick="pkgConfirm('delete','${p.id}')">Xóa</button>`:pkgActDisabled('Xóa','Chỉ Sales tạo gói hoặc Manager mới được xóa')}`;
-  if(p.status==='ACTIVE')return `<button class="btn btn-ghost btn-sm" onclick="pkgOpenEdit('${p.id}')">Sửa</button>${pkgCanRetire()?`<button class="btn btn-ghost btn-sm" style="color:var(--amber);border-color:#FDE68A" onclick="pkgConfirm('retire','${p.id}')">Ngừng bán</button>`:pkgActDisabled('Ngừng bán','Chỉ Manager mới được ngừng bán gói')}`;
+  if(p.status==='DRAFT')return `${pkgCanPublish(p)?`<button class="btn btn-secondary btn-sm" onclick="pkgConfirm('publish','${p.id}')">🚀 Xuất bản</button>`:pkgActDisabled('🚀 Xuất bản','Chỉ Sales tạo gói hoặc Manager mới được xuất bản')}<button class="btn btn-ghost btn-sm" onclick="pkgOpenEdit('${p.id}')">✏️ Sửa</button>${pkgCanDelete(p)?`<button class="btn btn-danger btn-sm" onclick="pkgConfirm('delete','${p.id}')">🗑️ Xóa</button>`:pkgActDisabled('🗑️ Xóa','Chỉ Sales tạo gói hoặc Manager mới được xóa')}`;
+  if(p.status==='ACTIVE')return `<button class="btn btn-ghost btn-sm" onclick="pkgOpenEdit('${p.id}')">✏️ Sửa</button>${pkgCanRetire()?`<button class="btn btn-ghost btn-sm" style="color:var(--amber);border-color:#FDE68A" onclick="pkgConfirm('retire','${p.id}')">⏹ Ngừng bán</button>`:pkgActDisabled('⏹ Ngừng bán','Chỉ Manager mới được ngừng bán gói')}`;
+  if(p.status==='RETIRED')return pkgCanPublish(p)?`<button class="btn btn-secondary btn-sm" onclick="pkgConfirm('rollback','${p.id}')" title="Tạo phiên bản nháp mới sao chép cấu hình này">↩️ Rollback</button>`:pkgActDisabled('↩️ Rollback','Chỉ Sales tạo gói hoặc Manager mới được rollback');
   return '';
 }
 
 /* ── FORM TẠO / SỬA GÓI ──────────────────────────────── */
-function pkgOpenCreate(){_pkgEditId=null;document.getElementById('pkgFormTitle').textContent='Thêm gói mới';pkgRenderForm(null);openModal('pkgModalForm');}
+function pkgOpenCreate(){_pkgEditId=null;document.getElementById('pkgFormTitle').textContent='Thêm gói sản phẩm';pkgRenderForm(null);openModal('pkgModalForm');}
 function pkgOpenEdit(id){
   const p=catPkg(id);if(!p)return;
   if(p.status==='RETIRED'){toast('error','Không thể sửa','Gói đã ngừng bán không thể chỉnh sửa.');return;}
-  _pkgEditId=id;document.getElementById('pkgFormTitle').textContent='Sửa gói — '+p.name;pkgRenderForm(p);openModal('pkgModalForm');
+  _pkgEditId=id;document.getElementById('pkgFormTitle').innerHTML='Chỉnh sửa gói sản phẩm <span style="font-family:monospace;font-size:12px;font-weight:600;background:var(--gray-100);color:var(--text-secondary);padding:2px 8px;border-radius:6px;margin-left:8px">'+catEsc(p.code)+'</span>';pkgRenderForm(p);openModal('pkgModalForm');
 }
 function pkgRenderForm(p){
   const isEdit=!!p;
@@ -5150,8 +5206,9 @@ function pkgRenderForm(p){
       ? `<div class="pkg-warn-box"><span>🔀</span><div><b>Gói này đang được ${sc} subscription sử dụng.</b> Khi lưu, hệ thống tạo <b>phiên bản mới (v${p.version+1}) ở trạng thái nháp</b> để không ảnh hưởng khách hàng hiện tại. Bạn xuất bản phiên bản mới để bắt đầu áp dụng — phiên bản v${p.version} sẽ tự động ngừng bán.</div></div>`
       : `<div class="pkg-warn-box"><span>✏️</span><div><b>Gói này chưa có subscription nào.</b> Thay đổi được cập nhật trực tiếp trên gói hiện tại, không tạo phiên bản mới.</div></div>`;
   }
+  document.getElementById('pkgFormHead').innerHTML=`${warn}<div id="pkgStepNav"></div>`;
   document.getElementById('pkgFormBody').innerHTML=`
-    ${warn}
+    <div id="pkgStep1">
     <div class="pkg-field">
       <label>Sản phẩm <span class="req">*</span></label>
       <select id="pkgfProduct" ${isEdit?'disabled':''} onchange="pkgFormOnProduct()"><option value="">-- Chọn sản phẩm --</option>${prodOpts}</select>
@@ -5161,7 +5218,7 @@ function pkgRenderForm(p){
       <div class="pkg-field">
         <label>Mã gói <span class="req">*</span></label>
         <input id="pkgfCode" value="${p?catEsc(p.code):''}" ${isEdit?'readonly style="background:var(--gray-100);color:var(--gray-600)"':'oninput="pkgCheckCode()"'} placeholder="VD: EDR-STD">
-        <div class="hint">${isEdit?'🔒 Không thể thay đổi sau khi tạo':'Nhập mã theo quy ước công ty, không trùng gói khác trong cùng sản phẩm'}</div>
+        ${isEdit?'':'<div class="hint">Nhập mã theo quy ước công ty, không trùng gói khác trong cùng sản phẩm</div>'}
         <div class="err" id="pkgfCodeErr"></div>
       </div>
       <div class="pkg-field">
@@ -5170,16 +5227,10 @@ function pkgRenderForm(p){
         <div class="err" id="pkgfNameErr">Vui lòng nhập tên gói</div>
       </div>
     </div>
-    <div class="pkg-grid2">
-      <div class="pkg-field">
-        <label>Thời hạn (tháng) <span class="req">*</span></label>
-        <input id="pkgfDuration" type="number" min="1" value="${p?p.duration_months:12}">
-        <div class="err" id="pkgfDurationErr">Thời hạn phải là số nguyên > 0</div>
-      </div>
-      <div class="pkg-field">
-        <label>Giá (₫)</label>
-        <input id="pkgfPrice" type="text" inputmode="numeric" value="${p&&p.price!=null?p.price.toLocaleString('vi-VN'):''}" oninput="pkgFmtNum(this)" placeholder="Tùy chọn">
-      </div>
+    <div class="pkg-field">
+      <label>Thời hạn (tháng) <span class="req">*</span></label>
+      <input id="pkgfDuration" type="number" min="1" value="${p?p.duration_months:12}">
+      <div class="err" id="pkgfDurationErr">Thời hạn phải là số nguyên > 0</div>
     </div>
     <div class="pkg-grid2" id="pkgfQtyRow">
       <div class="pkg-field" id="pkgfSeatWrap">
@@ -5191,24 +5242,52 @@ function pkgRenderForm(p){
         <input id="pkgfInst" type="number" min="0" value="${p&&p.default_instance_count!=null?p.default_instance_count:''}" placeholder="Tùy chọn">
       </div>
     </div>
-    <div class="pkg-field">
-      <label>Gói (tier) <span class="req">*</span></label>
-      <select id="pkgfTier" onchange="pkgFormOnTier()"><option value="">-- Chọn sản phẩm trước --</option></select>
-      <div class="hint">Mỗi gói ứng với 1 tier của sản phẩm. Tính năng được suy ra tự động theo tier.</div>
-      <div class="err" id="pkgfTierErr">Vui lòng chọn tier</div>
     </div>
-    <div class="pkg-field" id="pkgfFeatPreviewWrap" style="display:none">
-      <label>Tính năng bao gồm <span id="pkgfFeatCount" style="color:var(--text-secondary);font-weight:400;font-size:12px"></span></label>
-      <div id="pkgfFeatPreview" style="max-height:170px;overflow:auto;border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;background:var(--gray-50)"></div>
-      <div class="hint">Danh sách chỉ đọc — quyết định bởi ma trận tính năng của sản phẩm (tab Tính năng).</div>
-    </div>
-    <div class="pkg-field">
-      <label>Scope template</label>
-      <input id="pkgfScope" value="${p?catEsc(p.scope_template||''):''}" placeholder='VD: { tenant_mode: "MULTI" }'>
+    <div id="pkgStep2" style="display:none">
+      <div class="pkg-field" id="pkgfFeatWrap" style="display:none">
+        <label>Tính năng gói hỗ trợ <span id="pkgfFeatCount" style="color:var(--text-secondary);font-weight:400;font-size:12px"></span></label>
+        <div id="pkgfFeatGrid" style="border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;background:var(--gray-50)"></div>
+      </div>
     </div>`;
-  document.getElementById('pkgFormFooter').innerHTML=`<button class="btn btn-ghost" onclick="closeModal('pkgModalForm')">Hủy</button><button class="btn btn-primary" onclick="pkgSubmitForm()">💾 ${isEdit?'Lưu':'Tạo'}</button>`;
-  pkgFormOnProduct(p?p.tier:null);
+  _pkgFormStep=1;
+  pkgFormShowStep(1);
+  pkgFormOnProduct(p?new Set(pkgEnsureFeatures(p)):null);
 }
+let _pkgFormStep=1;
+function pkgStepNavHtml(n){
+  const dot=(i,label)=>`<div style="display:flex;align-items:center;gap:8px"><div style="width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:${n>=i?'var(--primary)':'var(--gray-200)'};color:${n>=i?'#fff':'var(--text-secondary)'}">${i}</div><span style="font-size:13px;font-weight:${n===i?'700':'500'};color:${n===i?'var(--navy)':'var(--text-secondary)'};white-space:nowrap">${label}</span></div>`;
+  return `<div style="display:flex;align-items:center;justify-content:center;gap:16px">${dot(1,'Thông tin chung')}<div style="flex:0 0 56px;height:2px;background:${n>=2?'var(--primary)':'var(--gray-200)'}"></div>${dot(2,'Tính năng của gói')}</div>`;
+}
+function pkgFormShowStep(n){
+  _pkgFormStep=n;
+  const s1=document.getElementById('pkgStep1'),s2=document.getElementById('pkgStep2');
+  if(s1)s1.style.display=n===1?'':'none';if(s2)s2.style.display=n===2?'':'none';
+  const modal=document.querySelector('#pkgModalForm .modal');if(modal)modal.style.maxWidth=n===2?'900px':'660px';
+  const nav=document.getElementById('pkgStepNav');if(nav)nav.innerHTML=pkgStepNavHtml(n);
+  const isEdit=!!_pkgEditId;
+  document.getElementById('pkgFormFooter').innerHTML=n===1
+    ? `<button class="btn btn-ghost" onclick="closeModal('pkgModalForm')">Hủy</button><button class="btn btn-primary" onclick="pkgFormNext()">Tiếp theo: Tính năng →</button>`
+    : `<button class="btn btn-ghost" onclick="pkgFormShowStep(1)">← Quay lại</button><button class="btn btn-primary" onclick="pkgSubmitForm()">💾 ${isEdit?'Lưu':'Tạo'}</button>`;
+}
+function pkgValidateStep1(){
+  document.querySelectorAll('#pkgStep1 .err').forEach(e=>e.style.display='none');
+  const isEdit=!!_pkgEditId;
+  const prodId=document.getElementById('pkgfProduct').value;
+  const code=document.getElementById('pkgfCode').value.trim();
+  const name=document.getElementById('pkgfName').value.trim();
+  const dur=parseInt(document.getElementById('pkgfDuration').value,10);
+  let ok=true;
+  if(!prodId){_pkgErr('pkgfProductErr','Vui lòng chọn sản phẩm');ok=false;}
+  if(!code){_pkgErr('pkgfCodeErr','Vui lòng nhập mã gói');ok=false;}
+  if(!name){_pkgErr('pkgfNameErr','Vui lòng nhập tên gói');ok=false;}
+  if(!(dur>0)){_pkgErr('pkgfDurationErr','Thời hạn phải là số nguyên > 0');ok=false;}
+  if(!isEdit && code && prodId){
+    const dup=CAT_PACKAGES.some(p=>p.product_id===prodId&&p.code.toLowerCase()===code.toLowerCase()&&p.status!=='RETIRED');
+    if(dup){_pkgErr('pkgfCodeErr','Mã gói đã tồn tại trong sản phẩm (bản đang bán) — reject 409');ok=false;}
+  }
+  return ok;
+}
+function pkgFormNext(){ if(pkgValidateStep1())pkgFormShowStep(2); }
 function pkgFmtNum(el){const d=el.value.replace(/[^\d]/g,'');el.value=d?parseInt(d,10).toLocaleString('vi-VN'):'';}
 function pkgCheckCode(){
   const inp=document.getElementById('pkgfCode');const err=document.getElementById('pkgfCodeErr');
@@ -5218,66 +5297,60 @@ function pkgCheckCode(){
   if(dup){err.textContent='Mã gói đã tồn tại trong sản phẩm này (gói đang bán). Vui lòng chọn mã khác.';err.style.display='block';}
   else err.style.display='none';
 }
-function pkgFormOnProduct(preselectTier){
-  const prodId=document.getElementById('pkgfProduct').value;
-  const pr=catProd(prodId);
-  const tierSel=document.getElementById('pkgfTier');
-  if(!pr){tierSel.innerHTML='<option value="">-- Chọn sản phẩm trước --</option>';}
-  else{
-    const tiers=pr.featureTiers||[];
-    tierSel.innerHTML='<option value="">-- Chọn tier --</option>'+tiers.map(t=>`<option value="${t}" ${t===preselectTier?'selected':''}>${catEsc(t)}</option>`).join('');
+function catFeatKey(f){return [f.component,f.module,f.feature].join('∷');}
+function pkgEnsureFeatures(p){
+  if(Array.isArray(p.features))return p.features;
+  const pr=catProd(p.product_id);const keys=new Set();
+  if(pr&&pr.featureCatalog){
+    pr.featureCatalog.forEach(f=>{if(f.type==='Mặc định')keys.add(catFeatKey(f));});
+    if(p.tier){const idx=(pr.featureTiers||[]).indexOf(p.tier);if(idx>=0)pr.featureCatalog.forEach(f=>{const on=f.tiers?f.tiers[idx]:[f.epp,f.edr,f.epr][idx];if(on)keys.add(catFeatKey(f));});}
   }
+  p.features=[...keys];return p.features;
+}
+function pkgFormOnProduct(preselect){
+  const prodId=document.getElementById('pkgfProduct').value;const pr=catProd(prodId);
   // ẩn/hiện instance theo has_instances
   const instWrap=document.getElementById('pkgfInstWrap');if(instWrap)instWrap.style.display=(pr&&pr.has_instances)?'':'none';
   const seatWrap=document.getElementById('pkgfSeatWrap');if(seatWrap)seatWrap.style.display=(pr&&pr.has_instances)?'none':'';
-  pkgFormOnTier();
+  pkgFormRenderFeatures(preselect instanceof Set?preselect:null);
 }
-function pkgFormOnTier(){
+// Renderer chung: grid tính năng nhóm theo component, TÊN trước · CHECKBOX sau.
+// readonly=true → chỉ đọc (màn chi tiết); false → tích/bỏ tích (form). "Mặc định" luôn checked + khóa.
+function pkgFeatureGridHtml(prod,selSet,readonly){
+  if(!prod||!prod.featureCatalog||!prod.featureCatalog.length)return '<div style="color:var(--gray-400);font-size:13px">Sản phẩm chưa khai báo tính năng.</div>';
+  const g={};prod.featureCatalog.forEach(f=>{(g[f.component]=g[f.component]||[]).push(f);});
+  return Object.entries(g).map(([c,rows])=>`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">${catEsc(c)}</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${rows.map(f=>{const df=f.type==='Mặc định';const key=catFeatKey(f);const on=df||(selSet?selSet.has(key):false);const dis=readonly||df;return `<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:38px;padding:0 12px;border:1px solid ${on?'#93C5FD':'var(--border)'};border-radius:8px;background:${on?'#EFF6FF':'#fff'};${dis?'':'cursor:pointer'}" title="${catEsc(f.feature)} · ${catEsc(f.type)}${df?' (luôn bao gồm)':''}"><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;${on?'color:var(--navy);font-weight:500':'color:var(--text-secondary)'}">${catEsc(f.feature)}</span><input type="checkbox" style="width:16px;height:16px;flex-shrink:0" ${readonly?'':`class="pkgf-feat" data-k="${catEsc(key)}" onchange="pkgFormFeatCount()"`} ${on?'checked':''} ${dis?'disabled':''}></label>`;}).join('')}</div></div>`).join('');
+}
+function pkgFormRenderFeatures(selSet){
   const pr=catProd(document.getElementById('pkgfProduct').value);
-  const tier=document.getElementById('pkgfTier').value;
-  const wrap=document.getElementById('pkgfFeatPreviewWrap');
-  const box=document.getElementById('pkgfFeatPreview');
-  if(!pr||!tier||!pr.featureCatalog){wrap.style.display='none';return;}
-  const idx=(pr.featureTiers||[]).indexOf(tier);
-  const feats=pr.featureCatalog.filter(f=>f.tiers?f.tiers[idx]:[f.epp,f.edr,f.epr][idx]);
-  document.getElementById('pkgfFeatCount').textContent=`· ${feats.length} tính năng`;
-  const g={};feats.forEach(f=>{(g[f.component]=g[f.component]||[]).push(f);});
-  box.innerHTML=Object.entries(g).map(([c,rows])=>`<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:3px">${catEsc(c)}</div>${rows.map(f=>`<div style="font-size:12px;color:var(--text-secondary);padding:1px 0">• ${catEsc(f.feature)} <span style="color:var(--gray-400)">(${catEsc(f.type)})</span></div>`).join('')}</div>`).join('')||'<span style="font-size:12px;color:var(--gray-400)">Tier này chưa có tính năng.</span>';
-  wrap.style.display='';
+  const wrap=document.getElementById('pkgfFeatWrap');const box=document.getElementById('pkgfFeatGrid');
+  if(!pr||!pr.featureCatalog||!pr.featureCatalog.length){if(wrap)wrap.style.display='none';if(box)box.innerHTML='';return;}
+  box.innerHTML=pkgFeatureGridHtml(pr,selSet,false);
+  wrap.style.display='';pkgFormFeatCount();
+}
+function pkgFormFeatCount(){
+  const pr=catProd(document.getElementById('pkgfProduct').value);
+  const n=document.querySelectorAll('#pkgfFeatGrid .pkgf-feat:checked').length;
+  const tot=pr&&pr.featureCatalog?pr.featureCatalog.length:0;
+  const el=document.getElementById('pkgfFeatCount');if(el)el.textContent=`· ${n}/${tot} tính năng`;
 }
 function _pkgErr(id,msg){const e=document.getElementById(id);if(e){e.textContent=msg;e.style.display='block';}}
 function pkgSubmitForm(){
-  document.querySelectorAll('#pkgFormBody .err').forEach(e=>e.style.display='none');
+  if(!pkgValidateStep1()){pkgFormShowStep(1);return;}
   const isEdit=!!_pkgEditId;
   const prodId=document.getElementById('pkgfProduct').value;
   const code=document.getElementById('pkgfCode').value.trim();
   const name=document.getElementById('pkgfName').value.trim();
   const dur=parseInt(document.getElementById('pkgfDuration').value,10);
-  const priceRaw=document.getElementById('pkgfPrice').value;
   const seatRaw=document.getElementById('pkgfSeat').value;
   const instRaw=document.getElementById('pkgfInst').value;
-  const scope=document.getElementById('pkgfScope').value.trim();
-  const tier=document.getElementById('pkgfTier').value;
-  let ok=true;
-  if(!prodId){_pkgErr('pkgfProductErr','Vui lòng chọn sản phẩm');ok=false;}
-  if(!code){_pkgErr('pkgfCodeErr','Vui lòng nhập mã gói');ok=false;}
-  if(!name){_pkgErr('pkgfNameErr','Vui lòng nhập tên gói');ok=false;}
-  if(!tier){_pkgErr('pkgfTierErr','Vui lòng chọn tier');ok=false;}
-  if(!(dur>0)){_pkgErr('pkgfDurationErr','Thời hạn phải là số nguyên > 0');ok=false;}
-  // BR-05.2 code unique trong product (bản non-RETIRED), bỏ qua khi edit cùng họ
-  if(!isEdit && code){
-    const dup=CAT_PACKAGES.some(p=>p.product_id===prodId&&p.code.toLowerCase()===code.toLowerCase()&&p.status!=='RETIRED');
-    if(dup){_pkgErr('pkgfCodeErr','Mã gói đã tồn tại trong sản phẩm (bản đang bán) — reject 409');ok=false;}
-  }
-  if(!ok)return;
+  const features=[...document.querySelectorAll('#pkgfFeatGrid .pkgf-feat:checked')].map(cb=>cb.dataset.k);
   const pr=catProd(prodId);
   const seat=pr&&pr.has_instances?null:(seatRaw!==''?parseInt(seatRaw,10):null);
   const inst=pr&&pr.has_instances?(instRaw!==''?parseInt(instRaw,10):null):null;
-  const priceDigits=(priceRaw||'').replace(/[^\d]/g,'');
-  const price=priceDigits!==''?parseInt(priceDigits,10):null;
 
   if(!isEdit){ // CREATE — luôn nháp, phiên bản 1
-    const np={id:pkgNewId(),product_id:prodId,code,tier,version:1,name,status:'DRAFT',duration_months:dur,default_seat_count:seat,default_instance_count:inst,scope_template:scope,price,created_by:currentUser?.name||'Sales',created_at:catToday()};
+    const np={id:pkgNewId(),product_id:prodId,code,version:1,name,status:'DRAFT',duration_months:dur,default_seat_count:seat,default_instance_count:inst,features,created_by:currentUser?.name||'Sales',created_at:catToday()};
     CAT_PACKAGES.push(np);
     closeModal('pkgModalForm');
     pkgShowView('list');pkgOpenDetail(np.id);
@@ -5286,7 +5359,7 @@ function pkgSubmitForm(){
   }
   // SỬA
   const p=catPkg(_pkgEditId);const sc=pkgSubCount(p.id);
-  const patch={name,tier,duration_months:dur,default_seat_count:seat,default_instance_count:inst,scope_template:scope,price};
+  const patch={name,duration_months:dur,default_seat_count:seat,default_instance_count:inst,features};
   if(p.status==='DRAFT' || (p.status==='ACTIVE'&&sc===0)){ // cập nhật trực tiếp
     Object.assign(p,patch);
     closeModal('pkgModalForm');
@@ -5321,6 +5394,12 @@ function pkgConfirm(action,id){
     B.innerHTML=`<div style="font-size:14px;line-height:1.6">Ngừng bán <b>${catEsc(p.name)}</b> <span class="badge badge-ver">v${p.version}</span>?
       <div class="pkg-warn-box" style="margin-top:12px"><span>ℹ️</span><div>Sales sẽ không thể chọn gói này khi tạo subscription mới.${sc?` <b>${sc}</b> subscription hiện tại vẫn hoạt động bình thường.`:''}</div></div></div>`;
     F.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('pkgConfirmModal')">Hủy</button><button class="btn btn-danger" onclick="pkgDoConfirm()">Ngừng bán</button>`;
+  }else if(action==='rollback'){
+    const nv=pkgFamilyMaxVer(p.product_id,p.code)+1;
+    T.textContent='Rollback phiên bản';
+    B.innerHTML=`<div style="font-size:14px;line-height:1.6">Tạo <b>phiên bản nháp mới (v${nv})</b> sao chép cấu hình của <b>${catEsc(p.name)}</b> <span class="badge badge-ver">v${p.version}</span> (đã ngừng bán).
+      <div class="pkg-warn-box" style="margin-top:12px"><span>↩️</span><div>Phiên bản cũ <b>không</b> bị thay đổi. Bản nháp v${nv} được tạo để bạn xem lại — khi <b>Xuất bản</b>, phiên bản đang bán hiện tại sẽ tự động ngừng bán.</div></div></div>`;
+    F.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('pkgConfirmModal')">Hủy</button><button class="btn btn-primary" onclick="pkgDoConfirm()">↩️ Rollback</button>`;
   }else{ // delete
     T.textContent='Xóa gói';
     B.innerHTML=`<div style="font-size:14px;line-height:1.6;text-align:center">Bạn có chắc chắn muốn xóa gói nháp <b>${catEsc(p.name)}</b> <span class="badge badge-ver">v${p.version}</span>?<br>Hành động này không thể hoàn tác.</div>`;
@@ -5334,6 +5413,7 @@ function pkgDoConfirm(){
   if(action==='publish' && !pkgCanPublish(p)){toast('error','Không có quyền','Chỉ Sales tạo gói hoặc Manager mới được xuất bản.');closeModal('pkgConfirmModal');return;}
   if(action==='retire' && !pkgCanRetire()){toast('error','Không có quyền','Chỉ Manager mới được ngừng bán gói.');closeModal('pkgConfirmModal');return;}
   if(action==='delete' && !pkgCanDelete(p)){toast('error','Không có quyền','Chỉ Sales tạo gói hoặc Manager mới được xóa.');closeModal('pkgConfirmModal');return;}
+  if(action==='rollback' && !pkgCanPublish(p)){toast('error','Không có quyền','Chỉ Sales tạo gói hoặc Manager mới được rollback.');closeModal('pkgConfirmModal');return;}
   if(action==='publish'){
     if(p.status!=='DRAFT'){toast('error','Không hợp lệ','Chỉ gói nháp mới xuất bản được.');closeModal('pkgConfirmModal');return;}
     pkgFamilyVersions(p.product_id,p.code).forEach(v=>{if(v.status==='ACTIVE'&&v.id!==p.id)v.status='RETIRED';});
@@ -5342,6 +5422,14 @@ function pkgDoConfirm(){
   }else if(action==='retire'){
     p.status='RETIRED';
     toast('success','Đã ngừng bán',`${p.name} phiên bản ${p.version} đã ngừng bán`);
+  }else if(action==='rollback'){
+    if(p.status!=='RETIRED'){toast('error','Không hợp lệ','Chỉ phiên bản đã ngừng bán mới rollback được.');closeModal('pkgConfirmModal');return;}
+    const nv=pkgFamilyMaxVer(p.product_id,p.code)+1;
+    const np={id:pkgNewId(),product_id:p.product_id,code:p.code,version:nv,name:p.name,status:'DRAFT',duration_months:p.duration_months,default_seat_count:p.default_seat_count,default_instance_count:p.default_instance_count,features:(p.features||[]).slice(),price:p.price,created_by:currentUser?.name||'Sales',created_at:catToday(),rolledBackFrom:p.version};
+    CAT_PACKAGES.push(np);
+    toast('success','Đã tạo phiên bản rollback (nháp)',`${np.name} · phiên bản ${nv} sao chép từ v${p.version} — Xuất bản để áp dụng`);
+    closeModal('pkgConfirmModal');_pkgConfirmCtx=null;
+    pkgShowView('list');pkgOpenDetail(np.id);return;
   }else{
     if(p.status!=='DRAFT'){toast('error','Không thể xóa','Chỉ gói nháp mới xóa được. Gói đang bán dùng "Ngừng bán".');closeModal('pkgConfirmModal');return;}
     CAT_PACKAGES=CAT_PACKAGES.filter(x=>x.id!==id);

@@ -1,0 +1,199 @@
+﻿,,,,,,,,,,Tier,,
+#,Components,Module,Feature,Sub-Feature Lv1,Sub-Feature Lv2,Description,Type,Actor,Note,EDR,EPP,EPR
+,Agent,Installer,Install Agent,Agent, , ,Default, , ,Default,Default,Default
+,Agent,Updater,Update Agent, , , ,Default, , ,Default,Default,Default
+,Agent,Communication,Communication, , , ,Default, , ,Default,Default,Default
+,Agent,Log Collector,Log Collector, , , ,Tier, , ,x, ,x
+,Agent, , ,Registry, , ,Tier, , ,x, ,x
+,Agent, , ,Process, , ,Tier, , ,x, ,x
+,Agent, , ,Network, , ,Tier, , ,x, ,x
+,Agent, , ,Windows Event, , ,Tier, , ,x, ,x
+,Agent,Core,Malware scan,Realtime Scan, ,"Thời điểm, phạm vi scan",Tier, , , ,x,x
+,Agent, , ,Schedule Scan, ,,Tier, , ,x,x,x
+,Agent, , ,On-Demand Scan, ,,Tier, , , ,x,x
+,Agent, ,,Local Scan, ,Kỹ thuật scan,Tier, , ,x,x,x
+,Agent, , ,Cloud Scan, ,,Tier, , ,x,x,x
+,Agent,Manager,Manager, , , ,Default, , ,x,x,x
+,Agent, ,Live query, , , ,Tier, , ,x, ,x
+,Agent, ,Action Center, , , ,Tier, , ,x, ,x
+,Agent, ,Vulnerability Detection, , , ,Add-on, ,Chưa phát triển,Add-on,Add-on,Add-on
+,Agent, ,Application Control, , , ,Tier, ,Chưa phát triển, ,x,x
+,Agent, ,Device Control, , , ,Tier, ,Đang phát triển, ,x,x
+,Agent, ,System Inventory, , , ,Tier, ,,x,x,x
+,,,Firewall,,,,Tier,,,x,x,x
+,Agent, ,Watch Dog, , , ,Default, , ,Default,Default,Default
+,Agent,GUI,GUI Agent,Home, , ,Tier, , , ,x,x
+,Agent, , ,Malware Scan, , ,Tier, , , ,x,x
+,Agent, , ,History Scan, , ,Tier, , , ,x,x
+,Agent, , ,Update Info, , ,Tier, , , ,x,x
+,Agent, , ,Setting, , ,Tier, , , ,x,x
+,Agent, , ,License Info, , ,Tier, , , ,x,x
+,Agent,,,,,,Default,,,,,
+,Agent,Self Protection,Self-Defense, , , ,Default, , ,Default,Default,Default
+,Security Center,System Management,Agent management,List Agent, , ,Default,Org User,,Default,Default,Default
+,Security Center, , ,Register Agent, , ,Default,Org User,,Default,Default,Default
+,Security Center, , ,View Detail Agent, , ,Default,Org User,,Default,Default,Default
+,Security Center, , ,Update Agent Management, , ,Tier,Org User,"Đã phát triển API, chưa có giao diện. Cần update về cơ chế chuẩn",Default,Default,Default
+,Security Center, , ,Agent Update Policy, , ,Tier,Org User,"Đã phát triển API, chưa có giao diện. Cần update về cơ chế chuẩn",Default,Default,Default
+,Security Center, ,Data Sharing,List Configs, , ,Tier,Org User,,x,x,x
+,Security Center, , ,Create Configs, , ,Tier,Org User,,x,x,x
+,Security Center, , ,Delete Configs, , ,Tier,Org User,,x,x,x
+,Security Center, , ,History, , ,Tier,Org User,,x,x,x
+,Security Center, ,Integration 3rd Platform/System,List Intergration, , ,Add-on,Org User,Chưa phát triển,Add-on,Add-on,Add-on
+,Security Center, , ,Config Intergration, , ,Add-on,Org User,Chưa phát triển,Add-on,Add-on,Add-on
+,Security Center,Dashboard,Dashboard,Dashboard EPP Default, , ,Tier,Org User, , ,x,x
+,Security Center, , ,Dashboard EDR Default, , ,Tier,Org User, ,x, ,x
+,Security Center, , ,List Dashboard, , ,Tier,Org User,"Đã có của Grafana, cần đánh giá lại",x,x,x
+,Security Center, , ,Create Dashboard, , ,Tier,Org User,"Đã có của Grafana, cần đánh giá lại",x,x,x
+,Security Center, , ,Edit Dashboard, , ,Tier,Org User,"Đã có của Grafana, cần đánh giá lại",x,x,x
+,Security Center, , ,Delete Dashboard, , ,Tier,Org User,"Đã có của Grafana, cần đánh giá lại",x,x,x
+,Security Center, , ,Duplicate Dashboard, , ,Tier,Org User,"Đã có của Grafana, cần đánh giá lại",x,x,x
+,Security Center, , ,View Dashboard, , ,Tier,Org User,"Đã có của Grafana, cần đánh giá lại",x,x,x
+,Security Center, ,Widget,Default Widget, , ,Tier,Org User,"Đã có của Grafana, cần đánh giá lại",x,x,x
+,Security Center, , ,List Widget, , ,Tier,Org User,"Đã có của Grafana, cần đánh giá lại",x,x,x
+,Security Center, , ,Create Widget, , ,Tier,Org User,"Đã có của Grafana, cần đánh giá lại",x,x,x
+,Security Center, , ,Edit Widget, , ,Tier,Org User,"Đã có của Grafana, cần đánh giá lại",x,x,x
+,Security Center, , ,Duplicate Widget, , ,Tier,Org User,"Đã có của Grafana, cần đánh giá lại",x,x,x
+,Security Center, , ,Delete Widget, , ,Tier,Org User,"Đã có của Grafana, cần đánh giá lại",x,x,x
+,Security Center, , ,Preview Widget, , ,Tier,Org User,"Đã có của Grafana, cần đánh giá lại",x,x,x
+,Security Center,TDIRs,Event Explorer,List Event, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Event Detail, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Event Search Suggestions, ,Gợi ý cú pháp khi tìm kiếm event,Tier,Org User,Chưa phát triển,x, ,x
+,Security Center, , ,Event Field Visualization, ,Trực quan hóa dữ liệu của các trường của event phục vụ phân tích điều tra sự cố,Tier,Org User,Chưa phát triển,x, ,x
+,Security Center, , ,Execute Query, , ,Tier,Org User, ,x, ,x
+,Security Center, , ,Save Open Query, , ,Tier,Org User, ,x, ,x
+,Security Center, , ,List Saved Open Query, , ,Tier,Org User, ,x, ,x
+,Security Center, , ,Execute Saved Query, , ,Tier,Org User, ,x, ,x
+,Security Center, , ,Delete Saved Open Query, , ,Tier,Org User, ,x, ,x
+,Security Center, ,Alert Management,List Alert, , ,Tier,Org User,"Đã có, cần hoàn thiện UI, UX",x, ,x
+,Security Center, , ,Alert Detail, , ,Tier,Org User,"Đã có, cần hoàn thiện UI, UX",x, ,x
+,Security Center, , ,Alert Actions, , ,Tier,Org User, ,x, ,x
+,Security Center, , ,Alert Search Suggestions, , ,Tier,Org User,Chưa phát triển,x, ,x
+,Security Center, , ,Alert Field Visualization, , ,Tier,Org User,Chưa phát triển,x, ,x
+,Security Center, , ,Alert Grouping, , ,Tier,Org User,"Cho phép cấu hình cơ chế gom nhóm tự động các Alert, sau đó tạo case tự động chứa các Alert đó. ",x, ,x
+,Security Center, ,Case Management,List Case, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Case Detail,Overview, ,Tier,Org User,,x, ,x
+,Security Center, , , ,Grap Entites, ,Tier,Org User,Chưa phát triển,x, ,x
+,Security Center, , , ,Timeline, ,Tier,Org User,Chưa phát triển,x, ,x
+,Security Center, , , ,Enrichment, ,Tier,Org User,Chưa phát triển,x, ,x
+,Security Center, , , ,Attachment file, ,Tier,Org User,,x, ,x
+,Security Center, , , ,Observables, ,Tier,Org User,,x, ,x
+,Security Center, , , ,Alert list, ,Tier,Org User,Chưa phát triển,x, ,x
+,Security Center, , , ,Event list, ,Tier,Org User,,x, ,x
+,Security Center, , , ,History, ,Tier,Org User,,x, ,x
+,Security Center, , ,Create Case, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Edit case, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Delete Case, , ,Tier,Org User,,x, ,x
+,Security Center, ,Live queries,Saved queries,List Saved Query, ,Tier,Org User,,x, ,x
+,Security Center, , , ,Execute Saved Query, ,Tier,Org User, ,x, ,x
+,Security Center, , , ,Create Live Query, ,Tier,Org User, ,x, ,x
+,Security Center, , , ,Edit Saved Query, ,Tier,Org User, ,x, ,x
+,Security Center, , , ,Delete Saved Query, ,Tier,Org User, ,x, ,x
+,Security Center, , ,Execute Live query, , ,Tier,Org User,,x, ,x
+,Security Center, , ,History,List History, ,Tier,Org User,,x, ,x
+,Security Center, , , ,Result Query, ,Tier,Org User, ,x, ,x
+,Security Center, ,Action Center,List History Action,Abort Action Event, ,Tier,Org User,"Đã có, cần hoàn thiện UI, UX. Một số action cần bổ sung",x, ,x
+,Security Center, , , ,Execute Revert Command, ,Tier,Org User, ,x, ,x
+,Security Center, , , ,Re-execute Command, ,Tier,Org User, ,x, ,x
+,Security Center, , ,Execute Command Schema, , ,Tier,Org User, ,x, ,x
+,Security Center,Security Management,Rule Management,List rule, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Create rule, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Edit rule, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Duplicate rule, , ,Tier,Org User,,x, ,x
+,Security Center, , ,View detail rule, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Delete Rule, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Import rule, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Export rule, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Enable/Disable rule, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Xây dựng tập rule built-in, , ,Tier,Org User,Chưa phát triển,x, ,x
+,Security Center, ,Context management,Create context table, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Import context, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Export context, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Add row, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Edit row, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Delete row, , ,Tier,Org User,,x, ,x
+,Security Center, , ,Feed data from TI, , ,Tier,Org User,Chưa phát triển,x, ,x
+,Security Center, ,MITRE ATT&CK,Dashboard Coverange, , ,Tier,Org User,,x, ,x
+,Security Center, ,Policy,Add Policy, , ,Tier,Org User, ,x,x,x
+,Security Center, , ,Edit Policy, , ,Tier,Org User, ,x,x,x
+,Security Center, , ,Duplicate Policy, , ,Tier,Org User, ,x,x,x
+,Security Center, , ,Delete Policy, , ,Tier,Org User, ,x,x,x
+,Security Center, , ,Malware Scan, , ,Tier,Org User, ,x,x,x
+,Security Center, , ,Device Control, , ,Tier,Org User, ,x,x,x
+,Security Center, , ,Application Control, , ,Tier,Org User, ,x,x,x
+,Security Center, , ,Folder Access, , ,Tier,Org User,Cần đánh giá lại,x,x,x
+,Security Center, , ,Network Protection, , ,Tier,Org User, ,x,x,x
+,Security Center,Report,Report Template,Report EPP Default, , ,Tier,Org User,, ,x, 
+,Security Center, , ,List Report Template, , ,Tier,Org User,Chưa phát triển,x,x,x
+,Security Center, , ,Create Report Template, , ,Tier,Org User,Chưa phát triển,x,x,x
+,Security Center, , ,Edit Report Template, , ,Tier,Org User,Chưa phát triển,x,x,x
+,Security Center, , ,Duplicate Report Template, , ,Tier,Org User,Chưa phát triển,x,x,x
+,Security Center, , ,Preview Report Template, , ,Tier,Org User,Chưa phát triển,x,x,x
+,Security Center, , ,Delete Report Template, , ,Tier,Org User,Chưa phát triển,x,x,x
+,Security Center, ,Report,List Report, , ,Tier,Org User,Chưa phát triển,x,x,x
+,Security Center, , ,Create Report, , ,Tier,Org User,Chưa phát triển,x,x,x
+,Security Center, , ,Edit Report, , ,Tier,Org User,Chưa phát triển,x,x,x
+,Security Center, , ,Duplicate, , ,Tier,Org User,Chưa phát triển,x,x,x
+,Security Center, , ,View Report, , ,Tier,Org User,Chưa phát triển,x,x,x
+,Security Center, , ,Delete Report, , ,Tier,Org User,Chưa phát triển,x,x,x
+,Security Center, , ,Share Report via Email, , ,Tier,Org User,Chưa phát triển,x,x,x
+,Security Center, , ,"Export Report to Excel, Word, PDF", , ,Tier,Org User,Chưa phát triển,x,x,x
+,Security Center,Tenant & Org,Tenant and License Tenant,Tạo Tenant, , ,Default,System User,,Default,Default,Default
+,Security Center, , ,Cập nhật Tenant, , ,Default,System User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Xem danh sách Tenant, , ,Default,System User,,Default,Default,Default
+,Security Center, , ,Xem chi tiết Tenant, , ,Default,System User,,Default,Default,Default
+,Security Center, , ,Active/Deactivate Tenant, , ,Default,System User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Kích hoạt/Vô hiệu hóa Tenant Admin, , ,Default,System User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Quản lý Tenant User, , ,Default,System User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Quản lý License Tenant, , ,Default,System User,Chưa phát triển,Default,Default,Default
+,Security Center,,,Kích hoạt License Tenant,,,Default,System User,,Default,Default,Default
+,Security Center, , ,Gia hạn License Tenant, , ,Default,System User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Upgrade/Downgrade License Tenant, , ,Default,System User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Theo dõi hết hạn license, , ,Default,Default,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Xử lý hết hạn license, , ,Default,Default,Chưa phát triển,Default,Default,Default
+,Security Center, ,Org and License Org,Tạo Org, , ,Default,Tenant User,,Default,Default,Default
+,Security Center, , ,Cập nhật Org, , ,Default,Tenant User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Xem danh sách Org, , ,Default,Tenant User,,Default,Default,Default
+,Security Center, , ,Xem chi tiết Org, , ,Default,Tenant User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Xóa Org, , ,Default,Tenant User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Khóa Org, , ,Default,Tenant User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Tạo License Org, , ,Default,Tenant User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Cập nhật License Org, , ,Default,Tenant User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Thu hồi quota Org, , ,Default,Tenant User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Theo dõi hết hạn license, , ,Default,Default,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Xử lý hết hạn license, , ,Default,Default,Chưa phát triển,Default,Default,Default
+,Security Center, ,Org Role,List Role, , ,Default,Org User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Create Role, , ,Default,Org User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Edit Role, , ,Default,Org User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,Delete Role, , ,Default,Org User,Chưa phát triển,Default,Default,Default
+,Security Center, , ,View Detail Role, , ,Default,Org User,Chưa phát triển,Default,Default,Default
+,Security Center, ,User,List User, , ,Default,Xem lại sau khi chốt được kiến trúc Multi Tenant,"Đã có, Xem lại sau khi chốt được kiến trúc Multi Tenant",Default,Default,Default
+,Security Center, , ,Create User, , ,Default,Xem lại sau khi chốt được kiến trúc Multi Tenant,"Đã có, Xem lại sau khi chốt được kiến trúc Multi Tenant",Default,Default,Default
+,Security Center, , ,Edit User, , ,Default,Xem lại sau khi chốt được kiến trúc Multi Tenant,"Đã có, Xem lại sau khi chốt được kiến trúc Multi Tenant",Default,Default,Default
+,Security Center, , ,View Detail User, , ,Default,Xem lại sau khi chốt được kiến trúc Multi Tenant,"Đã có, Xem lại sau khi chốt được kiến trúc Multi Tenant",Default,Default,Default
+,Security Center, , ,Delete User, , ,Default,Xem lại sau khi chốt được kiến trúc Multi Tenant,"Đã có, Xem lại sau khi chốt được kiến trúc Multi Tenant",Default,Default,Default
+,Security Center, , ,Inactive User,,Vô hiệu hóa user,Default,Xem lại sau khi chốt được kiến trúc Multi Tenant,"Chưa phát triển, Xem lại sau khi chốt được kiến trúc Multi Tenant",Default,Default,Default
+,Security Center, , ,Reset Password,,Gửi email reset mật khẩu cho user,Default,Xem lại sau khi chốt được kiến trúc Multi Tenant,"Chưa phát triển, Xem lại sau khi chốt được kiến trúc Multi Tenant",Default,Default,Default
+,Security Center, , ,Disconnect User,,Ngắt kết nối user từ xa,Default,Xem lại sau khi chốt được kiến trúc Multi Tenant,"Chưa phát triển, Xem lại sau khi chốt được kiến trúc Multi Tenant",Default,Default,Default
+,Security Center, , ,Device Control,,Quản lý thiết bị truy cập,Default,Xem lại sau khi chốt được kiến trúc Multi Tenant,"Chưa phát triển, Xem lại sau khi chốt được kiến trúc Multi Tenant",Default,Default,Default
+,Security Center, , ,IP Control,,Cấu hình địa chỉ IP được phép truy cập,Default,Xem lại sau khi chốt được kiến trúc Multi Tenant,"Chưa phát triển, Xem lại sau khi chốt được kiến trúc Multi Tenant",Default,Default,Default
+,Security Center,Configuration,Data source,Add Data Source, , ,Default, System User,"Đã có, cần hoàn thiện UI, UX",Default,Default,Default
+,Security Center, , ,Setting Data Source, , ,Default, System User,"Đã có, cần hoàn thiện UI, UX",Default,Default,Default
+,Security Center, , ,Delete Data Source, , ,Default, System User,"Đã có, cần hoàn thiện UI, UX",Default,Default,Default
+,Security Center, ,Storage Policy, , ,"Cấu hình chính sách lưu trữ dữ liệu log, alert: hot, warm, cold",Default, System User,Chưa phát triển,Default, ,Default
+,Security Center, ,Audit Log (System log), , ,"Thiếu thông tin: user thực hiện, IP máy thực hiện, Hành động thực hiện, Kết quả thực hiện.
+Thiếu các loại log cần ghi",Default,All,"Đã có, cần hoàn thiện UI, UX",Default,Default,Default
+,Security Center, ,Preferences, , , ,Default,System User,"Đã có của Grafana, cần đánh giá lại",Default,Default,Default
+,Security Center,Account info,My Account, , , ,Default,All,,Default,Default,Default
+,Security Center,,Change Password, , , ,Default,All,,Default,Default,Default
+,Security Center,,License info, , , ,Default,All,Chưa phát triển,Default,Default,Default
+,Security Center, ,Dashboard, , , ,Add-on,Org User,Đã có nhưng chưa dùng được,Add-on,Add-on,Add-on
+,Security Center, ,Inventory, , , ,Add-on,Org User,Đã có nhưng chưa dùng được,Add-on,Add-on,Add-on
+,Security Center,Playbook Management,Playbook list,List Playbook, , ,Tier,Org User,Đã có nhưng chưa dùng được,x, ,x
+,Security Center, , ,Create Playbook, , ,Tier,Org User,Đã có nhưng chưa dùng được,x, ,x
+,Security Center, , ,Edit Playbook, , ,Tier,Org User,Đã có nhưng chưa dùng được,x, ,x
+,Security Center, , ,Delete Playbook, , ,Tier,Org User,Đã có nhưng chưa dùng được,x, ,x
+,Security Center,Authentication,Single-Factor Authentication, , , ,Default,All, ,Default,Default,Default
+,Security Center, ,Multi-Factor Authentication, , , ,Tier,All,Chưa phát triển,x,x,x
+,Security Center, ,Single Sign-On, , , ,Tier,All,Chưa phát triển,x,x,x
+,Security Center, ,Activation User, , , ,Default,All,Chưa phát triển,Default,Default,Default

@@ -138,20 +138,74 @@ Phân tích từ các ảnh BPMN hiện có (UC-CON-01 → UC-CON-05, UC-CUS-01 
 
 ---
 
-## Ký hiệu BPMN 2.0 cốt lõi
+## Ký hiệu BPMN 2.0 — Taxonomy đầy đủ
 
-| Element | Shape | Mô tả |
-|---------|-------|-------|
-| **Pool** | Rectangle (outer container) | Tổ chức / hệ thống |
-| **Lane** | Horizontal band | Vai trò: Sales/Manager, System |
-| **Task** | Rounded rectangle + badge số | Một hành động đơn |
-| **Sub-process** | Rounded rect + dấu `[+]` dưới | Nhóm task phức tạp |
-| **Start Event** | Thin circle | Bắt đầu quy trình |
-| **End Event** | Thick/filled circle | Kết thúc quy trình |
-| **XOR Gateway** | Diamond + X | Rẽ nhánh điều kiện |
-| **Sequence Flow** | Solid arrow | Luồng chính |
-| **AF section** | Blue dashed box | Luồng phụ / alternative |
-| **EF section** | Red dashed box | Luồng lỗi / exception |
+> Nguồn tham khảo: thinhnotes.com — *Giải ngộ các ký hiệu BPMN* · *Quay tới bến với BPMN* · *BPMN và sự lợi hại của nó*.
+> Đây là bộ ký hiệu chuẩn để **phân tích ĐÚNG**. Phần "Visual Style Chuẩn OneCRM" ở trên là bản **rút gọn** của bộ này để render ảnh gọn cho stakeholder.
+
+### 1. Swimlane — "linh hồn của BPMN"
+- **Pool**: 1 tổ chức / hệ thống / thực thể tham gia (VD: OneCRM, Product Module, Khách hàng).
+- **Lane**: 1 actor/vai trò bên trong Pool (VD: Sales/Manager, System).
+- Quy tắc: **1 task chỉ thuộc 1 lane** (thể hiện AI làm). Nếu 2 actor cùng làm 1 task → **duplicate task ở cả 2 lane**.
+
+### 2. Activities (Hoạt động)
+| Loại | Ký hiệu | Khi dùng |
+|---|---|---|
+| **Task** | Chữ nhật bo góc | 1 hành động đơn, không phân rã thêm |
+| **Sub-Process** | Chữ nhật + dấu `[+]` | Nhóm task con CÓ Ý NGHĨA — chỉ dùng khi thật sự phân rã được (đừng lạm dụng) |
+| **Transaction** | Chữ nhật viền đôi | Giao dịch all-or-nothing |
+| **Call Activity** | Chữ nhật viền đậm | Gọi lại 1 process dùng chung |
+
+Task subtypes (icon góc): **User** 👤 · **Manual** ✋ · **Service** ⚙ · **Send/Receive** ✉ · **Business Rule** 📋.
+
+### 3. Events (Sự kiện) — 3 pha thời gian
+| Pha | Ký hiệu |
+|---|---|
+| **Start** | Vòng tròn **1 nét** (mảnh) |
+| **Intermediate** | Vòng tròn **2 nét** |
+| **End** | Vòng tròn **đậm** |
+
+- **Trigger** (icon trong vòng): Message ✉ · Timer ⏰ · Error ⚡ · Signal · Terminate.
+- **Boundary Event**: gắn ở **mép** một activity (timeout/lỗi) → rẽ nhánh xử lý ngoại lệ.
+
+### 4. Gateways — KHÔNG chỉ có XOR
+| Gateway | Ký hiệu | Nghĩa |
+|---|---|---|
+| **Exclusive (XOR)** | Thoi + `×` | Chọn **1** nhánh theo điều kiện |
+| **Inclusive (OR)** | Thoi + `○` | Chọn **≥1** nhánh (nhiều điều kiện đúng cùng lúc) |
+| **Parallel (AND)** | Thoi + `+` | **Tất cả** nhánh chạy song song |
+| **Event-based** | Thoi + ngũ giác | Rẽ theo **event tới trước**, không theo điều kiện dữ liệu |
+
+### 5. Flows — dùng ĐÚNG loại
+| Loại | Ký hiệu | Quy tắc |
+|---|---|---|
+| **Sequence Flow** | Mũi tên **liền** | Nối task **trong CÙNG 1 pool** |
+| **Message Flow** | Mũi tên **đứt + phong bì** | Nối task **GIỮA các pool khác nhau** |
+| **Association** | Đường **chấm** | Nối artifact/annotation với element |
+
+### 6. Artifacts (bổ trợ)
+- **Data Object** (tài liệu) · **Data Store** (kho dữ liệu) · **Annotation** (ghi chú giải thích).
+
+### Ánh xạ rút gọn OneCRM (bản render hiện dùng)
+1 Pool + 2 lane (Sales/Manager, System) → mọi flow nội bộ là **Sequence Flow**; chỉ dùng **XOR gateway**; luồng phụ/lỗi gói thành **AF box (xanh nét đứt)** / **EF box (đỏ nét đứt)** thay cho vẽ đầy đủ Message/Boundary Event — để ảnh gọn, dễ đọc.
+
+---
+
+## Nguyên tắc & Best Practices (áp dụng khi phân tích ở Bước 2 và khi vẽ)
+
+**Quy trình 3 bước:** **Tóm gọn → Phân loại → Vẽ.** Sàng lọc lấy ý chính, bỏ chi tiết thừa TRƯỚC khi vẽ.
+
+**5 lỗi thường gặp — phải tránh:**
+1. **Đặt tên task sai** → luôn **VERB + OBJECT** ("Kiểm tra visa", KHÔNG chỉ "Kiểm tra"). Không nêu actor/đối tượng trong tên (swimlane đã thể hiện).
+2. **Lạm dụng Sub-Process** → chỉ dùng khi task phân rã được thành nhiều task con có ý nghĩa.
+3. **Dùng sai loại Flow** → Sequence Flow trong cùng pool; Message Flow giữa các pool.
+4. **Đặt task sai lane** → 1 task = 1 lane; task dùng chung 2 actor → duplicate ở cả 2 lane.
+5. **Bố cục rối ("tơ vương")** → kích thước node đồng nhất, luồng rõ ràng, **tránh line cắt nhau** không cần thiết.
+
+**Tư duy nền (khi nào & vì sao dùng BPMN):**
+- BPMN **process-oriented** (khác UML object-oriented, khác flowchart tự do). Dùng khi quy trình **phức tạp, nhiều bước**, cần trình bày cho **cả quản lý lẫn người thực thi**, cần **chuẩn hóa & chia sẻ**.
+- **Đừng lạm dụng**: BPMN không cover hết chi tiết (nội dung email, message trạng thái, validate từng field) → để phần đó cho FRS/AC. Phân tích theo cấp: **management / core / support process**.
+- **Luôn kèm Legend/CHÚ GIẢI** giải thích ký hiệu cho stakeholder.
 
 ---
 
@@ -164,6 +218,8 @@ Phân tích từ các ảnh BPMN hiện có (UC-CON-01 → UC-CON-05, UC-CUS-01 
 - Nếu chỉ nêu tên UC (VD: "UC-CON-03"): tự suy luận từ context OneCRM, nhưng note rõ là đang suy luận.
 
 ### Bước 2 — Phân tích BPMN
+
+> Áp dụng **Nguyên tắc & Best Practices** (mục trên): tên task **VERB + OBJECT**; **1 task = 1 lane**; chọn đúng **Gateway** (XOR/OR/AND/event-based, không mặc định XOR); Sequence Flow trong pool / Message Flow giữa pool; tóm gọn bỏ chi tiết thừa.
 
 Hiển thị bảng phân tích:
 
@@ -194,13 +250,18 @@ Hiển thị bảng phân tích:
 |---|-----|-----|
 ```
 
-### Bước 3 — Sinh prompt Code Interpreter
+### Bước 3 — Sinh prompt (ĐIỀN vào template, không tự chế)
 
-Sinh **1 prompt duy nhất**, sẵn sàng copy vào ChatGPT (GPT-4o + Code Interpreter).
+**Bắt buộc:** ĐỌC `.claude/skills/bpmn/PROMPT_TEMPLATES.md` rồi **điền** vào template phù hợp — KHÔNG tự bịa cấu trúc prompt khác.
+- Chọn **Template A** (ChatGPT tạo ảnh — swimlane text-spec, MẶC ĐỊNH) hoặc **Template B** (Code Interpreter matplotlib). User chưa nói rõ công cụ → hỏi 1 câu hoặc dùng A. Template nào ghi "· MẶC ĐỊNH" thì ưu tiên.
+- Điền mọi placeholder `{...}` từ bảng phân tích Bước 2 (lanes, steps VERB+OBJECT, gateway đúng loại, AF/EF, End Events, phần DO NOT INCLUDE theo BR/anchor).
+- Xuất **1 prompt duy nhất** trong 1 code block để user copy.
 
 ---
 
-## Format output bắt buộc
+## Format output — nguồn chuẩn: `PROMPT_TEMPLATES.md`
+
+> **Cấu trúc prompt lấy từ `.claude/skills/bpmn/PROMPT_TEMPLATES.md`** (Template A — ChatGPT tạo ảnh · Template B — matplotlib). User tự dán/sửa template ở đó; skill chỉ điền placeholder. Khối dưới đây là **Template B (matplotlib) — bản tham khảo nhanh**; nếu lệch với file template thì **file template là chuẩn**.
 
 ````
 ---[PROMPT — Code Interpreter]---
