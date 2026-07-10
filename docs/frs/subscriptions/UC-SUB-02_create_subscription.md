@@ -1,6 +1,6 @@
 # UC-SUB-02 — Tạo Subscription
 
-> Module: M-03 Subscription Management | Phiên bản: 1.1 | Ngày: 09/07/2026
+> Module: M-03 Subscription Management | Phiên bản: 1.2 | Ngày: 10/07/2026
 > Trạng thái: Draft for Review
 
 ---
@@ -32,6 +32,7 @@
 | **BR-08** | Số license không được vượt quá số license còn lại trong pool tương ứng. Hệ thống hiển thị hint "Còn X / Y license khả dụng" ngay sau khi xác định được gói sản phẩm. |
 | **BR-09** | Các field Khách hàng, Loại hợp đồng, Gói sản phẩm, Thời hạn, Ngày hết hạn đều là readonly — tự động điền từ dữ liệu hợp đồng, người dùng không chỉnh sửa. |
 | **BR-10** | Ngày bắt đầu và Ngày hết hạn là **dự kiến** — không phải nguồn sự thật. Sau khi Product Module kích hoạt license, ngày hết hạn thực sẽ được đồng bộ lại qua webhook `license.active`. |
+| **BR-11** | **Cấu hình sản phẩm (scope):** sau khi xác định gói, nếu Product Module của sản phẩm khai báo `scope_schema` (PRD §5.3.7), form hiển thị mục "Cấu hình sản phẩm" với các trường do sản phẩm định nghĩa. Với **CMC EDR**: trường **Kiểu tổ chức** (`tenant_mode`) — `MULTI` (Multi organization) hoặc `SINGLE` (Single organization), bắt buộc, mặc định `MULTI`. Scope là cấu hình riêng của từng sub (per-customer), lưu vào `subscription.scope` (jsonb). Sản phẩm không khai báo `scope_schema` → không hiển thị mục này, `scope = null`. |
 
 ---
 
@@ -47,8 +48,8 @@
 |---|---|---|---|
 | **1** | System | Mở modal "Thêm Subscription mới"; form rỗng; sinh sẵn mã Sub `SUB-{YYYY}-{NNN}` (ẩn, không hiện trên form). | BR-01 |
 | **2** | User (Sales / Manager) | Tìm và chọn hợp đồng (theo mã HĐ hoặc tên khách hàng). | Chọn lại HĐ khác → **AF-03** |
-| **3** | System | Auto-fill Khách hàng + Loại hợp đồng (readonly); xác định Gói & Thời hạn theo loại HĐ; mặc định Ngày bắt đầu = hôm nay; tính Ngày hết hạn = start + `duration_months` − 1; hiện hint pool nếu RESELLER. | BR-03, BR-04, BR-05; RESELLER ≥ 2 pool → **AF-01** |
-| **4** | User | Nhập field bắt buộc theo loại HĐ — DIRECT: Số thiết bị (> 0); RESELLER: Đơn vị thụ hưởng + Số license (> 0, ≤ pool). | BR-06, BR-07, BR-08 |
+| **3** | System | Auto-fill Khách hàng + Loại hợp đồng (readonly); xác định Gói & Thời hạn theo loại HĐ; mặc định Ngày bắt đầu = hôm nay; tính Ngày hết hạn = start + `duration_months` − 1; hiện hint pool nếu RESELLER; nếu sản phẩm khai báo `scope_schema` → hiển thị mục **Cấu hình sản phẩm** với giá trị mặc định. | BR-03, BR-04, BR-05, BR-11; RESELLER ≥ 2 pool → **AF-01** |
+| **4** | User | Nhập field bắt buộc theo loại HĐ — DIRECT: Số thiết bị (> 0); RESELLER: Đơn vị thụ hưởng + Số license (> 0, ≤ pool); chọn **Cấu hình sản phẩm** (scope) nếu có — vd EDR: Kiểu tổ chức. | BR-06, BR-07, BR-08, BR-11 |
 | **5** | User | (Tuỳ chọn) Chỉnh Ngày bắt đầu → Ngày hết hạn tự cập nhật (**AF-02**); nhập Deal Code, Ghi chú. | BR-05 |
 | **6** | User | Click "💾 Tạo". | "Hủy" / ✕ bất kỳ lúc nào → **AF-C** |
 | **7** | System | **[Gateway — Form hợp lệ?]** Có → tiếp bước 8. Không → **EF** (validation inline). | Validate theo loại HĐ |
@@ -125,7 +126,7 @@ Modal "Thêm Subscription mới" gồm 5 phần theo thứ tự từ trên xuố
 
 1. **Hợp đồng** — ô tìm kiếm có thể tìm theo mã hoặc tên khách hàng.
 2. **Thông tin hợp đồng** — readonly, tự hiện sau khi chọn HĐ.
-3. **Sản phẩm & License** — gói, thời hạn, và fields license/seats tuỳ theo loại HĐ.
+3. **Sản phẩm & License** — gói, thời hạn, fields license/seats tuỳ theo loại HĐ, và mục **Cấu hình sản phẩm** (scope) nếu sản phẩm khai báo schema — vd EDR: Kiểu tổ chức (Multi/Single organization).
 4. **Thời gian** — ngày bắt đầu (dự kiến) và ngày hết hạn (dự kiến, readonly).
 5. **Bổ sung** — Deal Code và Ghi chú (tuỳ chọn).
 
@@ -150,6 +151,7 @@ Modal "Thêm Subscription mới" gồm 5 phần theo thứ tự từ trên xuố
 | 3 | Loại hợp đồng | — | Text readonly | Tự điền từ `contract.type` (`DIRECT` / `RESELLER`). |
 | 4 | Gói sản phẩm | ✓ | Select / Text readonly | DIRECT & RESELLER 1 pool: readonly, tự điền. RESELLER ≥ 2 pool: dropdown, nhóm theo pool bằng `optgroup`. |
 | 5 | Thời hạn | — | Text readonly | Tự điền từ `package.duration_months`, định dạng "X tháng". |
+| 5b | Cấu hình sản phẩm — Kiểu tổ chức (EDR) | ✓ (EDR) | Radio (2 card ngang) | Thuộc mục "Cấu hình sản phẩm" — chỉ hiện khi sản phẩm khai báo `scope_schema`. EDR: 2 lựa chọn **Multi organization** (`MULTI`, mặc định) / **Single organization** (`SINGLE`), bố cục 2 card ngang, mỗi card có tên + mô tả ngắn. Lưu vào `subscription.scope.tenant_mode`. |
 | 6 | Số thiết bị | ✓ (DIRECT) | Number input | Chỉ hiện với DIRECT. Phải > 0. |
 | 7 | Đơn vị thụ hưởng | ✓ (RESELLER) | Select | Chỉ hiện với RESELLER. Chọn từ danh sách đơn vị thụ hưởng đã đăng ký. |
 | 8 | Số license | ✓ (RESELLER) | Number input | Chỉ hiện với RESELLER. Phải > 0 và ≤ số license còn lại trong pool. Hint "Còn X / Y license khả dụng" hiển thị bên dưới. |
@@ -213,6 +215,14 @@ Modal "Thêm Subscription mới" gồm 5 phần theo thứ tự từ trên xuố
 | AC-SUB-02-18 | Sub mới vừa tạo. | Xem màn UC-SUB-03. | Badge trạng thái hiển thị "Draft". Mã Sub, HĐ, gói, ngày hết hạn khớp với form vừa nhập. |
 | AC-SUB-02-19 | Đang mở modal, đã nhập một phần dữ liệu. | Nhấn "Hủy" / ✕ tại bất kỳ bước nào (**AF-C**). | Modal đóng, không tạo sub; dữ liệu không thay đổi. Kết thúc tại **End 2 (Cancelled)**. |
 
+### Nhóm 6: Cấu hình sản phẩm (scope)
+
+| Mã | Given | When | Then |
+|---|---|---|---|
+| AC-SUB-02-20 | Chọn HĐ có sản phẩm CMC EDR. | Gói được xác định (auto-fill hoặc chọn). | Mục "Cấu hình sản phẩm" hiện với trường "Kiểu tổ chức" — 2 card ngang Multi organization / Single organization, mặc định chọn **Multi organization**. |
+| AC-SUB-02-21 | HĐ sản phẩm EDR, chọn Kiểu tổ chức = Single organization, form hợp lệ. | Click "💾 Tạo". | Sub tạo với `scope.tenant_mode = "SINGLE"`; giá trị hiển thị lại ở UC-SUB-03. Kết thúc tại **End 1 (Success)**. |
+| AC-SUB-02-22 | Chọn HĐ có sản phẩm không khai báo `scope_schema`. | Gói được xác định. | Mục "Cấu hình sản phẩm" **không** hiển thị; sub tạo với `scope = null`. |
+
 ---
 
 ## 5. Lịch sử thay đổi
@@ -221,6 +231,7 @@ Modal "Thêm Subscription mới" gồm 5 phần theo thứ tự từ trên xuố
 |---|---|---|---|
 | 1.0 | 08/07/2026 | BA Team | Khởi tạo tài liệu — Draft for Review. |
 | 1.1 | 09/07/2026 | Claude (AI) | Đồng bộ §2 theo BPMN UC-SUB-02: đánh lại còn 8 bước khớp badge (gateway = **bước 7**); DIRECT/RESELLER gộp trong nội dung task, không tách gateway loại HĐ; chuyển AF/EF sang style block `**[…]** — kích hoạt tại bước N`; **bổ sung AF-C (Hủy tạo) → End 2**; gom trigger EF-01..EF-05 về **bước 7** và nêu rõ EF là vòng lặp sửa lỗi quay **bước 6** (không phải End Event); thêm **§2.4 End Events** (End 1 Success, End 2 Cancelled). §4: căn AC theo bước/End Event; thêm **AC-19** (AF-C → End 2). |
+| 1.2 | 10/07/2026 | Claude (AI) | Bổ sung **Cấu hình sản phẩm (scope)** per-sub do Product Module khai báo (`scope_schema`, PRD §5.3.7): thêm **BR-11**; §2.1 bước 3–4 hiển thị & chọn scope; §3.1/§3.2 mô tả mục "Cấu hình sản phẩm" (EDR: Kiểu tổ chức MULTI/SINGLE, 2 card ngang); §4 thêm Nhóm 6 (AC-20..22). Đồng bộ demo `v2.4.0_subscriptions.html` + PRD §5.3.4/§5.3.5 (gỡ `scope_template` khỏi PACKAGE)/§5.3.7. |
 
 ### Review Checklist (self-review)
 

@@ -1,6 +1,6 @@
 # UC-SUB-04 — Chỉnh sửa Subscription
 
-> Module: M-03 Subscription Management | Phiên bản: 1.0 | Ngày: 09/07/2026
+> Module: M-03 Subscription Management | Phiên bản: 1.2 | Ngày: 10/07/2026
 > Trạng thái: Draft for Review
 
 ---
@@ -31,6 +31,7 @@
 | **BR-07** | Ngày hết hạn (`endDate`) được tự động tính khi người dùng nhập `startDate` (endDate = startDate + duration_months - 1 ngày). Người dùng vẫn có thể sửa trực tiếp `endDate`. |
 | **BR-08** | Deal Code và Ghi chú là tùy chọn. |
 | **BR-09** | Sau khi lưu thành công, form đóng lại, hệ thống cập nhật hero + tab Thông tin chung của trang UC-SUB-03 (nếu đang mở detail) hoặc cập nhật dòng trong danh sách UC-SUB-01. |
+| **BR-10** | **Cấu hình sản phẩm (scope):** nếu sản phẩm có khai báo `scope_schema` (PRD §5.3.7), form hiển thị mục "Cấu hình sản phẩm" với giá trị hiện tại của sub (`subscription.scope`); người dùng sửa được. Với **CMC EDR**: trường **Kiểu tổ chức** (`tenant_mode`) — `MULTI` / `SINGLE`. Lưu lại vào `subscription.scope`. Sản phẩm không khai báo → không hiển thị mục này. |
 
 ---
 
@@ -47,7 +48,7 @@
 | **1** | User (Sales / CSKH / License Admin / Manager) | Click ✏️ tại row subscription (UC-SUB-01) hoặc click "✏️ Sửa" trong hero section (UC-SUB-03). | Nút chỉ hiện khi `sub.status = DRAFT` — BR-01 |
 | **2** | System | **[Gateway — Sub tồn tại VÀ `sub.status = DRAFT`?]** Có → tiếp bước 3. Không → **EF-01**. | Pre-check tại thời điểm click |
 | **3** | System | Mở modal "Chỉnh sửa Subscription"; pre-fill toàn bộ dữ liệu hiện tại; Mã Sub + Gói sản phẩm + Thời hạn readonly (🔒). | BR-02, BR-03 |
-| **4** | User | Chỉnh sửa field theo loại HĐ — DIRECT: Số seats (>0); RESELLER: Đơn vị thụ hưởng + Số license (>0). Tùy chọn: đổi hợp đồng → **AF-01**; nhập Ngày bắt đầu → **AF-02**. | BR-05, BR-06 |
+| **4** | User | Chỉnh sửa field theo loại HĐ — DIRECT: Số seats (>0); RESELLER: Đơn vị thụ hưởng + Số license (>0); chỉnh **Cấu hình sản phẩm** (scope) nếu có — vd EDR: Kiểu tổ chức. Tùy chọn: đổi hợp đồng → **AF-01**; nhập Ngày bắt đầu → **AF-02**. | BR-05, BR-06, BR-10 |
 | **5** | User | Click "💾 Lưu thay đổi". "Hủy" / ✕ → **AF-C**. | — |
 | **6** | System | **[Gateway — Dữ liệu hợp lệ?]** Có → tiếp bước 7. Không → **EF-02**. | Validate toàn bộ form |
 | **7** | System | Lưu thay đổi vào DB; nếu đổi hợp đồng → dịch chuyển sub khỏi contract cũ, gắn contract mới. | BR-04 |
@@ -126,6 +127,10 @@
 │  Gói sản phẩm (readonly)      Thời hạn (readonly)       │
 │  [CMC EDR Standard        🔒] [12 tháng          🔒]    │
 │                                                          │
+│  ── Cấu hình sản phẩm (nếu sản phẩm có scope) ───────    │
+│  Kiểu tổ chức *                                         │
+│  (•) Multi organization      ( ) Single organization   │
+│                                                          │
 │  ── DIRECT only ─────────────────────────────────────   │
 │  Số seats *                                             │
 │  [50                                                 ]  │
@@ -161,6 +166,7 @@
 | 2 | Dropdown Hợp đồng | Searchable dropdown | Tìm kiếm theo mã HĐ hoặc tên khách hàng. Hiển thị `contractCode · customerName`. Khi thay đổi → kích hoạt AF-01. |
 | 3 | Gói sản phẩm | Text readonly | Tự điền từ hợp đồng đã chọn. Hiển thị icon 🔒. Không thể chỉnh sửa trực tiếp (BR-03). |
 | 4 | Thời hạn | Text readonly | Tự điền từ package của hợp đồng. Định dạng "X tháng". Hiển thị icon 🔒. |
+| 4b | Cấu hình sản phẩm | Radio group (2 card ngang) | Chỉ hiển thị khi sản phẩm có `scope_schema`. EDR: "Kiểu tổ chức" — 2 card Multi/Single organization, pre-fill giá trị hiện tại của sub (`sub.scope`). |
 | 5 | Số seats | Number input | Chỉ hiển thị khi `contractType = DIRECT`. Placeholder: "Nhập số seats". |
 | 6 | Đơn vị thụ hưởng | Select dropdown | Chỉ hiển thị khi `contractType = RESELLER`. Danh sách đơn vị thụ hưởng đã đăng ký. |
 | 7 | Số license | Number input | Chỉ hiển thị khi `contractType = RESELLER`. Placeholder: "Nhập số license". |
@@ -178,6 +184,7 @@
 | 1 | Hợp đồng | ✓ | Tất cả | Searchable; hiện `contractCode · customerName`; lỗi: "Vui lòng chọn hợp đồng". |
 | 2 | Gói sản phẩm | — | Tất cả | Readonly; tự động từ hợp đồng. Hiển thị icon 🔒. |
 | 3 | Thời hạn | — | Tất cả | Readonly; VD: "12 tháng". Hiển thị icon 🔒. |
+| 3b | Kiểu tổ chức (scope) | ✓ | Sản phẩm có scope (EDR) | Radio; `MULTI` / `SINGLE`; pre-fill giá trị hiện tại. Lưu `subscription.scope.tenant_mode`. |
 | 4 | Số seats | ✓ | DIRECT only | Số nguyên > 0; lỗi: "Số seats phải > 0". |
 | 5 | Đơn vị thụ hưởng | ✓ | RESELLER only | Dropdown; lỗi: "Vui lòng chọn đơn vị thụ hưởng". |
 | 6 | Số license | ✓ | RESELLER only | Số nguyên > 0; lỗi: "Số license phải > 0". |
@@ -198,6 +205,7 @@
 | AC-SUB-04-02 | Sub "SUB-2026-002" có `status = ACTIVE`. | Xem cột Thao tác tại UC-SUB-01. | Nút ✏️ không hiển thị. Không có cách mở form chỉnh sửa từ UI. |
 | AC-SUB-04-03 | Sub DIRECT đang mở form edit. | Quan sát form. | Chỉ hiển thị field Số seats. Không hiển thị Đơn vị thụ hưởng và Số license. |
 | AC-SUB-04-04 | Sub RESELLER đang mở form edit. | Quan sát form. | Hiển thị Đơn vị thụ hưởng và Số license (có giá trị hiện tại). Không hiển thị Số seats. |
+| AC-SUB-04-18 | Sub sản phẩm EDR có `scope.tenant_mode = "SINGLE"`. | Mở form edit. | Mục "Cấu hình sản phẩm" hiện; "Kiểu tổ chức" pre-fill chọn "Single organization" (card được tô nền xanh). |
 
 ### Nhóm 2: Validate
 
@@ -216,6 +224,7 @@
 | AC-SUB-04-09 | Sub DIRECT "SUB-2026-001", `seats = 50`. Sửa Số seats thành 100. | Click "💾 Lưu thay đổi". | Gateway (**bước 6**) hợp lệ → `seats` cập nhật thành 100. Modal đóng. Toast "Đã cập nhật thành công". Dòng tại UC-SUB-01 cập nhật ngay, không cần tải lại trang. Kết thúc **End 1 (Success)**. |
 | AC-SUB-04-10 | Sub RESELLER, sửa Đơn vị thụ hưởng và Số license. | Click "💾 Lưu thay đổi". | `beneficiaryId` và `licenseQty` cập nhật. Modal đóng. Toast "Đã cập nhật thành công". Kết thúc **End 1 (Success)**. |
 | AC-SUB-04-11 | Sub đang gắn với HĐ "HD-A". Người dùng đổi sang HĐ "HD-B" (cùng loại). | Click "💾 Lưu thay đổi". | Sub bị tách khỏi HD-A và gắn vào HD-B (**bước 7**, BR-04). Modal đóng. Toast "Đã cập nhật thành công". Kết thúc **End 1 (Success)**. |
+| AC-SUB-04-19 | Sub EDR có `scope.tenant_mode = "MULTI"`. Đổi Kiểu tổ chức thành Single organization. | Click "💾 Lưu thay đổi". | `scope.tenant_mode` cập nhật thành "SINGLE" (BR-10). Modal đóng. Toast "Đã cập nhật thành công". Chi tiết UC-SUB-03 hiển thị "Single organization". Kết thúc **End 1 (Success)**. |
 | AC-SUB-04-17 | Sub DIRECT đang mở form edit, người dùng đã sửa Số seats. | Nhấn "Hủy" hoặc ✕ (**AF-C**). | Modal đóng, không lưu bất kỳ thay đổi nào; `seats` giữ nguyên giá trị cũ. Kết thúc **End 2 (Cancelled)**. |
 
 ### Nhóm 4: Tính toán tự động
@@ -240,3 +249,4 @@
 |---|---|---|---|
 | 1.0 | 09/07/2026 | BA Team | Khởi tạo tài liệu — Draft for Review. |
 | 1.1 | 09/07/2026 | Claude (AI) | Đồng bộ §2 theo BPMN UC-SUB-04: đánh lại còn **8 bước** khớp badge; gộp Gateway vào 1 ô tại **bước 2** (pre-check DRAFT) và **bước 6** (validate); thêm §2.4 End Events (End 1 Success / End 2 Cancelled / End 3 Rejected); bổ sung **AF-C (Hủy chỉnh sửa)**; chuẩn hóa AF-01/AF-02/EF-01/EF-02 theo style bảng. §4: căn AC theo bước/End Event, thêm AC-16 (EF-02 loop RESELLER license ≤ 0) và AC-17 (AF-C → End 2). |
+| 1.2 | 10/07/2026 | Claude (AI) | Bổ sung sửa **Cấu hình sản phẩm (scope)** per-sub do Product Module khai báo (`scope_schema`, PRD §5.3.7): thêm **BR-10**; §2.1 bước 4 chỉnh scope; §3.1 wireframe + §3.2/§3.3 mô tả mục "Cấu hình sản phẩm" (EDR: Kiểu tổ chức MULTI/SINGLE, 2 card ngang, pre-fill); §4 thêm AC-18 (pre-fill) và AC-19 (lưu scope). Đồng bộ demo `v2.4.0_subscriptions.html` (`subSubmitEditSub`) + PRD §5.3.4. |

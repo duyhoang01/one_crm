@@ -523,19 +523,19 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
             <button class="btn btn-primary" onclick="subOpenCreate()">＋ Thêm Subscription</button>
           </div>
           <div class="toolbar">
-            <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="subSearchInput" type="text" placeholder="Tìm theo mã sub, gói sản phẩm, khách hàng, đơn vị thụ hưởng..." oninput="subFilterTable()"></div>
+            <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="subSearchInput" type="text" placeholder="Tìm theo mã sub, gói sản phẩm, khách hàng, đơn vị thụ hưởng, mã HĐ, deal code..." oninput="subFilterTable()"></div>
             <div class="sub-status-wrap" id="subStatusWrap">
               <button type="button" class="sub-status-btn" id="subStatusBtn" onclick="subToggleStatusDropdown(event)">
                 <span id="subStatusLabel">Tất cả trạng thái</span><span style="color:var(--gray-400);font-size:11px;">▾</span>
               </button>
               <div class="sub-status-panel" id="subStatusPanel">
                 <label class="sub-status-opt"><input type="checkbox" value="DRAFT" onchange="subFilterTable();subUpdateStatusLabel()"> Draft</label>
-                <label class="sub-status-opt"><input type="checkbox" value="PENDING_PROVISION" onchange="subFilterTable();subUpdateStatusLabel()"> Provisioning</label>
-                <label class="sub-status-opt"><input type="checkbox" value="ACTIVE" onchange="subFilterTable();subUpdateStatusLabel()"> Active</label>
-                <label class="sub-status-opt"><input type="checkbox" value="SUSPENDED" onchange="subFilterTable();subUpdateStatusLabel()"> Suspended</label>
-                <label class="sub-status-opt"><input type="checkbox" value="EXPIRED" onchange="subFilterTable();subUpdateStatusLabel()"> Expired</label>
-                <label class="sub-status-opt"><input type="checkbox" value="REVOKED" onchange="subFilterTable();subUpdateStatusLabel()"> Revoked</label>
-                <label class="sub-status-opt"><input type="checkbox" value="RENEWED" onchange="subFilterTable();subUpdateStatusLabel()"> Renewed</label>
+                <label class="sub-status-opt"><input type="checkbox" value="PENDING_PROVISION" onchange="subFilterTable();subUpdateStatusLabel()"> Chờ kích hoạt</label>
+                <label class="sub-status-opt"><input type="checkbox" value="ACTIVE" onchange="subFilterTable();subUpdateStatusLabel()"> Đang hoạt động</label>
+                <label class="sub-status-opt"><input type="checkbox" value="SUSPENDED" onchange="subFilterTable();subUpdateStatusLabel()"> Tạm dừng</label>
+                <label class="sub-status-opt"><input type="checkbox" value="EXPIRED" onchange="subFilterTable();subUpdateStatusLabel()"> Hết hạn</label>
+                <label class="sub-status-opt"><input type="checkbox" value="REVOKED" onchange="subFilterTable();subUpdateStatusLabel()"> Đã thu hồi</label>
+                <label class="sub-status-opt"><input type="checkbox" value="RENEWED" onchange="subFilterTable();subUpdateStatusLabel()"> Đã gia hạn</label>
               </div>
             </div>
             <select class="filter-select" id="subFilterProduct" onchange="subFilterTable()">
@@ -561,6 +561,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
                   <th onclick="subSort('customerName')" style="cursor:pointer;user-select:none;white-space:nowrap">Khách hàng <span id="subSortIcon-customerName" class="con-sort-icon">↕</span></th>
                   <th onclick="subSort('contractType')" style="cursor:pointer;user-select:none;white-space:nowrap">Loại HĐ <span id="subSortIcon-contractType" class="con-sort-icon">↕</span></th>
                   <th onclick="subSort('packageName')" style="cursor:pointer;user-select:none;white-space:nowrap">Gói sản phẩm <span id="subSortIcon-packageName" class="con-sort-icon">↕</span></th>
+                  <th style="white-space:nowrap">Kiểu tổ chức</th>
                   <th onclick="subSort('endDate')" style="cursor:pointer;user-select:none;white-space:nowrap">Ngày hết hạn <span id="subSortIcon-endDate" class="con-sort-icon">↕</span></th>
                   <th onclick="subSort('status')" style="cursor:pointer;user-select:none;white-space:nowrap">Trạng thái <span id="subSortIcon-status" class="con-sort-icon">↕</span></th>
                   <th>Thao tác</th>
@@ -670,6 +671,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
             <div class="field-error" id="subErrCrtLic" style="display:none;">Số license là bắt buộc và phải > 0</div>
           </div>
         </div>
+        <div id="subCrtScopeWrap"></div>
       </div>
       <div class="form-row">
         <div class="field">
@@ -924,6 +926,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <div class="field-error" id="subErrEditSubLic" style="display:none;">Số license phải > 0</div>
         </div>
       </div>
+      <div id="subEditScopeWrap"></div>
       <div class="form-row">
         <div class="field">
           <label class="field-label">Ngày bắt đầu (dự kiến)</label>
@@ -1888,7 +1891,7 @@ let conContracts = [
          {icon:'📊',cls:'tl-dot-gray',source:'WEBHOOK',actor:'System',title:'Usage snapshot cập nhật',time:'2026-07-08 08:00',detail:'486 / 500 seats đang dùng (97.2%)'},
          {icon:'✏️',cls:'tl-dot-blue',source:'UI',actor:'Sales A',title:'Cập nhật ngày hết hạn',time:'2025-12-10 14:00',detail:'endDate: 2026-01-19 (phụ lục gia hạn thêm 30 ngày)'},
          {icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2025-01-20 08:30',detail:'Hiệu lực → 2026-01-19 · 500 seats · FPT Software'},
-         {icon:'📤',cls:'tl-dot-gray',source:'SYSTEM',actor:'System',title:'Đã publish provisioning event',time:'2025-01-15 10:30',detail:'Outbox published · subscription.created'},
+         {icon:'📤',cls:'tl-dot-gray',source:'SYSTEM',actor:'System',title:'Đã publish provisioning event',time:'2025-01-15 10:30',detail:'Outbox published · subscription.submitted'},
          {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales A',title:'Subscription được tạo',time:'2025-01-15 10:00',detail:'HĐ: HD-CMC-2025-001 · CMC EDR 500 seats'},
        ],
        audit:[
@@ -2093,7 +2096,7 @@ let conContracts = [
        timeline:[
          {icon:'📞',cls:'tl-dot-gray',source:'UI',actor:'Sales B',title:'Liên hệ IT Bamboo — chờ phản hồi',time:'2026-07-07 10:00',detail:'Gửi email nhắc lần 2 · chờ xác nhận firewall rule'},
          {icon:'⏳',cls:'tl-dot-gray',source:'SYSTEM',actor:'System',title:'Đang chờ provisioning',time:'2026-06-23 15:00',detail:'Chờ xác nhận hạ tầng từ IT Bamboo Airways'},
-         {icon:'📤',cls:'tl-dot-gray',source:'SYSTEM',actor:'System',title:'Đã publish provisioning event',time:'2026-06-23 14:35',detail:'Outbox published · subscription.created · Bamboo Airways'},
+         {icon:'📤',cls:'tl-dot-gray',source:'SYSTEM',actor:'System',title:'Đã publish provisioning event',time:'2026-06-23 14:35',detail:'Outbox published · subscription.submitted · Bamboo Airways'},
          {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales B',title:'Subscription được tạo',time:'2026-06-23 14:30',detail:'HĐ: HD-CMC-2026-003 · EDR Enterprise 400 seat'},
        ],
        audit:[
@@ -3322,12 +3325,12 @@ function subRevokeTooltip(s){
   if(s.status==='EXPIRED')return'Subscription đã hết hạn';
   if(s.status==='DRAFT')return'Draft chưa được kích hoạt';
   if(s.status==='RENEWED')return'Subscription đã được gia hạn';
-  if(!currentUser||currentUser.role!=='Manager')return'Chỉ Manager mới có quyền thu hồi';
+  if(!currentUser||!['Manager','LicenseAdmin'].includes(currentUser.role))return'Chỉ Manager hoặc License Admin mới có quyền thu hồi';
   return'';
 }
 function subCanSuspend(s){return s&&s.status==='ACTIVE'&&currentUser&&(currentUser.role==='Sales'||currentUser.role==='Manager');}
 function subCanResume(s){return s&&s.status==='SUSPENDED'&&currentUser&&(currentUser.role==='Sales'||currentUser.role==='Manager');}
-function subCanRenew(s){return s&&['ACTIVE','SUSPENDED','EXPIRED'].includes(s.status);}
+function subCanRenew(s){if(!currentUser||currentUser.role==='Auditor')return false;return s&&['ACTIVE','SUSPENDED','EXPIRED'].includes(s.status);}
 function subCanEdit(s){return s&&s.status==='DRAFT';}
 
 // ── VIEW ROUTING
@@ -3395,7 +3398,7 @@ function subUpdateStatusLabel(){
   const sel=subGetSelectedStatuses();
   const lbl=document.getElementById('subStatusLabel');
   if(!lbl)return;
-  const NAMES={DRAFT:'Draft',PENDING_PROVISION:'Provisioning',ACTIVE:'Active',SUSPENDED:'Suspended',EXPIRED:'Expired',REVOKED:'Revoked',RENEWED:'Renewed'};
+  const NAMES={DRAFT:'Draft',PENDING_PROVISION:'Chờ kích hoạt',ACTIVE:'Đang hoạt động',SUSPENDED:'Tạm dừng',EXPIRED:'Hết hạn',REVOKED:'Đã thu hồi',RENEWED:'Đã gia hạn'};
   if(!sel.length)lbl.textContent='Tất cả trạng thái';
   else if(sel.length===1)lbl.textContent=NAMES[sel[0]]||sel[0];
   else lbl.textContent=`${sel.length} trạng thái`;
@@ -3432,10 +3435,10 @@ function subRenderTable(data,page){
   tbody.innerHTML=rows.map(sub=>{
     const isDraftRow=sub.status==='DRAFT';
     const editDraftRowBtn=isDraftRow
-      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenEditSub('${sub.id}')" title="Sửa Draft" style="font-size:13px;">✏️</button>`:'';
+      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenEditSub('${sub.id}')">✏️</button>`:'';
     const deleteDraftRowBtn=isDraftRow
-      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Xóa Draft">${TRASH_ICON}</button>`
-      :`<button class="btn btn-ghost btn-sm" disabled title="Chỉ được xóa khi ở trạng thái Draft" style="opacity:0.35;cursor:not-allowed;gap:4px;">${TRASH_ICON}</button>`;
+      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);">🗑️</button>`
+      :`<button class="btn btn-ghost btn-sm" disabled title="Chỉ được xóa khi ở trạng thái Draft" style="opacity:.4;cursor:not-allowed;">🗑️</button>`;
     const beneficiary=sub.contractType==='RESELLER'&&sub.beneficiaryName
       ?`<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">→ ${sub.beneficiaryName}</div>`:''
     return`<tr onclick="subOpenDetail('${sub.id}')">
@@ -3444,7 +3447,8 @@ function subRenderTable(data,page){
       <td><div style="font-size:14px;font-weight:500;">${sub.customerName}</div>${beneficiary}</td>
       <td>${subTypeBadge(sub.contractType)}</td>
       <td><div style="font-size:14px;font-weight:500;">${sub.packageName}</div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">${sub.contractType==='DIRECT'?(sub.seatCount||0)+' seats':(sub.licenseQty||0)+' license'}</div></td>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">${(sub.licenseQty||sub.seatCount||0)+' license'}</div></td>
+      <td style="font-size:13px;">${subStructureCell(sub)}</td>
       <td style="font-size:13px;">${sub.endDate?subFmtDate(sub.endDate):'<em style="color:var(--gray-400)">Chưa xác định</em>'}</td>
       <td>${subStatusBadge(sub.status)}</td>
       <td onclick="event.stopPropagation()"><div style="display:flex;gap:4px;">${editDraftRowBtn}${deleteDraftRowBtn}</div></td>
@@ -3492,6 +3496,7 @@ function subOpenCreate(){
   document.getElementById('subCrtBeneficiaryRow').style.display='none';
   ['subErrCrtContract','subErrCrtPackage','subErrCrtSeats','subErrCrtLic','subErrCrtBeneficiary'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   const hintEl=document.getElementById('subCrtLicHint');if(hintEl)hintEl.style.display='none';
+  const sw=document.getElementById('subCrtScopeWrap');if(sw)sw.innerHTML='';
   document.getElementById('subCrtContractSearch').value='';
   document.getElementById('subCrtContract').value='';
   document.getElementById('subCrtContractDropdown').style.display='none';
@@ -3646,7 +3651,61 @@ function subOnContractChange(){
     seatsRow.style.display='none';
     benRow.style.display='';
   }
+  subCrtRenderScope();
   subCrtCalcEndDate();
+}
+// ── SCOPE (cấu hình per-customer, schema khai báo theo product = package_schema)
+const PRODUCT_SCOPE_SCHEMA={
+  CMC_EDR:[{key:'tenant_mode',label:'Kiểu tổ chức',type:'radio',required:true,default:'MULTI',options:[{v:'MULTI',l:'Multi organization',d:'Nhiều đơn vị/chi nhánh tách biệt trong cùng một tenant'},{v:'SINGLE',l:'Single organization',d:'Một đơn vị duy nhất, không phân tách'}]}]
+};
+function subProductOfPkg(pkgId){return Object.keys(CON_PACKAGES_BY_PRODUCT).find(pid=>(CON_PACKAGES_BY_PRODUCT[pid]||[]).some(p=>p.id===pkgId))||'';}
+function subScopeFieldsHtml(productId,scope){
+  const schema=PRODUCT_SCOPE_SCHEMA[productId];
+  if(!schema||!schema.length)return '';
+  scope=scope||{};
+  const hint=f=>f.hint?`<div class="field-hint" style="display:block;color:var(--text-secondary);margin-top:2px;line-height:1.5">${f.hint}</div>`:'';
+  const fld=f=>{
+    const cur=scope[f.key]!=null?scope[f.key]:f.default;
+    if(f.type==='radio')return `<div class="form-row full"><div class="field"><label class="field-label">${f.label}${f.required?' <span class="required">*</span>':''}</label>${hint(f)}<div style="display:grid;grid-template-columns:repeat(${Math.min(f.options.length,2)},1fr);gap:12px;padding-top:6px">${f.options.map(o=>{const on=cur===o.v;return `<label style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;border:1px solid ${on?'#93C5FD':'var(--border)'};border-radius:8px;background:${on?'#EFF6FF':'#fff'};cursor:pointer"><input type="radio" name="subScope_${f.key}" class="sub-scope-fld" data-k="${f.key}" value="${o.v}" ${on?'checked':''} onchange="subScopeCardSync(this)" style="margin-top:2px;flex-shrink:0"><span><span style="font-size:14px;font-weight:600;color:var(--navy)">${o.l}</span>${o.d?`<span style="display:block;font-size:12px;color:var(--text-secondary);margin-top:2px;line-height:1.4">${o.d}</span>`:''}</span></label>`;}).join('')}</div></div></div>`;
+    return `<div class="form-row"><div class="field"><label class="field-label">${f.label}${f.required?' <span class="required">*</span>':''}</label>${hint(f)}<select class="field-select sub-scope-fld" data-k="${f.key}">${f.options.map(o=>`<option value="${o.v}" ${cur===o.v?'selected':''}>${o.l}</option>`).join('')}</select></div><div class="field"></div></div>`;
+  };
+  return schema.map(fld).join('');
+}
+function subScopeCardSync(radio){
+  document.querySelectorAll('input[name="'+radio.name+'"]').forEach(r=>{
+    const card=r.closest('label');if(!card)return;
+    card.style.borderColor=r.checked?'#93C5FD':'var(--border)';
+    card.style.background=r.checked?'#EFF6FF':'#fff';
+  });
+}
+function subCollectScope(containerId){
+  const scope={};
+  document.querySelectorAll('#'+containerId+' .sub-scope-fld').forEach(el=>{
+    if(el.type==='radio'){if(el.checked)scope[el.dataset.k]=el.value;}
+    else if(el.value!=='')scope[el.dataset.k]=el.value;
+  });
+  return Object.keys(scope).length?scope:null;
+}
+function subScopeInfoRows(sub){
+  const schema=PRODUCT_SCOPE_SCHEMA[sub.productId];
+  if(!schema||!schema.length)return '';
+  const scope=sub.scope||{};
+  const cell=(label,value)=>`<div><div class="sub-info-label">${label}</div><div class="sub-info-value">${value!=null&&value!==''?value:'<em style="color:var(--gray-400)">—</em>'}</div></div>`;
+  const cells=schema.map(f=>{const v=scope[f.key]!=null?scope[f.key]:f.default;const opt=(f.options||[]).find(o=>o.v===v);return cell(f.label,opt?opt.l:(v||null));});
+  while(cells.length%3!==0)cells.push('<div></div>');
+  return `<div class="sub-field-row">${cells.join('')}</div>`;
+}
+function subStructureCell(sub){
+  const schema=PRODUCT_SCOPE_SCHEMA[sub.productId];
+  if(!schema||!schema.length)return '<em style="color:var(--gray-400)">—</em>';
+  const f=schema[0];
+  const v=(sub.scope||{})[f.key]!=null?(sub.scope||{})[f.key]:f.default;
+  const opt=(f.options||[]).find(o=>o.v===v);
+  return opt?opt.l:(v||'<em style="color:var(--gray-400)">—</em>');
+}
+function subCrtRenderScope(){
+  const wrap=document.getElementById('subCrtScopeWrap');if(!wrap)return;
+  wrap.innerHTML=subScopeFieldsHtml(subProductOfPkg(document.getElementById('subCrtPackage').value),null);
 }
 function subCrtOnPackageChange(){
   const pkgId=document.getElementById('subCrtPackage').value;
@@ -3670,6 +3729,7 @@ function subCrtOnPackageChange(){
     durHid.value='';durDisp.value='';
     if(hintEl)hintEl.style.display='none';
   }
+  subCrtRenderScope();
   subCrtCalcEndDate();
 }
 function subCrtCalcEndDate(){
@@ -3726,6 +3786,7 @@ function subSubmitCreate(){
   const note=document.getElementById('subCrtNote').value.trim();
   const dealCode=(document.getElementById('subCrtDealCode')?.value||'').trim()||null;
   const now=new Date().toISOString();
+  const scope=subCollectScope('subCrtScopeWrap');
   const newSub={
     id,contractId:cid,contractCode:c.code,contractType:c.type,
     customerId:c.customerId,customerName:c.customerName,
@@ -3733,7 +3794,7 @@ function subSubmitCreate(){
     productId,packageId:pkgId,packageName,
     startDate,endDate,
     licenseQty:isReseller?lic:null,seatCount:isReseller?null:seats,
-    status:'DRAFT',note,dealCode,previousSubId:null,
+    status:'DRAFT',note,dealCode,scope,previousSubId:null,
     licMirrorStatus:null,licMirrorExpiry:null,lastSync:'—',
     createdBy:currentUser?.name||'Sales A',createdAt:now,
     timeline:[{icon:'📝',cls:'tl-dot-gray',source:'UI',actor:currentUser?.name||'Sales A',title:'Subscription được tạo (Draft)',time:now.replace('T',' ').slice(0,16),detail:`HĐ: ${c.code} · ${packageName}${isReseller?' · '+benName:' · '+seats+' seat'} · Chờ phê duyệt`}],
@@ -3762,9 +3823,9 @@ function subRenderHero(sub){
   const canResume=subCanResume(sub);
   const canRenew=subCanRenew(sub);
   const canEdit=subCanEdit(sub);
-  const backBtn=`<button class="btn btn-ghost" onclick="subShowView('list');subRenderTable();document.getElementById('breadcrumbCurrent').textContent='Subscription';">← Quay lại</button>`;
+  const backBtn=`<button class="btn btn-ghost" style="margin-right:auto;" onclick="subShowView('list');subRenderTable();document.getElementById('breadcrumbCurrent').textContent='Subscription';">← Quay lại</button>`;
   const approveBtn=isDraft?`<button class="btn btn-primary" onclick="subOpenApproveDraft('${sub.id}')">✅ Xác nhận</button>`:'';
-  const deleteDraftBtn=isDraft?`<button class="btn btn-danger" onclick="subOpenDeleteDraft('${sub.id}')">🗑️ Xóa</button>`:'';
+  const deleteDraftBtn=isDraft?`<button class="btn btn-ghost btn-sm" onclick="subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);">🗑️ Xóa</button>`:'';
   const editBtn=canEdit?`<button class="btn btn-secondary btn-sm" onclick="subOpenEditSub('${sub.id}')">✏️ Sửa</button>`:'';
   const suspendBtn=canSuspend?`<button class="btn btn-ghost btn-sm" onclick="subOpenSuspend('${sub.id}')" style="color:#D97706;border-color:#D97706;">⏸ Tạm dừng</button>`:'';
   const resumeBtn=canResume?`<button class="btn btn-ghost btn-sm" onclick="subOpenResume('${sub.id}')" style="color:#059669;border-color:#059669;">▶ Khôi phục</button>`:'';
@@ -3787,7 +3848,7 @@ function subRenderHero(sub){
         </div>
       </div>
       <div class="profile-actions">
-        ${approveBtn}${deleteDraftBtn}${editBtn}${suspendBtn}${resumeBtn}${renewBtn}${revokeBtn}${backBtn}
+        ${backBtn}${approveBtn}${editBtn}${renewBtn}${suspendBtn}${resumeBtn}${revokeBtn}${deleteDraftBtn}
       </div>
     </div>`;
 }
@@ -3814,10 +3875,8 @@ function subRenderInfo(sub){
   const cell=(label,value)=>`<div><div class="sub-info-label">${label}</div><div class="sub-info-value">${value!=null&&value!==''?value:'<em style="color:var(--gray-400)">—</em>'}</div></div>`;
   const contractLink=`<span style="font-family:monospace;color:var(--primary);cursor:pointer;text-decoration:underline;font-weight:600;" onclick="showModule('contract');conOpenDetail('${sub.contractId}');">${sub.contractCode}</span>`;
   const customerLink=`<span style="color:var(--primary);cursor:pointer;text-decoration:underline;font-weight:500;" onclick="showModule('customer');showCustomer360('${sub.customerId}');">${sub.customerName}</span>`;
-  const qtyLabel=sub.contractType==='DIRECT'?'Số seats':'Số license';
-  const qtyVal=sub.contractType==='DIRECT'
-    ?`<span style="font-weight:700;font-size:16px;color:var(--navy)">${(sub.seatCount||0).toLocaleString('vi-VN')}</span> <span style="font-size:12px;color:var(--text-secondary)">seats</span>`
-    :`<span style="font-weight:700;font-size:16px;color:var(--navy)">${(sub.licenseQty||0).toLocaleString('vi-VN')}</span> <span style="font-size:12px;color:var(--text-secondary)">license</span>`;
+  const qtyLabel='Số license';
+  const qtyVal=`<span style="font-weight:700;font-size:16px;color:var(--navy)">${((sub.licenseQty||sub.seatCount)||0).toLocaleString('vi-VN')}</span> <span style="font-size:12px;color:var(--text-secondary)">license</span>`;
   const mirrorVal=`${subMirrorBadge(sub.licMirrorStatus)}<span style="font-size:12px;color:var(--text-secondary);margin-left:6px;">Đồng bộ: ${sub.lastSync||'—'}</span>`;
   const beneficiaryCell=sub.contractType==='RESELLER'
     ?cell('Đơn vị thụ hưởng',sub.beneficiaryName?`<span style="font-weight:500;">${sub.beneficiaryName}</span>`:null)
@@ -3886,6 +3945,7 @@ function subRenderInfo(sub){
       ${cell(['PENDING','N/A',null,undefined].includes(sub.licMirrorStatus)?'Ngày hết hạn (dự kiến)':'Ngày hết hạn',`<span style="font-weight:600;">${subFmtDate(sub.endDate)}</span>`)}
       <div></div>
     </div>
+    ${subScopeInfoRows(sub)}
   </div>`;
 }
 function subRenderTimeline(sub){
@@ -4118,7 +4178,7 @@ function subConfirmRevoke(){
   found.sub.licMirrorExpiry=null;
   found.sub.lastSync='—';
   const now=new Date().toISOString().replace('T',' ').slice(0,16);
-  (found.sub.timeline=found.sub.timeline||[]).unshift({icon:'🔴',cls:'tl-dot-red',source:'UI',actor:currentUser?.name||'Manager',title:'Subscription bị thu hồi',time:now,detail:`Lý do: ${reason}`});
+  (found.sub.timeline=found.sub.timeline||[]).unshift({icon:'🔴',cls:'tl-dot-red',source:'UI',actor:currentUser?.name||'Manager',title:'Subscription bị thu hồi',time:now,detail:`Lý do: ${reason} · Event subscription.terminated published`});
   (found.sub.audit=found.sub.audit||[]).unshift({time:now,source:'UI',actor:currentUser?.name||'Manager',action:'Thu hồi Subscription',detail:`Lý do: ${reason}`,result:'SUCCESS'});
   subCloseModal('subModalRevoke');
   toast('success','Đã thu hồi',`${subRevokingId} — trạng thái chuyển sang REVOKED`);
@@ -4148,7 +4208,7 @@ function subConfirmApproveDraft(){
   const sub=found.sub;
   sub.status='PENDING_PROVISION';
   const now=new Date().toISOString().replace('T',' ').slice(0,16);
-  (sub.timeline=sub.timeline||[]).unshift({icon:'📤',cls:'tl-dot-blue',source:'UI',actor:currentUser?.name||'CSKH',title:'Subscription được phê duyệt & gửi provisioning',time:now,detail:'DRAFT → PENDING_PROVISION · Sự kiện subscription.created đã publish'});
+  (sub.timeline=sub.timeline||[]).unshift({icon:'📤',cls:'tl-dot-blue',source:'UI',actor:currentUser?.name||'CSKH',title:'Subscription được phê duyệt & gửi provisioning',time:now,detail:'DRAFT → PENDING_PROVISION · Sự kiện subscription.submitted đã publish'});
   (sub.audit=sub.audit||[]).unshift({time:now,source:'UI',actor:currentUser?.name||'CSKH',action:'Phê duyệt Subscription (DRAFT → PENDING_PROVISION)',detail:'Gửi yêu cầu provisioning tới hệ thống product',result:'SUCCESS'});
   subCloseModal('subModalApprove');
   toast('success','Đã phê duyệt',`${subApprovingId} — trạng thái chuyển sang PENDING_PROVISION`);
@@ -4239,7 +4299,7 @@ function subConfirmResume(){
   sub.status='ACTIVE';
   delete sub.suspendReason;
   const now=new Date().toISOString();
-  (sub.timeline=sub.timeline||[]).push({time:now,title:'Khôi phục subscription',icon:'▶',cls:'tl-dot-green',actor:currentUser?.name||'Sales',detail:'Subscription được khôi phục về Active'});
+  (sub.timeline=sub.timeline||[]).push({time:now,title:'Khôi phục subscription',icon:'▶',cls:'tl-dot-green',actor:currentUser?.name||'Sales',detail:'Subscription được khôi phục về Active · Event subscription.reactivated published'});
   (sub.audit=sub.audit||[]).push({time:now,src:'CRM',actor:currentUser?.name||'Sales',action:'RESUME',detail:'Khôi phục từ Suspended',result:'success'});
   subCloseModal('subModalResume');
   toast('success','Đã khôi phục',`${_subResumingId} trở về Active`);
@@ -4285,7 +4345,8 @@ function subOpenRenew(id){
 function subConfirmRenew(){
   const endDate=(document.getElementById('subRenewEndDate')?.value||'').trim();
   const errRenew=document.getElementById('subErrRenewEndDate');
-  if(!endDate){if(errRenew)errRenew.style.display='';toast('error','Thiếu thông tin','Ngày hết hạn là bắt buộc');return;}
+  const todayStr=new Date().toISOString().slice(0,10);
+  if(!endDate||endDate<=todayStr){if(errRenew)errRenew.style.display='';toast('error','Ngày không hợp lệ','Ngày hết hạn là bắt buộc và phải sau hôm nay');return;}
   if(errRenew)errRenew.style.display='none';
   const dealCode=(document.getElementById('subRenewDealCode')?.value||'').trim();
   const note=(document.getElementById('subRenewNote')?.value||'').trim();
@@ -4301,31 +4362,35 @@ function subConfirmRenew(){
     contractType:predecessor.contractType,
     customerId:predecessor.customerId,
     customerName:predecessor.customerName,
+    beneficiaryId:predecessor.beneficiaryId||null,
     beneficiaryName:predecessor.beneficiaryName||null,
     packageId:predecessor.packageId,
     packageName:predecessor.packageName,
     productId:predecessor.productId,
     seatCount:predecessor.seatCount||null,
     licenseQty:predecessor.licenseQty||null,
-    status:'DRAFT',
-    startDate:null,
+    status:'ACTIVE',
+    startDate:todayStr,
     endDate:endDate,
     dealCode:dealCode||null,
     note:note||null,
     previousSubId:_subRenewingId,
     createdAt:now,
     createdBy:currentUser?.name||'Sales',
-    licMirrorStatus:'N/A',
-    lastSync:null,
-    timeline:[{time:now,title:'DRAFT tạo để gia hạn',icon:'🔄',cls:'tl-dot-blue',actor:currentUser?.name||'Sales',detail:`Gia hạn từ ${_subRenewingId}`}],
-    audit:[{time:now,src:'CRM',actor:currentUser?.name||'Sales',action:'RENEW_CREATE',detail:`Gia hạn từ ${_subRenewingId}`,result:'success'}]
+    licMirrorStatus:'ACTIVE',
+    lastSync:now.slice(0,16).replace('T',' '),
+    timeline:[
+      {time:now,title:'Subscription gia hạn — kích hoạt',icon:'🔄',cls:'tl-dot-green',actor:currentUser?.name||'Sales',detail:`Gia hạn từ ${_subRenewingId} · Event subscription.renewed published`},
+      {time:now,title:'ACTIVE',icon:'✅',cls:'tl-dot-green',actor:'System',detail:`License được kích hoạt · subscription.renewed xử lý thành công`}
+    ],
+    audit:[{time:now,src:'CRM',actor:currentUser?.name||'Sales',action:'RENEW',detail:`Gia hạn từ ${_subRenewingId} — sub mới: ${newId}`,result:'success'}]
   };
   predecessor.status='RENEWED';
   (predecessor.timeline=predecessor.timeline||[]).push({time:now,title:'Đã được gia hạn',icon:'🔄',cls:'tl-dot-blue',actor:currentUser?.name||'Sales',detail:`Subscription kế tiếp: ${newId}`});
   (predecessor.audit=predecessor.audit||[]).push({time:now,src:'CRM',actor:currentUser?.name||'Sales',action:'RENEWED',detail:`Tạo successor ${newId}`,result:'success'});
   (contract.subs=contract.subs||[]).push(newSub);
   subCloseModal('subModalRenew');
-  toast('success','Đã tạo Subscription gia hạn',`${newId} ở trạng thái Draft`);
+  toast('success','Đã gia hạn thành công',`${newId} — kích hoạt từ hôm nay đến ${subFmtDate(endDate)}`);
   _subRenewingId=null;
   subRenderTable();
   subOpenDetail(newId);
@@ -4404,6 +4469,7 @@ function subOpenEditSub(id){
   document.getElementById('subEditContractSearch').value=con?`${con.code} · ${con.customerName}`:'';
   const dd=document.getElementById('subEditContractDropdown');if(dd)dd.style.display='none';
   subEditSubOnContractChange(sub);
+  const esw=document.getElementById('subEditScopeWrap');if(esw)esw.innerHTML=subScopeFieldsHtml(sub.productId,sub.scope);
   const sdEl=document.getElementById('subEditSubStartDate');if(sdEl)sdEl.value=sub.startDate||'';
   const edEl=document.getElementById('subEditSubEndDate');if(edEl)edEl.value=sub.endDate||'';
   document.getElementById('subEditSubDealCode').value=sub.dealCode||'';
@@ -4454,6 +4520,7 @@ function subSubmitEditSub(){
   sub.startDate=sd||null;sub.endDate=ed||null;
   sub.dealCode=(document.getElementById('subEditSubDealCode')?.value||'').trim()||null;
   sub.note=(document.getElementById('subEditSubNote')?.value||'').trim()||null;
+  sub.scope=subCollectScope('subEditScopeWrap');
   const now=new Date().toISOString();
   (sub.audit=sub.audit||[]).push({time:now,src:'CRM',actor:currentUser?.name||'Sales',action:'EDIT_DRAFT',
     detail:`HĐ: ${sub.contractCode} · ${isReseller?`${lic} license · ${benName||'—'}`:`${seats} seats`} · ${sub.startDate||'—'} → ${sub.endDate||'—'}`,result:'success'});

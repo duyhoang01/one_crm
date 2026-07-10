@@ -1024,7 +1024,7 @@ Phase 1 KHÔNG có: status/lifecycle, total_value, milestone, e-signature, appro
 | end_date | date | ✓ | Dự kiến lúc tạo; sau khi license active → đồng bộ = license_mirror.expiration_date (nguồn thật từ product). KHÔNG tự tính start_date + duration. |
 | seat_count | int | optional | Tuỳ package |
 | license_qty | int | optional | Số license rút từ pool HĐ RESELLER |
-| scope | jsonb | optional | Theo schema Product Module (vd {tenant_mode: "MULTI"}) |
+| scope | jsonb | optional | Cấu hình sản phẩm riêng của từng sub (per-customer): nhập khi tạo (UC-SUB-02), sửa được (UC-SUB-04), hiển thị ở chi tiết (UC-SUB-03). Các trường do Product Module khai báo qua `scope_schema` (§5.3.7). Vd EDR: `{tenant_mode: "MULTI"}` (Kiểu tổ chức). Sản phẩm không khai báo schema → NULL. |
 | deal_code | string | optional | Tag combo/bundle |
 | note | text | optional | Sales note |
 | suspend_reason | text | optional | Lý do tạm dừng — set khi sub → SUSPENDED (FR-SUB-09 / UC-SUB-09); xóa (NULL) khi resume (FR-SUB-10 / UC-SUB-10). Hiển thị lại trong modal Khôi phục để tham khảo. Transient: chỉ có giá trị khi status=SUSPENDED. |
@@ -1047,7 +1047,6 @@ Phase 1 KHÔNG có: status/lifecycle, total_value, milestone, e-signature, appro
 | default_instance_count | int | optional | Cho product has_instances=true |
 | features | jsonb | ✓ | Theo schema Product Module |
 | rules | jsonb | optional | Rule config theo schema module |
-| scope_template | jsonb | optional | Constraints scope cho sub |
 | price | decimal | optional | Phase 1 không xử lý billing |
 | created_at, created_by | ts, UUID | ✓ |  |
 
@@ -1070,7 +1069,8 @@ Phase 1 KHÔNG có: status/lifecycle, total_value, milestone, e-signature, appro
 |----|----|----|----|
 | id | UUID | ✓ | PK |
 | product_id | UUID FK | ✓ | 1:1 với PRODUCT |
-| package_schema | jsonb | ✓ | Schema fields Sales được phép cấu hình |
+| package_schema | jsonb | ✓ | Schema fields cấu hình ở cấp PACKAGE (features, rules, seat...) |
+| scope_schema | jsonb | optional | Schema các trường **scope** cấu hình per-sub — Sales nhập khi tạo/sửa sub (vd EDR: `tenant_mode` — Kiểu tổ chức MULTI/SINGLE). Sản phẩm không khai báo → sub không hiển thị mục "Cấu hình sản phẩm". |
 | license_status_set | jsonb | ✓ | List status raw + display name + mapping → sub state |
 | usage_snapshot_schema | jsonb | ✓ | Schema usage data |
 | outbound_event_mapping | jsonb | ✓ | Event types CRM publish + payload schema |
@@ -3350,6 +3350,7 @@ Kích hoạt license — actor cấu hình. Đưa sub sang ACTIVE tách trigge
 - **FR-SUB-06 (Xóa Draft / UC-SUB-06):** **hard delete**, **không** ghi audit trail (bản ghi không còn tồn tại) — làm rõ so với v2.3.
 - **FR-SUB-05 (Xác nhận / UC-SUB-05):** thêm **re-check race condition** tại thời điểm confirm (sub có thể đã đổi trạng thái khi modal đang mở).
 - **FR-SUB-09/10 (Tạm dừng / Khôi phục):** lý do tạm dừng lưu vào `subscription.suspend_reason`, hiển thị lại ở modal Khôi phục (xem §5.3.4).
+- **Cấu hình sản phẩm (scope) chuyển về Subscription:** cấu hình riêng theo từng KH (vd EDR: **Kiểu tổ chức** MULTI/SINGLE) là dữ liệu **per-sub** — lưu ở `subscription.scope` (§5.3.4), nhập khi tạo (UC-SUB-02), sửa được (UC-SUB-04), hiển thị ở chi tiết (UC-SUB-03). Trường `scope_template` **đã gỡ khỏi PACKAGE** (§5.3.5); Product Module khai báo schema scope qua field mới `scope_schema` trong PRODUCT_MODULE_CONFIG (§5.3.7). *Còn tồn (sẽ đồng bộ khi cập nhật tài liệu M-04 Catalog / PM-01 EDR):* §6.9.3 (EDR Package Schema) và FR-CAT-05 vẫn liệt kê `tier`/`tenant_mode`/`scope_template` ở cấp package.*
 - **Nút hành động** ở trang chi tiết (UC-SUB-03) hiển thị **có điều kiện theo role + status** — bảng đầy đủ tại UC-SUB-03 §3.2.
 
 > Business Rule, Acceptance Criteria và API chi tiết của từng FR-SUB xem trong file FRS tương ứng. FR-SUB-11 (bên dưới) là hàm hệ thống (worker), không có UC người dùng nên giữ nguyên đặc tả trong PRD.
