@@ -1,6 +1,6 @@
 # UC-SUB-02 — Tạo Subscription
 
-> Module: M-03 Subscription Management | Phiên bản: 1.2 | Ngày: 10/07/2026
+> Module: M-03 Subscription Management | Phiên bản: 1.3 | Ngày: 13/07/2026
 > Trạng thái: Draft for Review
 
 ---
@@ -24,12 +24,13 @@
 |---|---|
 | **BR-01** | Mã Subscription được hệ thống tự động sinh theo định dạng `SUB-{YYYY}-{NNN}` (năm hiện tại, số thứ tự 3 chữ số, tăng dần). Người dùng không nhập tay. |
 | **BR-02** | Subscription mới tạo luôn có `status = DRAFT`. |
-| **BR-03** | Gói sản phẩm (package) được xác định theo loại hợp đồng: (a) DIRECT → tự động lấy `contract.packages[0]`, người dùng không được thay đổi; (b) RESELLER có 1 pool → tự động lấy gói đầu tiên của pool đó, người dùng không được thay đổi; (c) RESELLER có ≥ 2 pool → người dùng chọn từ dropdown nhóm theo pool. |
+| **BR-03** | Gói sản phẩm (package) được xác định theo loại hợp đồng: (a) DIRECT → tự động lấy `contract.packages[0]`, người dùng không được thay đổi; (b) RESELLER có 1 pool → tự động lấy **gói đã ghim của pool đó** (`pool.packageId`), người dùng không được thay đổi; (c) RESELLER có ≥ 2 pool → người dùng chọn từ dropdown, **mỗi pool là một lựa chọn** (1 pool = 1 gói). |
+| **BR-12** | Gói sản phẩm **kế thừa từ hợp đồng đã ghim phiên bản** (`contract.packages[]` / `pool.packageId` = `package_id` của 1 version cụ thể). Hệ thống **KHÔNG** tra cứu bản `ACTIVE` hiện hành của catalog. Nếu catalog đã publish version mới hoặc đã ngừng bán version đã ghim, sub mới vẫn dùng **đúng version của hợp đồng** — kể cả khi gói đó `RETIRED` (ngừng bán chỉ chặn **tạo HĐ mới**, không chặn tạo sub trong HĐ đã ký). |
 | **BR-04** | Thời hạn (duration) được tự động lấy từ `package.duration_months` sau khi gói được xác định. Người dùng không nhập tay. |
 | **BR-05** | Ngày hết hạn (dự kiến) = Ngày bắt đầu + `duration_months` - 1 ngày. Nếu người dùng chưa nhập ngày bắt đầu khi gói được xác định, hệ thống mặc định lấy ngày hiện tại làm ngày bắt đầu. |
 | **BR-06** | DIRECT: bắt buộc nhập Số thiết bị (> 0). Không có Đơn vị thụ hưởng, không có Số license. |
 | **BR-07** | RESELLER: bắt buộc chọn Đơn vị thụ hưởng và nhập Số license (> 0). Không có Số thiết bị. |
-| **BR-08** | Số license không được vượt quá số license còn lại trong pool tương ứng. Hệ thống hiển thị hint "Còn X / Y license khả dụng" ngay sau khi xác định được gói sản phẩm. |
+| **BR-08** | Số license không được vượt quá số license còn lại trong pool tương ứng. **Pool tương ứng được tra theo `packageId`** (pool ghim theo gói, không theo sản phẩm). Hệ thống hiển thị hint "Còn X / Y license khả dụng" ngay sau khi xác định được gói sản phẩm. |
 | **BR-09** | Các field Khách hàng, Loại hợp đồng, Gói sản phẩm, Thời hạn, Ngày hết hạn đều là readonly — tự động điền từ dữ liệu hợp đồng, người dùng không chỉnh sửa. |
 | **BR-10** | Ngày bắt đầu và Ngày hết hạn là **dự kiến** — không phải nguồn sự thật. Sau khi Product Module kích hoạt license, ngày hết hạn thực sẽ được đồng bộ lại qua webhook `license.active`. |
 | **BR-11** | **Cấu hình sản phẩm (scope):** sau khi xác định gói, nếu Product Module của sản phẩm khai báo `scope_schema` (PRD §5.3.7), form hiển thị mục "Cấu hình sản phẩm" với các trường do sản phẩm định nghĩa. Với **CMC EDR**: trường **Kiểu tổ chức** (`tenant_mode`) — `MULTI` (Multi organization) hoặc `SINGLE` (Single organization), bắt buộc, mặc định `MULTI`. Scope là cấu hình riêng của từng sub (per-customer), lưu vào `subscription.scope` (jsonb). Sản phẩm không khai báo `scope_schema` → không hiển thị mục này, `scope = null`. |
@@ -62,9 +63,9 @@
 
 | Bước | Tác nhân | Hành động / Phản hồi |
 |---|---|---|
-| **AF-01a** | System | Hiển thị dropdown Gói sản phẩm với các nhóm (`optgroup`) theo từng pool — nhãn "{Tên sản phẩm} — còn {X}/{Y} license". |
+| **AF-01a** | System | Hiển thị dropdown Gói sản phẩm — **mỗi pool là 1 option** (1 pool = 1 gói đã ghim), nhãn "{Tên gói} v{version} — còn {X}/{Y} license". |
 | **AF-01b** | User | Chọn gói sản phẩm từ dropdown. |
-| **AF-01c** | System | Điền Thời hạn từ gói đã chọn; cập nhật Ngày hết hạn (BR-05); hiển thị hint pool khả dụng của pool tương ứng (BR-08). |
+| **AF-01c** | System | Điền Thời hạn từ gói đã chọn; cập nhật Ngày hết hạn (BR-05); hiển thị hint pool khả dụng của pool tương ứng — tra theo `packageId` (BR-08). |
 | → | — | Tiếp tục luồng chính từ **bước 4**. |
 
 **[AF-02: Người dùng chỉnh Ngày bắt đầu]** — kích hoạt tại bước 5.
@@ -149,7 +150,7 @@ Modal "Thêm Subscription mới" gồm 5 phần theo thứ tự từ trên xuố
 | 1 | Hợp đồng | ✓ | Searchable dropdown | Tìm theo mã HĐ hoặc tên khách hàng. Mỗi option hiển thị: mã HĐ (monospace) + badge DIRECT/RESELLER + tên khách hàng. Sau khi chọn: hiển thị tên hợp đồng đã chọn trong ô, giá trị ID lưu vào hidden input. |
 | 2 | Khách hàng | — | Text readonly | Tự điền từ `contract.customerName` sau khi chọn HĐ. |
 | 3 | Loại hợp đồng | — | Text readonly | Tự điền từ `contract.type` (`DIRECT` / `RESELLER`). |
-| 4 | Gói sản phẩm | ✓ | Select / Text readonly | DIRECT & RESELLER 1 pool: readonly, tự điền. RESELLER ≥ 2 pool: dropdown, nhóm theo pool bằng `optgroup`. |
+| 4 | Gói sản phẩm | ✓ | Select / Text readonly | Hiển thị tên gói **kèm phiên bản** (vd "CMC EDR v2"). DIRECT & RESELLER 1 pool: readonly, tự điền từ gói đã ghim trên HĐ. RESELLER ≥ 2 pool: dropdown, mỗi pool 1 option kèm số license còn lại. |
 | 5 | Thời hạn | — | Text readonly | Tự điền từ `package.duration_months`, định dạng "X tháng". |
 | 5b | Cấu hình sản phẩm — Kiểu tổ chức (EDR) | ✓ (EDR) | Radio (2 card ngang) | Thuộc mục "Cấu hình sản phẩm" — chỉ hiện khi sản phẩm khai báo `scope_schema`. EDR: 2 lựa chọn **Multi organization** (`MULTI`, mặc định) / **Single organization** (`SINGLE`), bố cục 2 card ngang, mỗi card có tên + mô tả ngắn. Lưu vào `subscription.scope.tenant_mode`. |
 | 6 | Số thiết bị | ✓ (DIRECT) | Number input | Chỉ hiện với DIRECT. Phải > 0. |
@@ -183,9 +184,10 @@ Modal "Thêm Subscription mới" gồm 5 phần theo thứ tự từ trên xuố
 | Mã | Given | When | Then |
 |---|---|---|---|
 | AC-SUB-02-03 | Có HĐ mã "HD-CMC-2025-001" của "FPT Software". | Nhập "FPT" vào ô tìm kiếm HĐ. | Dropdown hiển thị HĐ của FPT. Mỗi option có badge DIRECT/RESELLER màu tương ứng và tên khách hàng ở dòng 2. |
-| AC-SUB-02-04 | Chọn HĐ DIRECT có gói "CMC EDR Standard, 12 tháng". | Chọn HĐ từ dropdown. | Khách hàng và Loại HĐ tự điền (readonly). Gói sản phẩm tự điền "CMC EDR Standard" (readonly). Thời hạn tự điền "12 tháng". Ngày hết hạn tự tính = hôm nay + 12 tháng - 1 ngày. |
-| AC-SUB-02-05 | Chọn HĐ RESELLER có 1 pool (CMC EDR). | Chọn HĐ. | Gói sản phẩm tự điền gói đầu tiên của pool (readonly). Hint "Còn X / Y license khả dụng" hiển thị. Phần Đơn vị thụ hưởng + Số license hiện ra. |
-| AC-SUB-02-06 | Chọn HĐ RESELLER có 2 pool (CA + CMC EDR). | Chọn HĐ. | Dropdown Gói sản phẩm hiển thị 2 nhóm optgroup. Mỗi nhóm có label "{Tên sản phẩm} — còn X/Y license". |
+| AC-SUB-02-04 | Chọn HĐ DIRECT ghim gói "CMC EDR v2, 12 tháng". | Chọn HĐ từ dropdown. | Khách hàng và Loại HĐ tự điền (readonly). Gói sản phẩm tự điền "CMC EDR v2" (readonly). Thời hạn tự điền "12 tháng". Ngày hết hạn tự tính = hôm nay + 12 tháng - 1 ngày. |
+| AC-SUB-02-05 | Chọn HĐ RESELLER có 1 pool (gói "CMC EDR v2"). | Chọn HĐ. | Gói sản phẩm tự điền **gói đã ghim của pool** (readonly). Hint "Còn X / Y license khả dụng" hiển thị. Phần Đơn vị thụ hưởng + Số license hiện ra. |
+| AC-SUB-02-06 | Chọn HĐ RESELLER có 2 pool (gói "CA Organization v1" + gói "CMC EPP v1"). | Chọn HĐ. | Dropdown Gói sản phẩm hiển thị **2 option** — mỗi option 1 pool, nhãn "{Tên gói} v{version} — còn X/Y license". |
+| AC-SUB-02-23 | HĐ DIRECT ghim gói "CMC EDR v2". Catalog sau đó publish "CMC EDR v3" (`ACTIVE`) và ngừng bán v2 (`RETIRED`). | Sales tạo sub mới trên HĐ này. | Gói sản phẩm vẫn tự điền **"CMC EDR v2"** (không nhảy sang v3). Sub tạo được bình thường với `package_id` của v2 (BR-12). |
 | AC-SUB-02-07 | Đã chọn HĐ A. | Xoá và chọn lại HĐ B (loại khác) — **AF-03** tại bước 2. | Toàn bộ phần Sản phẩm & License, Ngày bắt đầu, Ngày hết hạn reset và tính lại theo HĐ B (chạy lại **bước 3**). |
 
 ### Nhóm 3: Tính ngày
@@ -232,6 +234,7 @@ Modal "Thêm Subscription mới" gồm 5 phần theo thứ tự từ trên xuố
 | 1.0 | 08/07/2026 | BA Team | Khởi tạo tài liệu — Draft for Review. |
 | 1.1 | 09/07/2026 | Claude (AI) | Đồng bộ §2 theo BPMN UC-SUB-02: đánh lại còn 8 bước khớp badge (gateway = **bước 7**); DIRECT/RESELLER gộp trong nội dung task, không tách gateway loại HĐ; chuyển AF/EF sang style block `**[…]** — kích hoạt tại bước N`; **bổ sung AF-C (Hủy tạo) → End 2**; gom trigger EF-01..EF-05 về **bước 7** và nêu rõ EF là vòng lặp sửa lỗi quay **bước 6** (không phải End Event); thêm **§2.4 End Events** (End 1 Success, End 2 Cancelled). §4: căn AC theo bước/End Event; thêm **AC-19** (AF-C → End 2). |
 | 1.2 | 10/07/2026 | Claude (AI) | Bổ sung **Cấu hình sản phẩm (scope)** per-sub do Product Module khai báo (`scope_schema`, PRD §5.3.7): thêm **BR-11**; §2.1 bước 3–4 hiển thị & chọn scope; §3.1/§3.2 mô tả mục "Cấu hình sản phẩm" (EDR: Kiểu tổ chức MULTI/SINGLE, 2 card ngang); §4 thêm Nhóm 6 (AC-20..22). Đồng bộ demo `v2.4.0_subscriptions.html` + PRD §5.3.4/§5.3.5 (gỡ `scope_template` khỏi PACKAGE)/§5.3.7. |
+| 1.3 | 13/07/2026 | Claude (AI) | **Đồng bộ versioning gói (M-04)**: thêm **BR-12** — gói **kế thừa từ HĐ đã ghim phiên bản**, KHÔNG lấy bản `ACTIVE` hiện hành của catalog; gói `RETIRED` vẫn tạo được sub trong HĐ đã ký. Cập nhật **BR-03** (RESELLER: 1 pool = 1 gói) và **BR-08** (tra pool theo `packageId`). AF-01 đổi từ `optgroup` theo sản phẩm → **mỗi pool 1 option**. Tên gói hiển thị kèm phiên bản. Thêm **AC-SUB-02-23**. Nguồn: `docs/plans/M-04_versioning_decisions.md` (D1, D2, D3). |
 
 ### Review Checklist (self-review)
 

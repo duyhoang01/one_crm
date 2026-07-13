@@ -39,8 +39,6 @@
 
 ![BPMN 2.0 — UC-CAT-06 Sửa Gói sản phẩm](../../assets/M-04_catalog/UC-CAT-06_bpmn.png)
 
-> ⏳ Ảnh BPMN sẽ được sinh sau — path theo convention, file chưa tồn tại.
-
 ### 2.1 Luồng chính
 
 > Số bước khớp badge trong ảnh BPMN. Bước **2** (pre-check RETIRED), **6** (validate) và **7** (clone-on-edit) là Gateway (XOR). Gateway **7** là điểm quyết định versioning fan ra 2 End Event.
@@ -229,6 +227,7 @@
 | Phiên bản | Ngày | Người cập nhật | Nội dung |
 |---|---|---|---|
 | 1.0 | 10/07/2026 | BA Team | Khởi tạo tài liệu — Draft for Review. Đặc tả màn Sửa gói với nguyên tắc **versioning clone-on-edit**: gói `DRAFT`/`ACTIVE`-chưa-có-sub → cập nhật tại chỗ; gói `ACTIVE`-đã-có-sub → tạo phiên bản mới nháp (không đè bản đang bán). Định nghĩa BR-01..09, banner versioning 2 dạng, Gateway 7 (clone-on-edit) fan 2 End Event, 6 nhóm AC (16 AC). Bám sát demo v2.5.0 (`pkgOpenEdit`, `pkgRenderForm`, `pkgSubmitForm` nhánh sửa, `pkgSubCount`, `pkgFamilyMaxVer`). |
+| 1.1 | 10/07/2026 | Claude (AI) | Nhúng ảnh BPMN; đối chiếu §2 ↔ BPMN: **khớp hoàn toàn** (7 step; gateway ② "Gói RETIRED?", ⑥ "Dữ liệu hợp lệ?", ⑦ clone-on-edit fan 2 End; AF-01 Hủy; EF-01 RETIRED → End 4; EF-02 validate loop; End 1–4) — không cần sửa luồng. Gỡ ghi chú placeholder. |
 
 ### Review Checklist
 
@@ -248,4 +247,4 @@
 - ✅ Mô tả UI đủ (header + badge, banner, step nav, field bảng 1 & 2, footer 2 bước)
 - ✅ Field immutable ghi rõ "Không thể thay đổi sau khi tạo" (Sản phẩm, Mã gói)
 - ✅ Message lỗi & text banner/toast khớp demo
-- ✅ Screenshot đã chèn; ⏳ Ảnh BPMN chưa sinh (demo-first)
+- ✅ Screenshot + ảnh BPMN đã chèn; §2 đã đối chiếu khớp BPMN (7 step, gateway 2/6/7 clone-on-edit, End 1–4)

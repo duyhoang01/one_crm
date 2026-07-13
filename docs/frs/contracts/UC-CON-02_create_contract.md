@@ -1,6 +1,6 @@
 ﻿# UC-CON-02 — Thêm mới Hợp đồng
 
-> Module: M-02 Contract Management | Phiên bản: 1.0 | Ngày: 06/07/2026
+> Module: M-02 Contract Management | Phiên bản: 1.1 | Ngày: 13/07/2026
 > Trạng thái: Draft for Review
 
 ---
@@ -11,10 +11,10 @@
 |---|---|
 | **Mã Use Case** | UC-CON-02 |
 | **Tên** | Thêm mới Hợp đồng |
-| **Mô tả** | Sales tạo hồ sơ hợp đồng mới cho khách hàng đã tồn tại trong hệ thống. Hỗ trợ 2 loại: `DIRECT` và `RESELLER`. HĐ loại `RESELLER` có thêm section License Pool. Sales có thể đính kèm file HĐ giấy ngay tại bước tạo. |
+| **Mô tả** | Sales tạo hồ sơ hợp đồng mới cho khách hàng đã tồn tại trong hệ thống. Hỗ trợ 2 loại: `DIRECT` và `RESELLER`. HĐ `DIRECT` ghim 1 gói sản phẩm; HĐ `RESELLER` khai báo License Pool — **mỗi pool ghim 1 gói**. Sales có thể đính kèm file HĐ giấy ngay tại bước tạo. |
 | **Tác nhân** | Sales |
-| **Tiền điều kiện** | Đã đăng nhập hệ thống; có quyền `contract:create`. Tồn tại ít nhất 1 Customer chưa bị xóa mềm (`deletedAt IS NULL`). |
-| **Hậu điều kiện (Success)** | Contract record tạo với `subs = []` và `poolItems` theo khai báo. Audit log ghi. File hợp lệ lưu vào S3/MinIO. Sau tạo → điều hướng UC-CON-03. |
+| **Tiền điều kiện** | Đã đăng nhập hệ thống; có quyền `contract:create`. Tồn tại ít nhất 1 Customer chưa bị xóa mềm (`deletedAt IS NULL`). Catalog có ít nhất 1 gói `status = ACTIVE`. |
+| **Hậu điều kiện (Success)** | Contract record tạo với `subs = []`, `packages` (DIRECT) hoặc `poolItems` (RESELLER) theo khai báo — mọi tham chiếu gói là `package_id` của **một phiên bản cụ thể**. Audit log ghi. File hợp lệ lưu vào S3/MinIO. Sau tạo → điều hướng UC-CON-03. |
 | **Hậu điều kiện (Failure)** | Không có record nào được tạo. Modal giữ nguyên dữ liệu đã nhập. |
 | **Trigger** | Click nút "+ Thêm Hợp đồng" tại UC-CON-01. |
 | **Liên kết** | UC-CON-01 (Danh sách), UC-CON-03 (Chi tiết), UC-CON-05 (Đính kèm file) |
@@ -29,6 +29,10 @@
 | **BR-04** | Dropdown Khách hàng chỉ hiển thị KH có `deletedAt IS NULL`. |
 | **BR-05** | Audit log là bắt buộc — nếu không ghi được thì rollback toàn bộ transaction. |
 | **BR-06** | File đính kèm: định dạng hợp lệ gồm PDF, DOCX, XLSX, JPG, PNG; dung lượng tối đa 10MB/file; tối đa 15 file/HĐ. |
+| **BR-07** | HĐ loại `DIRECT` bắt buộc chọn **đúng 1 gói sản phẩm** khi tạo. Gói này được ghim vào `contract.packages`. |
+| **BR-08** | Mọi dropdown chọn gói (DIRECT và Pool RESELLER) **chỉ hiển thị gói có `status = ACTIVE`** trong catalog. Gói `DRAFT` và `RETIRED` không được chọn. |
+| **BR-09** | HĐ **ghim phiên bản gói** (`package_id` = 1 bản ghi version cụ thể) tại thời điểm ký, **không** ghim theo "họ gói" (product + code). Catalog publish version mới hoặc ngừng bán version đã ghim đều **không** làm thay đổi HĐ đã tạo. |
+| **BR-10** | Trong 1 HĐ `RESELLER`, **mỗi gói chỉ được có tối đa 1 pool**. Không cho phép 2 pool trỏ cùng `package_id`. |
 
 ---
 
@@ -46,14 +50,15 @@
 | 4 | System | Validate realtime: kiểm tra trùng mã sau mỗi keystroke. Nếu trùng → hiển thị lỗi inline (không block tiếp tục nhập). | Theo BR-01. |
 | 5 | Sales | Chọn Khách hàng từ dropdown. | Chỉ KH `deletedAt IS NULL` theo BR-04. |
 | 6 | Sales | Chọn Loại hợp đồng (radio card: Direct / Reseller). | — |
-| 7 | System | Nếu chọn `RESELLER` → hiển thị section License Pool, tự thêm 1 dòng pool rỗng. Nếu chọn `DIRECT` → ẩn section. | — |
-| 8 | Sales | Nhập Ngày ký (tuỳ chọn). Nhập Mô tả (tuỳ chọn). | — |
-| 9 | Sales | (Tuỳ chọn) Đính kèm file → **AF-01**. | — |
-| 10 | Sales | Nhấn nút "💾 Tạo". | — |
-| 11 | System | Validate toàn bộ form: required fields, format ngày, pool items (nếu RESELLER). Nếu thất bại → **EF-01**. | Theo BR-03 với RESELLER. |
-| 12 | System | Kiểm tra lần cuối trùng mã server-side. Nếu trùng → **EF-02**. | — |
-| 13 | System | Tạo Contract record. Ghi Audit Log. Upload các file hợp lệ lên S3/MinIO (nếu có). | Theo BR-05, BR-06. |
-| 14 | System | Đóng modal. Hiển thị toast "Tạo thành công — Hợp đồng {code} đã được tạo". Điều hướng sang UC-CON-03. | — |
+| 7 | System | Nếu chọn `RESELLER` → hiển thị section License Pool, tự thêm 1 dòng pool rỗng. Nếu chọn `DIRECT` → hiển thị section Gói sản phẩm. | Dropdown gói ở cả 2 section chỉ nạp gói `ACTIVE` (BR-08). |
+| 8 | Sales | Chọn Gói sản phẩm (nếu `DIRECT`) hoặc điền các dòng Pool (nếu `RESELLER` → **AF-02**). | Theo BR-07 / BR-03. |
+| 9 | Sales | Nhập Ngày ký (tuỳ chọn). Nhập Mô tả (tuỳ chọn). | — |
+| 10 | Sales | (Tuỳ chọn) Đính kèm file → **AF-01**. | — |
+| 11 | Sales | Nhấn nút "💾 Tạo". | — |
+| 12 | System | Validate toàn bộ form: required fields, format ngày, gói (nếu DIRECT), pool items (nếu RESELLER). Nếu thất bại → **EF-01**. | Theo BR-03, BR-07, BR-10. |
+| 13 | System | Kiểm tra lần cuối trùng mã server-side. Nếu trùng → **EF-02**. | — |
+| 14 | System | Tạo Contract record, ghim `package_id` của gói đã chọn (DIRECT) / của từng pool (RESELLER). Ghi Audit Log. Upload các file hợp lệ lên S3/MinIO (nếu có). | Theo BR-05, BR-06, BR-09. |
+| 15 | System | Đóng modal. Hiển thị toast "Tạo thành công — Hợp đồng {code} đã được tạo". Điều hướng sang UC-CON-03. | — |
 
 ### 2.2 Luồng phụ
 
@@ -70,8 +75,9 @@
 
 | Bước | Tác nhân | Hành động |
 |---|---|---|
-| 1 | Sales | Nhấn nút "+ Thêm sản phẩm vào Pool". |
-| 2 | System | Append 1 dòng mới gồm: dropdown Gói sản phẩm (grouped EPP / EDR / EPR, required), input Tổng số license (số nguyên > 0, required), cảnh báo "⚠️ Không thể thay đổi sau khi lưu", nút [✕] xóa dòng. |
+| 1 | Sales | Nhấn nút "+ Thêm gói vào Pool". |
+| 2 | System | Append 1 dòng mới gồm: dropdown **Gói sản phẩm** (group theo sản phẩm, **chỉ gói `ACTIVE`** — BR-08, required), input Tổng số license (số nguyên > 0, required), cảnh báo "⚠️ Không thể thay đổi sau khi lưu", nút [✕] xóa dòng. |
+| 3 | System | Nếu gói vừa chọn đã có ở dòng pool khác → chặn (BR-10), hiển thị toast "Trùng gói — Mỗi gói chỉ được có 1 pool trong hợp đồng". |
 
 #### AF-03 — Hủy tạo hợp đồng
 
@@ -113,9 +119,10 @@
 
 Modal "Thêm Hợp đồng mới" gồm các khu vực:
 1. **Thông tin cơ bản:** Mã HĐ, Khách hàng, Loại HĐ, Ngày ký, Mô tả.
-2. **Section License Pool (RESELLER only):** Hiển thị điều kiện — chỉ khi chọn `RESELLER`.
-3. **Khu vực đính kèm file:** Dropzone và danh sách file tạm.
-4. **Footer hành động:** Nút "💾 Tạo" và nút "Hủy".
+2. **Section Gói sản phẩm (DIRECT only):** Hiển thị điều kiện — chỉ khi chọn `DIRECT`.
+3. **Section License Pool (RESELLER only):** Hiển thị điều kiện — chỉ khi chọn `RESELLER`.
+4. **Khu vực đính kèm file:** Dropzone và danh sách file tạm.
+5. **Footer hành động:** Nút "💾 Tạo" và nút "Hủy".
 
 ### 3.2 Mô tả component
 
@@ -125,19 +132,26 @@ Modal "Thêm Hợp đồng mới" gồm các khu vực:
 |---|---|---|---|
 | Mã hợp đồng | Text input | ✅ | Placeholder: "VD: HD-CMC-2025-001". Hint: "Nhập mã theo quy ước công ty, không trùng với HĐ khác". Validate realtime kiểm tra trùng (BR-01). |
 | Khách hàng | Dropdown | ✅ | Chỉ hiển thị KH `deletedAt IS NULL`. Format hiển thị: "Tên KH (Loại)". |
-| Loại hợp đồng | Radio card | ✅ | 2 cards: **Direct** và **Reseller**. Chọn Reseller → hiện section Pool. Chọn Direct → ẩn section, xóa pool đã nhập. Immutable sau khi tạo (BR-02). |
+| Loại hợp đồng | Radio card | ✅ | 2 cards: **Direct** và **Reseller**. Chọn Reseller → hiện section Pool. Chọn Direct → hiện section Gói sản phẩm. Đổi loại → xóa dữ liệu section của loại cũ. Immutable sau khi tạo (BR-02). |
 | Ngày ký | Date picker | ❌ | Format `dd/MM/yyyy`. |
 | Mô tả | Textarea | ❌ | 2 rows. |
+
+#### Section Gói sản phẩm (DIRECT only)
+
+| Component | Loại | Bắt buộc | Mô tả |
+|---|---|---|---|
+| Header section | Text | — | "Gói sản phẩm". |
+| Dropdown Gói bán theo hợp đồng | Select (grouped theo sản phẩm) | ✅ | **Chỉ gói `ACTIVE`** (BR-08). Hiển thị "{Tên gói} v{version} · {kỳ hạn} tháng". Chọn đúng 1 gói (BR-07); giá trị lưu là `package_id` của phiên bản đó (BR-09). |
 
 #### Section License Pool (RESELLER only)
 
 | Component | Loại | Bắt buộc | Mô tả |
 |---|---|---|---|
-| Header section | Text | — | "Phân bổ số lượng bản quyền theo sản phẩm". |
-| Dropdown Gói sản phẩm | Select (grouped) | ✅ | Nhóm: EPP / EDR / EPR. Mỗi dòng pool cần chọn 1 sản phẩm. |
+| Header section | Text | — | "Phân bổ số lượng bản quyền theo gói". |
+| Dropdown Gói sản phẩm | Select (grouped theo sản phẩm) | ✅ | **Chỉ gói `ACTIVE`** (BR-08). Mỗi dòng pool ghim đúng 1 gói (1 phiên bản); không trùng gói giữa các dòng (BR-10). |
 | Tổng số license | Number input | ✅ | Số nguyên > 0. Format phân cách nghìn. Cảnh báo inline: "⚠️ Không thể thay đổi sau khi lưu". |
 | Nút [✕] xóa dòng | Icon button | — | Xóa dòng pool tương ứng khỏi form. |
-| Nút "+ Thêm sản phẩm vào Pool" | Text button | — | Thêm dòng pool mới (AF-02). |
+| Nút "+ Thêm gói vào Pool" | Text button | — | Thêm dòng pool mới (AF-02). |
 
 #### Khu vực đính kèm file
 
@@ -162,19 +176,19 @@ Modal "Thêm Hợp đồng mới" gồm các khu vực:
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-CON-02-01 | Sales điền mã "HD-CMC-2026-001", KH "FPT Software", loại Direct, Ngày ký 01/07/2026. | Nhấn "Tạo". | Contract tạo thành công với `type=DIRECT`, `subs=[]`, `poolItems=[]`. Toast "Tạo thành công". Điều hướng UC-CON-03. |
+| AC-CON-02-01 | Sales điền mã "HD-CMC-2026-001", KH "FPT Software", loại Direct, gói "CMC EDR v2", Ngày ký 01/07/2026. | Nhấn "Tạo". | Contract tạo thành công với `type=DIRECT`, `packages=['PKG-EDR-02']`, `subs=[]`, `poolItems=[]`. Toast "Tạo thành công". Điều hướng UC-CON-03. |
 | AC-CON-02-02 | Sales điền đủ required fields, không nhập Ngày ký và Mô tả. | Nhấn "Tạo". | Tạo thành công với `signedDate = null`, `description = null`. |
-| AC-CON-02-03 | Sales chọn Reseller, thêm 1 pool "EPP Business: 500". | Nhấn "Tạo". | Contract với `type=RESELLER`, `poolItems=[{productId: EPP, poolTotal: 500, allocatedQty: 0}]`. Audit log ghi. |
-| AC-CON-02-04 | Sales chọn Reseller, 2 pool: EDR 500 + EPR 200. | Nhấn "Tạo". | 2 pool items được tạo. Cột Pool License tại Danh sách: "EDR: 0/500" và "EPR: 0/200". |
+| AC-CON-02-03 | Sales chọn Reseller, thêm 1 pool "CMC EPP v1: 500". | Nhấn "Tạo". | Contract với `type=RESELLER`, `poolItems=[{packageId: 'PKG-EPP-03', poolTotal: 500, allocatedQty: 0}]`. Audit log ghi kèm `package_id`. |
+| AC-CON-02-04 | Sales chọn Reseller, 2 pool: "CMC EDR v2" 500 + "CA Organization v1" 200. | Nhấn "Tạo". | 2 pool items được tạo, mỗi item ghim 1 `package_id` riêng. Cột Pool License tại Danh sách hiển thị theo **tên gói**: "CMC EDR v2: 0/500" và "CA Organization v1: 0/200". |
 | AC-CON-02-05 | Sales tạo Reseller, kèm 1 file PDF hợp lệ. | Nhấn "Tạo". | Contract tạo thành công. File lưu trên S3/MinIO. Panel "Đính kèm" tại UC-CON-03 hiển thị file. |
 
-### Nhóm 2: Hiển thị section License Pool
+### Nhóm 2: Hiển thị section theo loại HĐ
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-CON-02-06 | Modal vừa mở, chưa chọn loại HĐ. | — | Section License Pool ẩn. |
-| AC-CON-02-07 | Sales chọn loại "Reseller". | Chọn. | Section Pool xuất hiện, tự thêm 1 dòng pool rỗng. |
-| AC-CON-02-08 | Sales đang ở chế độ Reseller (2 dòng pool đã nhập), sau đó chọn lại Direct. | Chọn "Direct". | Section Pool ẩn, 2 dòng pool đã nhập bị xóa khỏi UI. |
+| AC-CON-02-06 | Modal vừa mở, chưa chọn loại HĐ. | — | Cả section Gói sản phẩm và section License Pool đều ẩn. |
+| AC-CON-02-07 | Sales chọn loại "Reseller". | Chọn. | Section Pool xuất hiện, tự thêm 1 dòng pool rỗng. Section Gói sản phẩm ẩn. |
+| AC-CON-02-08 | Sales đang ở chế độ Reseller (2 dòng pool đã nhập), sau đó chọn lại Direct. | Chọn "Direct". | Section Pool ẩn, 2 dòng pool đã nhập bị xóa khỏi UI. Section Gói sản phẩm hiện ra, ở trạng thái chưa chọn. |
 
 ### Nhóm 3: Validation và lỗi
 
@@ -183,6 +197,15 @@ Modal "Thêm Hợp đồng mới" gồm các khu vực:
 | AC-CON-02-09 | Mã "HD-CMC-2025-001" đã tồn tại trong hệ thống. | Sales nhập đúng mã đó. | Lỗi inline ngay lập tức: "Mã hợp đồng đã tồn tại" (realtime validate). |
 | AC-CON-02-10 | Sales bỏ trống Mã HĐ và không chọn KH. | Nhấn "Tạo". | Lỗi inline: "Mã hợp đồng là bắt buộc" dưới field Mã; "Vui lòng chọn khách hàng" dưới field KH. |
 | AC-CON-02-11 | Sales chọn Reseller, 1 dòng pool thiếu Gói sản phẩm. | Nhấn "Tạo". | Toast lỗi: "Thiếu thông tin Pool — Điền đầy đủ Gói sản phẩm và Pool tổng". Không tạo record. |
+
+### Nhóm 3b: Ghim phiên bản gói (BR-07 → BR-10)
+
+| Mã | Given | When | Then |
+|---|---|---|---|
+| AC-CON-02-18 | Catalog có "CMC EDR v1" (`RETIRED`), "CMC EDR v2" (`ACTIVE`), "CMC EDR v3" (`DRAFT`). | Sales mở dropdown gói (DIRECT hoặc Pool). | Chỉ **"CMC EDR v2"** xuất hiện. v1 và v3 không có trong danh sách (BR-08). |
+| AC-CON-02-19 | Sales chọn Direct nhưng bỏ trống Gói sản phẩm. | Nhấn "Tạo". | Lỗi inline dưới dropdown: "Vui lòng chọn gói sản phẩm". Không tạo record (BR-07). |
+| AC-CON-02-20 | Sales tạo HĐ Direct ghim "CMC EDR v2". Sau đó Catalog publish "CMC EDR v3" và ngừng bán v2. | Mở lại UC-CON-03 của HĐ đó. | HĐ vẫn hiển thị **"CMC EDR v2"** — không tự nhảy sang v3 (BR-09). |
+| AC-CON-02-21 | Sales chọn Reseller, dòng pool 1 chọn "CMC EDR v2", dòng pool 2 cũng chọn "CMC EDR v2". | Nhấn "Tạo". | Toast lỗi: "Trùng gói — Mỗi gói chỉ được có 1 pool trong hợp đồng". Không tạo record (BR-10). |
 
 ### Nhóm 4: Đính kèm file
 
@@ -218,3 +241,10 @@ Modal "Thêm Hợp đồng mới" gồm các khu vực:
 - ✅ Mô tả UI đủ chi tiết
 - ✅ Component states đã mô tả
 - ✅ Toast/error messages đã định nghĩa
+
+### Lịch sử thay đổi
+
+| Phiên bản | Ngày | Nội dung |
+|---|---|---|
+| 1.0 | 06/07/2026 | Bản đầu. |
+| 1.1 | 13/07/2026 | **Đồng bộ versioning gói (M-04)**: thêm BR-07 (DIRECT bắt buộc chọn 1 gói) · BR-08 (dropdown chỉ gói `ACTIVE`) · BR-09 (HĐ ghim `package_id` = phiên bản cụ thể) · BR-10 (mỗi gói tối đa 1 pool). **Pool ghim theo GÓI, không theo sản phẩm.** Thêm section "Gói sản phẩm" cho HĐ DIRECT. Bổ sung AC-CON-02-18…21. Nguồn: `docs/plans/M-04_versioning_decisions.md` (D2, D3). |

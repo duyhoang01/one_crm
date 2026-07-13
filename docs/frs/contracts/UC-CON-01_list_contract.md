@@ -1,6 +1,6 @@
 ﻿# UC-CON-01 — Danh sách Hợp đồng
 
-> Module: M-02 Contract Management | Phiên bản: 1.0 | Ngày: 06/07/2026
+> Module: M-02 Contract Management | Phiên bản: 1.1 | Ngày: 13/07/2026
 > Trạng thái: Draft for Review
 
 ---
@@ -99,7 +99,7 @@ Màn hình Danh sách Hợp đồng bao gồm 3 khu vực chính:
 | 3 | **Loại HĐ** | `contract.type` | Badge: `DIRECT` → xanh dương; `RESELLER` → tím. | ✅ |
 | 4 | **Ngày ký** | `contract.signedDate` | Định dạng `dd/MM/yyyy`. Hiển thị "—" khi `signedDate = null`. | ✅ |
 | 5 | **Subscriptions** | `contract.subs` | Dòng 1: tổng số sub, ví dụ "3 subs". Dòng 2: số sub có status=ACTIVE, màu xanh lá, ví dụ "2 active". Hiển thị "—" khi `subs.length = 0`. | ✅ |
-| 6 | **Pool License** | `contract.poolItems` | Chỉ với `RESELLER`: mỗi pool item một dòng theo định dạng `{productName}: {allocatedQty}/{poolTotal}`. Với `DIRECT`: hiển thị "—". | ❌ |
+| 6 | **Pool License** | `contract.poolItems` | Chỉ với `RESELLER`: mỗi pool item một dòng theo định dạng `{packageName}: {allocatedQty}/{poolTotal}` — **tên gói kèm phiên bản**, vì pool ghim theo gói chứ không theo sản phẩm. Với `DIRECT`: hiển thị "—". | ❌ |
 | 7 | **Thao tác** | — | Nút ✏️ (luôn active). Nút 🗑️: `disabled` khi `subs.length > 0` (tooltip "Đã có Subscription, không thể xóa"), `active` khi `subs.length = 0`. | ❌ |
 
 #### Pagination
@@ -128,7 +128,7 @@ Màn hình Danh sách Hợp đồng bao gồm 3 khu vực chính:
 |---|---|---|---|
 | AC-CON-01-01 | Có 4 hợp đồng trong hệ thống (2 DIRECT, 2 RESELLER). | Mở màn hình Danh sách. | Hiển thị đủ 4 HĐ. Cột Pool License: có dữ liệu với RESELLER, hiển thị "—" với DIRECT. |
 | AC-CON-01-02 | HĐ DIRECT có 3 sub (2 ACTIVE, 1 SUSPENDED). | Xem cột Subscriptions. | Dòng 1: "3 subs". Dòng 2: "2 active" màu xanh lá. |
-| AC-CON-01-03 | HĐ RESELLER có 2 pool: EDR 200/500, AV 100/300. | Xem cột Pool License. | 2 dòng: "EDR/EPP: 200/500" và "Antivirus (AV): 100/300". |
+| AC-CON-01-03 | HĐ RESELLER có 2 pool: gói "CMC EDR v2" 200/500, gói "AV Business v1" 100/300. | Xem cột Pool License. | 2 dòng: "CMC EDR v2: 200/500" và "AV Business v1: 100/300" — hiển thị **tên gói kèm phiên bản**, không phải tên sản phẩm. |
 | AC-CON-01-04 | HĐ có `signedDate = null`. | Xem cột Ngày ký. | Hiển thị "—". |
 | AC-CON-01-05 | HĐ chưa có sub nào (`subs.length = 0`). | Xem cột Subscriptions. | Hiển thị "—" (không hiển thị "0 subs"). |
 
@@ -185,3 +185,10 @@ Màn hình Danh sách Hợp đồng bao gồm 3 khu vực chính:
 - ✅ Mô tả UI đủ chi tiết
 - ✅ Component states đã mô tả
 - ✅ Toast/error messages đã định nghĩa
+
+### Lịch sử thay đổi
+
+| Phiên bản | Ngày | Nội dung |
+|---|---|---|
+| 1.0 | 06/07/2026 | Bản đầu. |
+| 1.1 | 13/07/2026 | Cột **Pool License** hiển thị theo `{packageName}` (tên gói + phiên bản) thay vì `{productName}` — pool ghim theo gói, không theo sản phẩm. Cập nhật AC-CON-01-03. Nguồn: `docs/plans/M-04_versioning_decisions.md` (D3). |

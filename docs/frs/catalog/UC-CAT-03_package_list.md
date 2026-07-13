@@ -41,8 +41,6 @@
 
 ![BPMN 2.0 — UC-CAT-03 Danh sách Gói sản phẩm](../../assets/M-04_catalog/UC-CAT-03_bpmn.png)
 
-> ⚠️ **Ảnh BPMN hiện đang LỖI — cần render lại:** node ⑤ bị lẫn nội dung UC-CAT-02 ("Render tab Thông tin — card Thông tin sản phẩm…"), thứ tự "Áp dụng sort ↔ Click header cột" bị đảo, badge lệch. **§2 dưới đây là bản CHUẨN** — render lại bằng prompt trong `_bpmn_prompts.md`.
-
 ### 2.1 Luồng chính
 
 > Trigger (click menu "🎁 Gói sản phẩm" hoặc "Xem N gói") là **điểm vào**, không đánh số bước. Bước **4** và **8** là Gateway (XOR). Đây là màn hình hub-lite: gateway hành động (bước 8) fan ra nhiều End Event.
@@ -251,7 +249,7 @@
 | Phiên bản | Ngày | Người cập nhật | Nội dung |
 |---|---|---|---|
 | 1.0 | 10/07/2026 | BA Team | Khởi tạo tài liệu — Draft for Review. Đặc tả màn Danh sách gói: cột / filter / sort / pager / quy tắc gộp version / điều kiện hiển thị nút thao tác theo trạng thái & quyền. Hành vi form tạo/sửa, publish/ngừng bán/xóa/rollback và chi tiết version là UC riêng, chỉ cross-reference. |
-| 1.1 | 10/07/2026 | Claude (AI) | Nhúng ảnh BPMN — **ảnh đang LỖI** (node ⑤ lẫn nội dung UC-CAT-02, đảo thứ tự sort/click header, badge lệch), cần render lại bằng `_bpmn_prompts.md`; §2 GIỮ NGUYÊN (bản chuẩn). |
+| 1.1 | 10/07/2026 | Claude (AI) | Nhúng ảnh BPMN. Bản render đầu bị lỗi image-gen (node ma ⑤ lẫn nội dung UC-CAT-02, đảo thứ tự sort/click header) → **đã render lại**. Đối chiếu §2 ↔ BPMN bản mới: **khớp hoàn toàn** (8 step; gateway ④ "Có kết quả phù hợp?", ⑧ "Loại thao tác?" fan 7 nhánh; AF-01 có gateway con "Còn kết quả?", AF-02, EF-01 có gateway "Nhấn ＋Tạo gói?"; End 1–6) — không cần sửa luồng. |
 
 ### Review Checklist
 
@@ -271,4 +269,4 @@
 - ✅ Mô tả UI đủ chi tiết (page header, toolbar, bảng 8 cột dữ liệu + thao tác, pager)
 - ✅ Component states đã mô tả (nút disabled + tooltip theo từng trạng thái, empty state)
 - ✅ Badge trạng thái đã định nghĩa đủ 3 loại (Draft/Active/Retired)
-- ✅ Screenshot đã chèn; ⏳ Ảnh BPMN chưa sinh (demo-first)
+- ✅ Screenshot + ảnh BPMN đã chèn; §2 đã đối chiếu khớp BPMN (8 step, gateway ④ & ⑧, AF-01/02, EF-01, End 1–6)

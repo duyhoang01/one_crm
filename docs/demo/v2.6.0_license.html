@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%230268C5'/><stop offset='1' stop-color='%2300ADEE'/></linearGradient></defs><rect width='64' height='64' rx='14' fill='url(%23g)'/><rect x='14' y='14' width='16' height='16' rx='3.5' fill='%23fff'/><rect x='34' y='14' width='16' height='16' rx='3.5' fill='%23fff' opacity='.65'/><rect x='14' y='34' width='16' height='16' rx='3.5' fill='%23fff' opacity='.65'/><rect x='34' y='34' width='16' height='16' rx='3.5' fill='%23fff'/></svg>">
-<title>OneCRM — Product &amp; Package Catalog v2.5</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%230F766E'/><stop offset='1' stop-color='%2334D399'/></linearGradient></defs><rect width='64' height='64' rx='14' fill='url(%23g)'/><path d='M32 12l14 6v12c0 10-6 17.5-14 22-8-4.5-14-12-14-22V18l14-6z' fill='%23fff'/><path d='M32 26a5 5 0 00-2.5 9.33V42h5v-6.67A5 5 0 0032 26z' fill='%230F766E'/></svg>">
+<title>OneCRM — License Mirror &amp; Usage Tracking v2.6</title>
 <style>
 :root{--primary:#0268C5;--azure:#00ADEE;--navy:#1F2533;--bg-page:#F2F6FA;--bg-sidebar:#F1F5F9;--text-primary:#111827;--text-secondary:#636363;--border:#E5E5E5;--border-active:#0268C5;--red:#FB2C36;--amber:#F59E0B;--green:#10B981;--gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;--gray-400:#9CA3AF;--gray-600:#4B5563;--r-sm:8px;--r-md:12px;--r-lg:16px;--shadow-md:0 4px 12px rgba(0,0,0,.1);--shadow-lg:0 20px 40px rgba(0,0,0,.12);--sidebar-w:240px;--font:'Inter',ui-sans-serif,system-ui,-apple-system,sans-serif;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -310,6 +310,27 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
 .sub-mirror-suspended{background:#FFF7ED;color:#EA580C;}
 .sub-mirror-expired,.sub-mirror-revoked{background:#FEF2F2;color:var(--red);}
 .sub-mirror-na{background:var(--gray-100);color:var(--gray-400);}
+/* ── M-05 LICENSE & USAGE ── */
+.sub-mirror-provisioning{background:#EFF6FF;color:#1D4ED8;}
+.lic-cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;font-weight:700;}
+.lic-cnt.zero{background:var(--gray-200);color:var(--text-secondary);}
+.lic-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.lic-chip{display:flex;align-items:center;gap:7px;padding:7px 13px;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-secondary);transition:.15s;}
+.lic-chip:hover{border-color:var(--primary);color:var(--primary);}
+.lic-chip.active{background:#EBF4FD;border-color:var(--primary);color:var(--primary);font-weight:600;}
+.lic-chip-n{font-weight:700;font-size:12px;}
+.lic-bar{height:6px;background:#E5E7EB;border-radius:4px;overflow:hidden;width:120px;}
+.lic-bar>div{height:100%;border-radius:4px;}
+.lic-flag{display:inline-block;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:5px;vertical-align:middle;}
+.lic-flag-upsell{background:#FEF3C7;color:#92400E;}
+.lic-flag-stale{background:#F1F5F9;color:#475569;}
+.lic-flag-mismatch{background:#FEE2E2;color:#B91C1C;}
+.lic-flag-anomaly{background:#FDF4FF;color:#A21CAF;}
+.lic-flag-ok{background:#ECFDF5;color:#047857;}
+.lic-prio{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;}
+.lic-prio-p1{background:#FEE2E2;color:#B91C1C;}
+.lic-prio-p2{background:#FFEDD5;color:#C2410C;}
+.lic-banner{border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;font-size:13px;}
 .sub-field-row{display:grid;grid-template-columns:repeat(3,1fr);padding:16px 0;border-bottom:1px solid var(--border);}
 .sub-field-row:last-child{border-bottom:none;}
 /* Sub Chain */
@@ -411,7 +432,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
     <div style="height:1px;background:var(--border);margin-bottom:24px;"></div>
     <div class="field" style="margin-bottom:14px;">
       <label class="field-label">Email</label>
-      <input class="field-input" id="loginEmail" type="email" placeholder="Nhập email của bạn" value="sales.a@cmc.vn" onkeydown="if(event.key==='Enter')doLogin()">
+      <input class="field-input" id="loginEmail" type="email" placeholder="Nhập email của bạn" value="licadmin@cmc.vn" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <div class="field" style="margin-bottom:10px;">
       <label class="field-label">Mật khẩu</label>
@@ -440,6 +461,8 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
       <div class="nav-item active" id="navCustomer" onclick="showModule('customer')"><span class="nav-icon">👥</span> Khách hàng</div>
       <div class="nav-item" id="navContract" onclick="showModule('contract')"><span class="nav-icon">📄</span> Hợp đồng</div>
       <div class="nav-item" id="navSubscription" onclick="showModule('subscription')"><span class="nav-icon">🔑</span> Subscription</div>
+      <div class="sidebar-section">Vận hành</div>
+      <div class="nav-item" id="navLicense" onclick="showModule('license')"><span class="nav-icon">🛡️</span> License &amp; Usage</div>
       <div class="sidebar-section">Danh mục</div>
       <div class="nav-item" id="navProduct" onclick="showModule('product')"><span class="nav-icon">📦</span> Sản phẩm</div>
       <div class="nav-item" id="navPackage" onclick="showModule('package')"><span class="nav-icon">🎁</span> Gói sản phẩm</div>
@@ -719,6 +742,71 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
         </div>
         <!-- ── DETAIL ── -->
         <div class="pkg-pane" id="pkg-view-detail"></div>
+      </div>
+
+      <!-- ════════════════ MODULE: LICENSE & USAGE (M-05 License Mirror & Usage Tracking) ════════════════ -->
+      <div id="module-license" class="hidden">
+        <!-- ── LIST ── -->
+        <div class="pkg-pane active" id="lic-view-list">
+          <div class="page-header">
+            <div>
+              <div class="page-title">License &amp; Usage</div>
+              <div class="page-subtitle">Trạng thái license và mức sử dụng do Product Module gửi về. CRM chỉ quan sát — không chỉnh sửa license.</div>
+            </div>
+          </div>
+
+          <div class="tabs" style="margin-bottom:14px;">
+            <div class="tab active" id="licTabAll" onclick="licSwitchTab('all')">🔑 Tất cả license</div>
+            <div class="tab" id="licTabMismatch" onclick="licSwitchTab('mismatch')">⚠️ Lệch trạng thái <span class="lic-cnt" id="licMismatchCount">0</span></div>
+          </div>
+
+          <!-- PANE: TẤT CẢ LICENSE (FR-LIC-06) -->
+          <div id="lic-pane-all">
+            <div class="lic-chips" id="licChips"></div>
+            <div class="toolbar">
+              <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="licSearch" placeholder="Tìm theo khách hàng, mã sub, external ref..." oninput="licRenderTable()"></div>
+              <select class="filter-select" id="licFilterProduct" onchange="licRenderTable()"><option value="">Tất cả sản phẩm</option></select>
+              <select class="filter-select" id="licFilterStatus" onchange="licRenderTable()">
+                <option value="">Mọi trạng thái license</option>
+                <option value="ACTIVE">Active</option>
+                <option value="PROVISIONING">Provisioning</option>
+                <option value="PENDING">Pending</option>
+                <option value="GRACE">Grace</option>
+                <option value="SUSPENDED">Suspended</option>
+                <option value="EXPIRED">Expired</option>
+                <option value="REVOKED">Revoked</option>
+              </select>
+              <select class="filter-select" id="licFilterUsage" onchange="licRenderTable()">
+                <option value="">Mọi mức sử dụng</option>
+                <option value="90">≥ 90% (cơ hội up-sell)</option>
+                <option value="70">≥ 70%</option>
+                <option value="0">Chưa có dữ liệu usage</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" onclick="licClearFilter()">Xoá lọc</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr>
+                  <th>Khách hàng / Đơn vị thụ hưởng</th>
+                  <th>Subscription</th>
+                  <th>Sản phẩm</th>
+                  <th>Trạng thái license</th>
+                  <th style="min-width:180px">Mức sử dụng</th>
+                  <th>Hết hạn (từ product)</th>
+                  <th>Đồng bộ lần cuối</th>
+                  <th></th>
+                </tr></thead>
+                <tbody id="licTbody"></tbody>
+              </table>
+            </div>
+            <div id="licCount" style="margin-top:10px;font-size:12px;color:var(--text-secondary);"></div>
+          </div>
+
+          <!-- PANE: LỆCH TRẠNG THÁI (FR-LIC-07) -->
+          <div id="lic-pane-mismatch" class="hidden"></div>
+        </div>
+        <!-- ── DETAIL (FR-LIC-01 / 04 / 05) ── -->
+        <div class="pkg-pane" id="lic-view-detail"></div>
       </div>
     </div>
   </main>
@@ -1446,6 +1534,7 @@ const DEMO_USERS=[
   {email:'sales.a@cmc.vn',password:'demo123',name:'Sales A',role:'Sales',initials:'SA',avatarBg:'#0268C5'},
   {email:'sales.b@cmc.vn',password:'demo123',name:'Sales B',role:'Sales',initials:'SB',avatarBg:'#0268C5'},
   {email:'manager@cmc.vn',password:'demo123',name:'Nguyễn Manager',role:'Manager',initials:'MG',avatarBg:'#7C3AED'},
+  {email:'licadmin@cmc.vn',password:'demo123',name:'Trần License Admin',role:'License Admin',initials:'LA',avatarBg:'#0F766E'},
 ];
 let currentUser=null;
 
@@ -1494,8 +1583,8 @@ function doLogout(){
   document.getElementById('userMenu').style.display='none';
   document.getElementById('mainApp').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
-  document.getElementById('loginEmail').value='';
-  document.getElementById('loginPass').value='';
+  document.getElementById('loginEmail').value='licadmin@cmc.vn';
+  document.getElementById('loginPass').value='demo123';
   document.getElementById('loginError').style.display='none';
   // Reset app state
   subCurrentId=null;
@@ -1980,6 +2069,8 @@ function showModule(mod){
   document.getElementById('navSubscription').classList.toggle('active',mod==='subscription');
   document.getElementById('navProduct').classList.toggle('active',mod==='product');
   document.getElementById('navPackage').classList.toggle('active',mod==='package');
+  document.getElementById('navLicense').classList.toggle('active',mod==='license');
+  document.getElementById('module-license').classList.toggle('hidden',mod!=='license');
   document.getElementById('module-customer').classList.toggle('hidden',mod!=='customer');
   document.getElementById('module-contract').classList.toggle('hidden',mod!=='contract');
   document.getElementById('module-subscription').classList.toggle('hidden',mod!=='subscription');
@@ -2003,6 +2094,11 @@ function showModule(mod){
     pkgShowView('list');
     document.getElementById('breadcrumbCurrent').textContent='Gói sản phẩm';
     pkgRenderTable();
+  } else if(mod==='license'){
+    document.getElementById('breadcrumbCurrent').textContent='License & Usage';
+    licShowView('list');
+    licInitFilters();
+    licSwitchTab('all');
   } else {
     conShowView('list');
     document.getElementById('breadcrumbCurrent').textContent='Hợp đồng';
@@ -3521,6 +3617,7 @@ function subMirrorBadge(status){
     ACTIVE:{cls:'sub-mirror-active',label:'Active'},
     GRACE:{cls:'sub-mirror-grace',label:'Trong gia hạn'},
     PENDING:{cls:'sub-mirror-pending',label:'Pending'},
+    PROVISIONING:{cls:'sub-mirror-provisioning',label:'Provisioning'},
     SUSPENDED:{cls:'sub-mirror-suspended',label:'Suspended'},
     EXPIRED:{cls:'sub-mirror-expired',label:'Expired'},
     REVOKED:{cls:'sub-mirror-revoked',label:'Revoked'},
@@ -4309,7 +4406,15 @@ function subRenderLicense(sub){
     <span style="font-size:13px;color:${guidance.text};">${guidance.msg}</span>
   </div>`:''}
   ${quotaHtml}
-  ${metaHtml}`;
+  ${typeof licInstancesCard==='function'?licInstancesCard(sub):''}
+  ${metaHtml}
+  ${typeof licCanForceSync==='function'?`<div class="card" style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+    <div style="font-size:12px;color:var(--text-secondary);">Số liệu do ${licProductName(sub.productId)} gửi về. Cần số mới nhất? Yêu cầu product gửi lại (tối đa 1 lần / ${LIC_FORCE_SYNC_COOLDOWN} phút).</div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-secondary btn-sm" ${licCanForceSync(sub)?'':'disabled style="opacity:.5;cursor:not-allowed"'} onclick="licForceSync('${sub.id}')">🔄 Đồng bộ lại usage</button>
+      <button class="btn btn-ghost btn-sm" onclick="licOpenDetail('${sub.id}')">🛡️ Xem trong License &amp; Usage</button>
+    </div>
+  </div>`:''}`;
 }
 function subAppendAuditRows(items,q){
   const tbody=document.getElementById('subAuditBody');if(!tbody)return;
@@ -5488,6 +5593,562 @@ function catInit(){
   if(fp)fp.innerHTML='<option value="">Tất cả sản phẩm</option>'+CAT_PRODUCTS.map(p=>`<option value="${p.id}">${catEsc(p.name)}</option>`).join('');
 }
 catInit();
+
+/* ══════════════════════════════════════════════════════════════════
+   M-05 — LICENSE MIRROR & USAGE TRACKING
+   FR-LIC-01 Xem chi tiết mirror · FR-LIC-04 Force sync usage
+   FR-LIC-05 License Instances · FR-LIC-06 Search · FR-LIC-07 Mismatch
+   Nguyên tắc (YT-1/YT-4): CRM chỉ QUAN SÁT — không sửa license, không
+   ra lệnh kỹ thuật. Usage là snapshot overwrite (BR-03.2) → KHÔNG có
+   biểu đồ lịch sử ở Phase 1.
+   ══════════════════════════════════════════════════════════════════ */
+const LIC_SLA_MINUTES=15;            // mismatch_sla_minutes (BR-07.1)
+const LIC_RECONCILE_HOURS=24;        // auto_reconcile_after_hours (BR-07.1)
+const LIC_STALE_HOURS=24;            // license stale — ops alert (FR-LIC-06 / US-07)
+const LIC_UPSELL_PCT=90;             // ngưỡng cơ hội up-sell (BR-03.7 / US-08)
+const LIC_FORCE_SYNC_COOLDOWN=5;     // phút — rate limit (BR-04.4)
+const LIC_PORTAL={
+  CMC_EDR:'https://portal.cmc-cyber.vn/edr/tenants/',
+  C_SHIELD:'https://portal.cmc-cyber.vn/cshield/apps/',
+  AV:'https://portal.cmc-cyber.vn/av/licenses/',
+  CA:'https://ca.cmc-cyber.vn/orgs/',
+};
+let licForceSyncAt={};   // subId → epoch ms (rate limit trong phiên demo)
+let licTab='all';
+let licChip='';          // '' | upsell | grace | stale | pending | anomaly
+
+/* ── SEED: mỗi bản ghi = 1 case thực tế ───────────────────────────
+   Dùng chung nguồn dữ liệu với M-03 Subscription (conContracts) —
+   không tạo nguồn sự thật thứ hai. */
+function licSub(id){for(const c of conContracts){const s=(c.subs||[]).find(x=>x.id===id);if(s)return s;}return null;}
+function licSeedData(){
+  // Case bổ sung 1 — sub ACTIVE nhưng license EXPIRED quá SLA (mismatch loại B: KH mất dịch vụ, CRM tưởng còn chạy)
+  const conAV=conContracts.find(c=>c.id==='con-011');
+  if(conAV)conAV.subs.push({
+    id:'SUB-2026-021',contractId:'con-011',beneficiaryId:'B004',beneficiaryName:'Nam Long Group',
+    productId:'AV',packageId:'PKG-CA-02',packageName:'AV Business',
+    startDate:'2026-03-01',endDate:'2027-02-28',licenseQty:60,seatCount:60,
+    status:'ACTIVE',note:'',
+    licMirrorStatus:'EXPIRED',licMirrorExpiry:'2026-07-10',lastSync:'3 ngày trước',lastSyncMins:4320,
+    activationDate:'2026-03-01',usedQty:41,extRef:'AV-2026-0041',
+    createdBy:'Sales A',createdAt:'2026-03-01T09:00:00',
+    timeline:[{icon:'⏰',cls:'tl-dot-red',source:'WEBHOOK',actor:'System',title:'License hết hạn phía product',time:'2026-07-10 00:05',detail:'license.expired · AV Business 60 license'}],
+    audit:[{time:'2026-07-10 00:05',source:'WEBHOOK',actor:'System',action:'Cập nhật license mirror',detail:'status: ACTIVE → EXPIRED',result:'SUCCESS'}],
+  });
+  // Case bổ sung 2+3 — chuỗi gia hạn: predecessor RENEWED + successor ACTIVE nhưng mirror còn PENDING
+  // (§5.5.1 — mismatch TẠM THỜI ĐƯỢC CHẤP NHẬN, không alert cho tới khi webhook license.active về)
+  conContracts.push({
+    id:'con-013',code:'HD-CMC-2026-009',
+    customerId:'cust-023',customerName:'Bệnh viện Bạch Mai',customerType:'B2B',
+    type:'DIRECT',packages:['PKG-EDR-02'],
+    signedDate:'2026-05-22',description:'Cung cấp EDR Standard 80 seat cho BV Bạch Mai — đã gia hạn lần 1.',
+    createdBy:'Sales B',createdAt:'2026-05-22T10:00:00',poolItems:[],
+    subs:[
+      {id:'SUB-2026-018',contractId:'con-013',beneficiaryId:null,beneficiaryName:null,
+       productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR Standard',
+       startDate:'2026-05-22',endDate:'2026-07-12',licenseQty:null,seatCount:80,
+       status:'RENEWED',note:'Đã gia hạn — chuyển sang SUB-2026-019.',
+       licMirrorStatus:'EXPIRED',licMirrorExpiry:'2026-07-12',lastSync:'1 ngày trước',lastSyncMins:1440,
+       activationDate:'2026-05-22',quotaUsed:77,extRef:'BVBM-TENANT-018',
+       licMetadata:[{label:'Tenant ID',value:'BVBM-TENANT-018'},{label:'Loại triển khai',value:'SaaS'},{label:'Khu vực',value:'VN-HN'}],
+       createdBy:'Sales B',createdAt:'2026-05-22T10:30:00',
+       timeline:[{icon:'🔄',cls:'tl-dot-blue',source:'UI',actor:'Sales B',title:'Subscription được gia hạn',time:'2026-07-12 09:00',detail:'Successor: SUB-2026-019 · 80 seat'}],
+       audit:[{time:'2026-07-12 09:00',source:'UI',actor:'Sales B',action:'Gia hạn Subscription',detail:'successor: SUB-2026-019 · predecessor → RENEWED',result:'SUCCESS'}]},
+      {id:'SUB-2026-019',contractId:'con-013',beneficiaryId:null,beneficiaryName:null,
+       productId:'CMC_EDR',packageId:'PKG-EDR-02',packageName:'CMC EDR Standard',
+       startDate:'2026-07-13',endDate:'2027-07-12',licenseQty:null,seatCount:80,
+       status:'ACTIVE',note:'Gia hạn lần 1 — chờ webhook license.active từ product.',previousSubId:'SUB-2026-018',
+       licMirrorStatus:'PENDING',licMirrorExpiry:null,lastSync:'Chưa đồng bộ',lastSyncMins:null,
+       renewalPending:true,   // §5.5.1 — loại trừ khỏi cảnh báo mismatch
+       createdBy:'Sales B',createdAt:'2026-07-13T09:00:00',
+       timeline:[{icon:'📤',cls:'tl-dot-gray',source:'SYSTEM',actor:'System',title:'Đã publish subscription.renewed',time:'2026-07-13 09:01',detail:'Chờ product push license.active'}],
+       audit:[{time:'2026-07-13 09:00',source:'UI',actor:'Sales B',action:'Tạo Subscription (Gia hạn)',detail:'status: ACTIVE · predecessor: SUB-2026-018',result:'SUCCESS'}]},
+    ],
+  });
+  // Case bổ sung 4 — C-Shield: has_instances = true → có LICENSE_INSTANCE (FR-LIC-05)
+  conContracts.push({
+    id:'con-014',code:'HD-CMC-2026-010',
+    customerId:'cust-011',customerName:'Tập đoàn Vingroup',customerType:'B2B',
+    type:'DIRECT',packages:['PKG-CS-02'],
+    signedDate:'2026-04-05',description:'C-Shield Enterprise — bảo vệ ứng dụng di động Vingroup.',
+    createdBy:'Sales B',createdAt:'2026-04-05T09:00:00',poolItems:[],
+    subs:[
+      {id:'SUB-2026-020',contractId:'con-014',beneficiaryId:null,beneficiaryName:null,
+       productId:'C_SHIELD',packageId:'PKG-CS-02',packageName:'C-Shield Enterprise',
+       startDate:'2026-04-10',endDate:'2027-04-09',licenseQty:null,seatCount:500,
+       status:'ACTIVE',note:'',
+       licMirrorStatus:'ACTIVE',licMirrorExpiry:'2027-04-09',lastSync:'18 phút trước',lastSyncMins:18,
+       activationDate:'2026-04-10',quotaUsed:312,extRef:'CS-APP-VIN-020',
+       licMetadata:[{label:'App Bundle ID',value:'vn.vingroup.oneapp'},{label:'Nền tảng',value:'iOS & Android'},{label:'Phiên bản SDK',value:'3.2.1'}],
+       licInstances:[
+         {ref:'jti:8f2a-31c0-9b7e',status:'ACTIVE',meta:'vn.vingroup.oneapp · iOS 17',issued:'2026-04-10',synced:'18 phút trước'},
+         {ref:'jti:11cc-77d2-4a05',status:'ACTIVE',meta:'vn.vingroup.oneapp · Android 14',issued:'2026-04-10',synced:'18 phút trước'},
+         {ref:'jti:5b90-02fa-c318',status:'ACTIVE',meta:'vn.vinhomes.resident · iOS 17',issued:'2026-05-02',synced:'18 phút trước'},
+         {ref:'jti:a4d7-6e11-70bb',status:'REVOKED',meta:'vn.vinfast.app · Android 13 (SDK cũ)',issued:'2026-04-18',synced:'2 ngày trước'},
+         {ref:'jti:c0e3-9911-2d4f',status:'PENDING',meta:'vn.vinid.wallet · chờ ký JWT',issued:'2026-07-11',synced:'6 giờ trước'},
+       ],
+       createdBy:'Sales B',createdAt:'2026-04-05T09:30:00',
+       timeline:[{icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2026-04-10 10:00',detail:'C-Shield Enterprise · 500 instance'}],
+       audit:[{time:'2026-04-10 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event',result:'SUCCESS'}]},
+    ],
+  });
+
+  // ── Override trên các sub sẵn có để phủ nốt các case còn lại ──
+  const O={
+    // Mismatch loại A (ưu tiên cao): sub SUSPENDED nhưng license CÒN ACTIVE → KH vẫn dùng free
+    'SUB-2026-005':{licMirrorStatus:'ACTIVE',lastSync:'9 phút trước',lastSyncMins:9,usedQty:96,extRef:'CA-ORG-MEKONG-005',mismatchMins:214},
+    // License đang provisioning — trong ngưỡng, KHÔNG phải mismatch
+    'SUB-2026-006':{licMirrorStatus:'PROVISIONING',lastSync:'25 phút trước',lastSyncMins:25,extRef:'CA-ORG-NAMLONG-006'},
+    // Mismatch loại C: PENDING quá auto_reconcile_after_hours (24h) mà không có webhook nào
+    'SUB-2026-009':{pendingHours:480,mismatchMins:28800},
+    // License stale: ACTIVE nhưng chưa đồng bộ > 24h → ops alert
+    'SUB-2026-007':{lastSync:'2 ngày trước',lastSyncMins:2940,extRef:'VNPT-TENANT-007'},
+    // Usage bình thường
+    'SUB-2026-008':{lastSyncMins:45,extRef:'CMC-TENANT-008'},
+    // GRACE: license hết hạn nhưng KH vẫn dùng được — sub vẫn ACTIVE (không phải mismatch)
+    'SUB-2026-011':{lastSyncMins:30,extRef:'VIETTEL-TENANT-011'},
+    // Cơ hội up-sell: usage 96%
+    'SUB-2026-016':{lastSyncMins:5,extRef:'SCB-TENANT-016'},
+    // Bất thường dữ liệu: used > total (BR-03.6) — KHÔNG phải overage thương mại
+    'SUB-2026-003':{usedQty:63,lastSync:'12 phút trước',lastSyncMins:12,extRef:'CMC-DIST-TENANT-003'},
+    // Suspend khớp hai bên
+    'SUB-2026-010':{lastSyncMins:1440,extRef:'TNL-TENANT-010'},
+    // Đã hết hạn
+    'SUB-2026-001':{lastSyncMins:null,extRef:'FPT-TENANT-001'},
+    'SUB-2026-013':{lastSyncMins:180,extRef:'SCB-TENANT-013'},
+  };
+  Object.keys(O).forEach(id=>{const s=licSub(id);if(s)Object.assign(s,O[id]);});
+
+  // Sub sinh tự động (SUB-Dxx): gán usage tất định để danh sách phản ánh thực tế
+  subGetAllSubs().forEach(s=>{
+    const raw=licSub(s.id);if(!raw)return;
+    if(raw.status!=='ACTIVE')return;
+    if(!['ACTIVE','GRACE'].includes(raw.licMirrorStatus))return;   // product chưa active license → chưa có usage
+    if(raw.quotaUsed!=null||raw.usedQty!=null)return;
+    let h=0;for(let i=0;i<s.id.length;i++)h=(h*31+s.id.charCodeAt(i))%1000;
+    const total=raw.seatCount||raw.licenseQty||0;
+    const pct=40+(h%46);                      // 40–85%
+    const used=Math.round(total*pct/100);
+    if(s.contractType==='DIRECT')raw.quotaUsed=used;else raw.usedQty=used;
+    if(raw.lastSyncMins==null)raw.lastSyncMins=5+(h%180);
+    if(!raw.extRef)raw.extRef=`${(raw.productId||'PRD').replace('_','-')}-${s.id.replace('SUB-','')}`;
+  });
+}
+
+/* ── HELPERS ─────────────────────────────────────────────────── */
+// Danh sách LICENSE_MIRROR: 1 sub : 1 mirror. Sub DRAFT chưa có mirror (AC-01.2).
+function licAllMirrors(){
+  return subGetAllSubs().filter(s=>s.status!=='DRAFT'&&s.licMirrorStatus&&s.licMirrorStatus!=='N/A');
+}
+function licProduct(pid){return CAT_PRODUCTS.find(p=>p.id===pid)||null;}
+function licProductName(pid){return licProduct(pid)?.name||pid||'—';}
+// BR-01.1 — display name tra từ PRODUCT_MODULE_CONFIG.statusMap (raw → display), fallback về nhãn core
+const LIC_STATUS_FALLBACK={ACTIVE:'Active',PROVISIONING:'Provisioning',PENDING:'Pending',GRACE:'Trong gia hạn',SUSPENDED:'Suspended',EXPIRED:'Expired',REVOKED:'Revoked'};
+function licStatusDisplay(sub){
+  const raw=sub.licMirrorStatus;
+  const m=(licProduct(sub.productId)?.statusMap||[]).find(x=>x.raw.toLowerCase()===String(raw).toLowerCase());
+  return m?m.display:(LIC_STATUS_FALLBACK[raw]||raw);
+}
+function licMirrorBadge(sub){
+  const cls={ACTIVE:'sub-mirror-active',GRACE:'sub-mirror-grace',PENDING:'sub-mirror-pending',PROVISIONING:'sub-mirror-provisioning',SUSPENDED:'sub-mirror-suspended',EXPIRED:'sub-mirror-expired',REVOKED:'sub-mirror-revoked'}[sub.licMirrorStatus]||'sub-mirror-na';
+  return`<span class="sub-mirror-badge ${cls}">${licStatusDisplay(sub)}</span>`;
+}
+// Usage snapshot (BR-03.2: overwrite, không lịch sử)
+function licUsage(sub){
+  const isDirect=sub.contractType==='DIRECT';
+  const total=(isDirect?sub.seatCount:sub.licenseQty)||sub.seatCount||0;
+  const used=isDirect?sub.quotaUsed:sub.usedQty;
+  const unit=sub.productId==='C_SHIELD'?'instance':(isDirect?'seat':'license');
+  if(used==null||!total)return{used:null,total,pct:null,unit,anomaly:false};
+  const pct=Math.round(used/total*100);
+  return{used,total,pct,unit,anomaly:used>total};   // BR-03.6 anomaly guard
+}
+function licUsageColor(pct){return pct==null?'#94A3B8':pct>=90?'#EF4444':pct>=70?'#F59E0B':'#22C55E';}
+// Cơ hội up-sell (US-08): chỉ tính license CÒN hiệu lực — license đã hết hạn/thu hồi không phải cơ hội bán thêm seat
+function licIsUpsell(sub){
+  if(!['ACTIVE','GRACE'].includes(sub.licMirrorStatus))return false;
+  const u=licUsage(sub);
+  return u.pct!=null&&!u.anomaly&&u.pct>=LIC_UPSELL_PCT;
+}
+function licStaleHours(sub){return sub.lastSyncMins==null?null:Math.floor(sub.lastSyncMins/60);}
+function licIsStale(sub){
+  if(!['ACTIVE','GRACE'].includes(sub.licMirrorStatus))return false;
+  const h=licStaleHours(sub);
+  return h!=null&&h>=LIC_STALE_HOURS;
+}
+function licLastSyncText(sub){
+  if(sub.lastSyncMins==null)return sub.lastSync&&sub.lastSync!=='—'?sub.lastSync:'Chưa đồng bộ';
+  const m=sub.lastSyncMins;
+  if(m<60)return`${m} phút trước`;
+  if(m<1440)return`${Math.floor(m/60)} giờ trước`;
+  return`${Math.floor(m/1440)} ngày trước`;
+}
+function licFmtMins(m){
+  if(m==null)return'—';
+  if(m<60)return`${m} phút`;
+  if(m<1440)return`${Math.floor(m/60)} giờ ${m%60?(m%60)+' phút':''}`.trim();
+  return`${Math.floor(m/1440)} ngày`;
+}
+/* FR-LIC-07 — phát hiện lệch sub.status ↔ license_mirror.status quá ngưỡng SLA.
+   Loại trừ: (a) GRACE + sub ACTIVE — hợp lệ theo §5.5.1;
+             (b) sub RENEWED — predecessor đã bàn giao;
+             (c) sub vừa gia hạn còn chờ webhook (renewalPending) — mismatch tạm thời được chấp nhận.
+   CRM KHÔNG tự sửa trạng thái (BR-07.3). */
+function licMismatch(sub){
+  const st=sub.status,mr=sub.licMirrorStatus;
+  if(sub.renewalPending)return null;
+  if(st==='RENEWED')return null;
+  if(st==='ACTIVE'&&mr==='GRACE')return null;
+  if(['SUSPENDED','REVOKED'].includes(st)&&['ACTIVE','GRACE'].includes(mr))
+    return{code:'A',priority:'P2',mins:sub.mismatchMins||60,
+      label:'Sub đã dừng nhưng license còn hiệu lực',
+      risk:'Khách hàng vẫn dùng được dịch vụ dù subscription đã ngừng — rủi ro thất thoát doanh thu.'};
+  if(st==='ACTIVE'&&['SUSPENDED','EXPIRED','REVOKED'].includes(mr))
+    return{code:'B',priority:'P2',mins:sub.mismatchMins||sub.lastSyncMins||60,
+      label:'Sub đang hiệu lực nhưng license đã ngừng',
+      risk:'Khách hàng đang bị gián đoạn dịch vụ trong khi CRM ghi nhận còn hiệu lực — rủi ro khiếu nại.'};
+  if(st==='PENDING_PROVISION'&&['PENDING',null,undefined].includes(mr)&&(sub.pendingHours||0)>=LIC_RECONCILE_HOURS)
+    return{code:'C',priority:'P2',mins:sub.mismatchMins||sub.pendingHours*60,
+      label:`Chờ provisioning quá ${LIC_RECONCILE_HOURS} giờ, chưa nhận webhook nào`,
+      risk:'Product chưa kích hoạt hoặc webhook thất bại — khách hàng đã ký nhưng chưa được phục vụ.'};
+  return null;
+}
+function licMismatchList(){return licAllMirrors().map(s=>({sub:s,mm:licMismatch(s)})).filter(x=>x.mm);}
+function licCanForceSync(sub){return ['ACTIVE','SUSPENDED'].includes(sub.status);}   // BR-04.1
+function licCanViewMismatch(){return currentUser&&['Manager','License Admin'].includes(currentUser.role);}
+function licPortalUrl(sub){return(LIC_PORTAL[sub.productId]||'#')+(sub.extRef||'');}
+
+/* ── VIEW SWITCH ─────────────────────────────────────────────── */
+function licShowView(v){
+  document.getElementById('lic-view-list').classList.toggle('active',v==='list');
+  document.getElementById('lic-view-detail').classList.toggle('active',v==='detail');
+}
+function licInitFilters(){
+  const fp=document.getElementById('licFilterProduct');
+  if(fp&&fp.options.length<=1)fp.innerHTML='<option value="">Tất cả sản phẩm</option>'+CAT_PRODUCTS.map(p=>`<option value="${p.id}">${catEsc(p.name)}</option>`).join('');
+}
+function licSwitchTab(t){
+  // RBAC — tab Lệch trạng thái chỉ dành cho Manager / License Admin (FR-LIC-07 actor)
+  const tabM=document.getElementById('licTabMismatch');
+  if(tabM)tabM.style.display=licCanViewMismatch()?'':'none';
+  if(t==='mismatch'&&!licCanViewMismatch())t='all';
+  licTab=t;
+  document.getElementById('licTabAll').classList.toggle('active',t==='all');
+  if(tabM)tabM.classList.toggle('active',t==='mismatch');
+  document.getElementById('lic-pane-all').classList.toggle('hidden',t!=='all');
+  document.getElementById('lic-pane-mismatch').classList.toggle('hidden',t!=='mismatch');
+  licRenderMismatchCount();
+  if(t==='all'){licRenderChips();licRenderTable();}
+  else licRenderMismatch();
+}
+function licRenderMismatchCount(){
+  const el=document.getElementById('licMismatchCount');if(!el)return;
+  const n=licMismatchList().length;
+  el.textContent=n;el.classList.toggle('zero',n===0);
+}
+function licSetChip(c){licChip=(licChip===c)?'':c;licRenderChips();licRenderTable();}
+function licClearFilter(){
+  licChip='';
+  ['licSearch'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['licFilterProduct','licFilterStatus','licFilterUsage'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  licRenderChips();licRenderTable();
+}
+
+/* ── LIST (FR-LIC-06) ────────────────────────────────────────── */
+function licRenderChips(){
+  const el=document.getElementById('licChips');if(!el)return;
+  const all=licAllMirrors();
+  const n={
+    upsell:all.filter(licIsUpsell).length,
+    grace:all.filter(s=>s.licMirrorStatus==='GRACE').length,
+    stale:all.filter(s=>licIsStale(s)).length,
+    pending:all.filter(s=>['PENDING','PROVISIONING'].includes(s.licMirrorStatus)).length,
+    anomaly:all.filter(s=>licUsage(s).anomaly).length,
+  };
+  const chip=(key,icon,label,count)=>`<div class="lic-chip ${licChip===key?'active':''}" onclick="licSetChip('${key}')">${icon} ${label} <span class="lic-chip-n">${count}</span></div>`;
+  el.innerHTML=
+    `<div class="lic-chip ${licChip===''?'active':''}" onclick="licSetChip('')">🔑 Tất cả <span class="lic-chip-n">${all.length}</span></div>`+
+    chip('upsell','📈',`Usage ≥ ${LIC_UPSELL_PCT}% — cơ hội up-sell`,n.upsell)+
+    chip('grace','⚠️','Trong gia hạn (GRACE)',n.grace)+
+    chip('stale','🕓',`Chưa đồng bộ > ${LIC_STALE_HOURS}h`,n.stale)+
+    chip('pending','⏳','Chờ kích hoạt',n.pending)+
+    chip('anomaly','🔬','Bất thường dữ liệu',n.anomaly);
+}
+function licRenderTable(){
+  const tb=document.getElementById('licTbody');if(!tb)return;
+  const q=(document.getElementById('licSearch')?.value||'').trim().toLowerCase();
+  const fProd=document.getElementById('licFilterProduct')?.value||'';
+  const fStatus=document.getElementById('licFilterStatus')?.value||'';
+  const fUsage=document.getElementById('licFilterUsage')?.value||'';
+  let rows=licAllMirrors();
+  if(q)rows=rows.filter(s=>(s.customerName+' '+(s.beneficiaryName||'')+' '+s.id+' '+(s.extRef||'')+' '+(s.packageName||'')).toLowerCase().includes(q));
+  if(fProd)rows=rows.filter(s=>s.productId===fProd);
+  if(fStatus)rows=rows.filter(s=>s.licMirrorStatus===fStatus);
+  if(fUsage!==''){
+    const th=parseInt(fUsage,10);
+    rows=rows.filter(s=>{const u=licUsage(s);return th===0?u.pct==null:(u.pct!=null&&u.pct>=th);});
+  }
+  if(licChip==='upsell')rows=rows.filter(licIsUpsell);
+  if(licChip==='grace')rows=rows.filter(s=>s.licMirrorStatus==='GRACE');
+  if(licChip==='stale')rows=rows.filter(s=>licIsStale(s));
+  if(licChip==='pending')rows=rows.filter(s=>['PENDING','PROVISIONING'].includes(s.licMirrorStatus));
+  if(licChip==='anomaly')rows=rows.filter(s=>licUsage(s).anomaly);
+  // Ưu tiên hiển thị: mismatch → usage cao → còn lại
+  rows.sort((a,b)=>{
+    const ma=licMismatch(a)?1:0,mb=licMismatch(b)?1:0;
+    if(ma!==mb)return mb-ma;
+    return (licUsage(b).pct||0)-(licUsage(a).pct||0);
+  });
+  document.getElementById('licCount').textContent=`${rows.length} license mirror`;
+  if(!rows.length){
+    tb.innerHTML=`<tr><td colspan="8"><div class="table-empty" style="padding:40px;text-align:center;color:var(--text-secondary)"><div style="font-size:32px;margin-bottom:8px">🔍</div><div>Không có license nào khớp bộ lọc</div></div></td></tr>`;return;
+  }
+  tb.innerHTML=rows.map(s=>{
+    const u=licUsage(s);
+    const mm=licMismatch(s);
+    const flags=[
+      mm?`<span class="lic-flag lic-flag-mismatch">Lệch ${mm.priority}</span>`:'',
+      u.anomaly?`<span class="lic-flag lic-flag-anomaly">Bất thường</span>`:'',
+      licIsUpsell(s)?`<span class="lic-flag lic-flag-upsell">Up-sell</span>`:'',
+      licIsStale(s)?`<span class="lic-flag lic-flag-stale">Stale</span>`:'',
+    ].join('');
+    const usageCell=u.pct==null
+      ?`<span style="font-size:12px;color:var(--gray-400)">Product chưa gửi usage</span>`
+      :`<div style="display:flex;align-items:center;gap:8px;">
+          <div class="lic-bar"><div style="width:${Math.min(u.pct,100)}%;background:${u.anomaly?'#A21CAF':licUsageColor(u.pct)}"></div></div>
+          <span style="font-size:12px;font-weight:600;color:${u.anomaly?'#A21CAF':licUsageColor(u.pct)}">${u.used.toLocaleString('vi-VN')}/${u.total.toLocaleString('vi-VN')} ${u.unit} (${u.pct}%)</span>
+        </div>`;
+    return`<tr style="cursor:pointer" onclick="licOpenDetail('${s.id}')">
+      <td><div style="font-weight:600;">${s.customerName}</div>${s.beneficiaryName?`<div style="font-size:11px;color:var(--text-secondary)">→ ${s.beneficiaryName}</div>`:''}</td>
+      <td><div style="font-family:monospace;font-size:12px;font-weight:600;">${s.id}</div><div style="font-size:11px;color:var(--text-secondary)">${s.packageName||''}</div></td>
+      <td>${licProductName(s.productId)}</td>
+      <td>${licMirrorBadge(s)}${flags}<div style="font-size:11px;color:var(--text-secondary);margin-top:3px;">Sub: ${SUB_STATUS_META[s.status]?.label||s.status}</div></td>
+      <td>${usageCell}</td>
+      <td>${s.licMirrorExpiry?subFmtDate(s.licMirrorExpiry):'<em style="color:var(--gray-400)">—</em>'}</td>
+      <td style="font-size:12px;color:${licIsStale(s)?'var(--red)':'var(--text-secondary)'}">${licLastSyncText(s)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();licOpenDetail('${s.id}')">Xem</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── MISMATCH (FR-LIC-07) ────────────────────────────────────── */
+function licRenderMismatch(){
+  const el=document.getElementById('lic-pane-mismatch');if(!el)return;
+  if(!licCanViewMismatch()){el.innerHTML='';return;}
+  const list=licMismatchList().sort((a,b)=>b.mm.mins-a.mm.mins);
+  const banner=`<div class="lic-banner" style="background:#EFF6FF;border:1px solid #BFDBFE;color:#1E3A8A;">
+    <span style="font-size:16px">ℹ️</span>
+    <div>Hệ thống quét định kỳ và <strong>chỉ cảnh báo</strong> khi sub và license lệch nhau quá ngưỡng SLA ${LIC_SLA_MINUTES} phút — CRM không tự sửa trạng thái, không gọi sang product. Sub vừa gia hạn đang chờ webhook <strong>không</strong> tính là lệch.</div>
+  </div>`;
+  if(!list.length){
+    el.innerHTML=banner+`<div class="card" style="padding:48px;text-align:center;color:var(--text-secondary)"><div style="font-size:36px;margin-bottom:10px">✅</div><div style="font-weight:600;color:var(--text-primary)">Không có cặp lệch trạng thái</div><div style="font-size:13px;margin-top:4px">Mọi subscription đang khớp với license phía product.</div></div>`;
+    return;
+  }
+  el.innerHTML=banner+`<div class="table-wrap"><table>
+    <thead><tr><th>Ưu tiên</th><th>Khách hàng</th><th>Subscription</th><th>Trạng thái Sub ↔ License</th><th>Loại lệch</th><th>Lệch trong</th><th></th></tr></thead>
+    <tbody>${list.map(({sub:s,mm})=>`
+      <tr style="cursor:pointer" onclick="licOpenDetail('${s.id}')">
+        <td><span class="lic-prio lic-prio-${mm.priority.toLowerCase()}">${mm.priority}</span></td>
+        <td><div style="font-weight:600">${s.customerName}</div>${s.beneficiaryName?`<div style="font-size:11px;color:var(--text-secondary)">→ ${s.beneficiaryName}</div>`:''}</td>
+        <td><div style="font-family:monospace;font-size:12px;font-weight:600">${s.id}</div><div style="font-size:11px;color:var(--text-secondary)">${licProductName(s.productId)}</div></td>
+        <td>${subStatusBadge(s.status)} <span style="color:var(--gray-400);margin:0 4px">↔</span> ${licMirrorBadge(s)}</td>
+        <td><div style="font-size:13px;font-weight:500">${mm.label}</div><div style="font-size:11px;color:var(--text-secondary);max-width:340px">${mm.risk}</div></td>
+        <td style="font-weight:600;color:var(--red)">${licFmtMins(mm.mins)}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();licOpenDetail('${s.id}')">Xem</button></td>
+      </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+/* ── DETAIL (FR-LIC-01 + 04 + 05) ────────────────────────────── */
+function licOpenDetail(subId){
+  const s=subFindById(subId);if(!s)return;
+  showModule('license');
+  document.getElementById('breadcrumbCurrent').textContent='License & Usage · '+s.id;
+  licShowView('detail');
+  licRenderDetail(s.id);
+}
+function licBackToList(){
+  document.getElementById('breadcrumbCurrent').textContent='License & Usage';
+  licShowView('list');licSwitchTab(licTab);
+}
+function licUsageCard(s){
+  const u=licUsage(s);
+  if(u.pct==null){
+    return`<div class="card" style="padding:20px;margin-bottom:16px;">
+      <div class="section-hdr">Mức sử dụng (usage snapshot)</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:24px;font-weight:700;color:var(--navy)">${(u.total||0).toLocaleString('vi-VN')}</span>
+        <span style="font-size:14px;color:var(--text-secondary)">${u.unit} được cấp phép</span>
+        <span style="font-size:12px;color:var(--gray-400);background:#F8FAFC;border:1px solid #E2E8F0;padding:2px 8px;border-radius:10px;">Product chưa gửi dữ liệu sử dụng</span>
+      </div>
+    </div>`;
+  }
+  const color=u.anomaly?'#A21CAF':licUsageColor(u.pct);
+  return`<div class="card" style="padding:20px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="section-hdr" style="margin-bottom:0">Mức sử dụng (usage snapshot)</div>
+      <span style="font-size:11px;color:var(--gray-400);">Ảnh chụp hiện tại · không lưu lịch sử ở Phase 1</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px;">
+      <span style="font-size:30px;font-weight:700;color:var(--navy)">${u.used.toLocaleString('vi-VN')}</span>
+      <span style="font-size:15px;color:var(--text-secondary)">/ ${u.total.toLocaleString('vi-VN')} ${u.unit}</span>
+      <span style="font-size:14px;font-weight:700;color:${color};margin-left:4px;">${u.pct}%</span>
+    </div>
+    <div style="height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden;">
+      <div style="height:100%;width:${Math.min(u.pct,100)}%;background:${color};border-radius:4px;"></div>
+    </div>
+    <div style="font-size:12px;color:var(--text-secondary);margin-top:7px;">
+      ${u.anomaly
+        ?`Product báo <strong>${u.used.toLocaleString('vi-VN')}</strong> vượt hạn mức <strong>${u.total.toLocaleString('vi-VN')}</strong> ${u.unit}.`
+        :`Còn ${(u.total-u.used).toLocaleString('vi-VN')} ${u.unit} chưa dùng · cập nhật ${licLastSyncText(s)}`}
+    </div>
+  </div>`;
+}
+// FR-LIC-05 — has_instances=false (EDR/AV) → không có instance; has_instances=true (C-Shield) → bảng JWT
+function licInstancesCard(s){
+  const prod=licProduct(s.productId);
+  if(!prod||!prod.has_instances){
+    return`<div class="card" style="padding:20px;margin-bottom:16px;">
+      <div class="section-hdr">License Instances</div>
+      <div style="display:flex;align-items:center;gap:10px;color:var(--text-secondary);font-size:13px;">
+        <span style="font-size:20px">📄</span>
+        <span>${licProductName(s.productId)} cấp phép ở cấp subscription — không phát hành license instance riêng lẻ.</span>
+      </div>
+    </div>`;
+  }
+  const inst=s.licInstances||[];
+  const badge=st=>({ACTIVE:'sub-mirror-active',PENDING:'sub-mirror-pending',REVOKED:'sub-mirror-revoked',EXPIRED:'sub-mirror-expired'}[st]||'sub-mirror-na');
+  return`<div class="card" style="padding:20px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="section-hdr" style="margin-bottom:0">License Instances <span style="font-weight:500;color:var(--text-secondary);font-size:12px;">(${inst.length})</span></div>
+      <span style="font-size:11px;color:var(--gray-400)">Do ${licProductName(s.productId)} phát hành · CRM chỉ mirror</span>
+    </div>
+    ${inst.length?`<div class="table-wrap"><table>
+      <thead><tr><th>External ref</th><th>Trạng thái</th><th>Thông tin</th><th>Ngày phát hành</th><th>Đồng bộ</th></tr></thead>
+      <tbody>${inst.map(i=>`<tr>
+        <td style="font-family:monospace;font-size:12px;">${i.ref}</td>
+        <td><span class="sub-mirror-badge ${badge(i.status)}">${i.status}</span></td>
+        <td style="font-size:12px;color:var(--text-secondary)">${i.meta}</td>
+        <td style="font-size:12px;">${subFmtDate(i.issued)}</td>
+        <td style="font-size:12px;color:var(--text-secondary)">${i.synced}</td>
+      </tr>`).join('')}</tbody></table></div>`
+    :`<div style="color:var(--text-secondary);font-size:13px;">Chưa có instance nào được phát hành.</div>`}
+  </div>`;
+}
+function licRenderDetail(subId){
+  const s=subFindById(subId);const el=document.getElementById('lic-view-detail');if(!s||!el)return;
+  const mm=licMismatch(s);
+  const u=licUsage(s);
+  const stale=licIsStale(s);
+  const banners=[];
+  if(mm)banners.push(`<div class="lic-banner" style="background:#FEF2F2;border:1px solid #FCA5A5;color:#B91C1C;">
+    <span style="font-size:16px">⚠️</span>
+    <div><div style="font-weight:600;margin-bottom:2px;">Lệch trạng thái ${mm.priority} — ${mm.label}</div>
+    <div>Sub <strong>${SUB_STATUS_META[s.status]?.label||s.status}</strong> ↔ License <strong>${licStatusDisplay(s)}</strong>, kéo dài ${licFmtMins(mm.mins)} (ngưỡng SLA ${LIC_SLA_MINUTES} phút). ${mm.risk} CRM chỉ cảnh báo — cần Sales/Ops xử lý thủ công.</div></div>
+  </div>`);
+  if(s.renewalPending)banners.push(`<div class="lic-banner" style="background:#EFF6FF;border:1px solid #BFDBFE;color:#1E3A8A;">
+    <span style="font-size:16px">🔄</span>
+    <div><div style="font-weight:600;margin-bottom:2px;">Vừa gia hạn — đang chờ license từ product</div>
+    <div>Subscription đã ACTIVE về mặt thương mại, license mirror còn <strong>Pending</strong> cho tới khi product gửi <code>license.active</code>. Đây là trạng thái chờ hợp lệ, không tính là lệch.</div></div>
+  </div>`);
+  if(s.licMirrorStatus==='GRACE')banners.push(`<div class="lic-banner" style="background:#FFFBEB;border:1px solid #FCD34D;color:#92400E;">
+    <span style="font-size:16px">⏳</span>
+    <div><div style="font-weight:600;margin-bottom:2px;">License đang trong giai đoạn gia hạn (GRACE)</div>
+    <div>Khách hàng vẫn dùng được dịch vụ nhưng license đã quá hạn — cần chốt gia hạn trước khi product ngắt.</div></div>
+  </div>`);
+  if(u.anomaly)banners.push(`<div class="lic-banner" style="background:#FDF4FF;border:1px solid #E9D5FF;color:#86198F;">
+    <span style="font-size:16px">🔬</span>
+    <div><div style="font-weight:600;margin-bottom:2px;">Bất thường dữ liệu usage</div>
+    <div>Product báo ${u.used.toLocaleString('vi-VN')}/${u.total.toLocaleString('vi-VN')} ${u.unit} — vượt hạn mức. Sản phẩm chặn cài vượt seat nên đây là <strong>lỗi dữ liệu/đồng bộ</strong>, không phải tình huống thương mại. Đã ghi nhận cho ops kiểm tra.</div></div>
+  </div>`);
+  if(stale)banners.push(`<div class="lic-banner" style="background:#F8FAFC;border:1px solid #E2E8F0;color:#334155;">
+    <span style="font-size:16px">🕓</span>
+    <div><div style="font-weight:600;margin-bottom:2px;">License chưa đồng bộ ${licFmtMins(s.lastSyncMins)}</div>
+    <div>Vượt ngưỡng ${LIC_STALE_HOURS} giờ — số liệu hiển thị có thể đã cũ. Có thể yêu cầu đồng bộ lại hoặc báo ops kiểm tra kênh webhook.</div></div>
+  </div>`);
+
+  const cell=(label,value,hint)=>`<div><div class="sub-info-label">${label}${hint?` <span style="font-size:10px;color:var(--gray-400);font-weight:400;">${hint}</span>`:''}</div><div class="sub-info-value">${value!=null&&value!==''?value:'<em style="color:var(--gray-400)">—</em>'}</div></div>`;
+  const canSync=licCanForceSync(s);
+  const syncBtn=`<button class="btn btn-secondary" ${canSync?'':'disabled style="opacity:.5;cursor:not-allowed"'} onclick="licForceSync('${s.id}')" title="${canSync?'Yêu cầu product gửi lại usage mới nhất':'Chỉ áp dụng cho subscription đang Active hoặc Suspended'}">🔄 Đồng bộ lại usage</button>`;
+  const portalBtn=`<a class="btn btn-ghost" href="${licPortalUrl(s)}" target="_blank" rel="noopener" title="Mở trang quản trị của ${licProductName(s.productId)} — người dùng tự đăng nhập bằng tài khoản product">↗ Mở Product portal</a>`;
+
+  el.innerHTML=`
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+    <button class="btn btn-ghost btn-sm" onclick="licBackToList()">← Danh sách License</button>
+    <span style="font-size:12px;color:var(--text-secondary)">CRM là observer — mọi giá trị dưới đây do ${licProductName(s.productId)} gửi về qua webhook.</span>
+  </div>
+  ${banners.join('')}
+  <div class="card" style="padding:20px;margin-bottom:16px;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:19px;font-weight:700;color:var(--navy);margin-bottom:6px;">${s.packageName} — ${s.customerName}${s.beneficiaryName?` <span style="font-weight:500;color:var(--text-secondary)">→ ${s.beneficiaryName}</span>`:''}</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          ${licMirrorBadge(s)}
+          <span style="color:var(--gray-400)">↔</span>
+          ${subStatusBadge(s.status)}
+          <span style="font-size:12px;color:var(--text-secondary);">· Đồng bộ ${licLastSyncText(s)}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">${syncBtn}${portalBtn}</div>
+    </div>
+  </div>
+  <div class="card" style="padding:20px;margin-bottom:16px;">
+    <div class="section-hdr">Thông tin License Mirror</div>
+    <div class="sub-field-row">
+      ${cell('Subscription',`<span style="font-family:monospace;color:var(--primary);cursor:pointer;text-decoration:underline;font-weight:600" onclick="showModule('subscription');subOpenDetail('${s.id}')">${s.id}</span>`)}
+      ${cell('Sản phẩm',`${licProduct(s.productId)?.icon||''} ${licProductName(s.productId)}`)}
+      ${cell('External ref','<span style="font-family:monospace;font-size:12px;background:#F1F5F9;padding:2px 7px;border-radius:4px;">'+(s.extRef||'—')+'</span>','(ID do product sinh)')}
+    </div>
+    <div class="sub-field-row">
+      ${cell('Trạng thái license',licMirrorBadge(s),'(raw: '+s.licMirrorStatus+')')}
+      ${cell('Ngày kích hoạt',s.activationDate?subFmtDate(s.activationDate):null,'(từ product)')}
+      ${cell('Ngày hết hạn',s.licMirrorExpiry?`<span style="font-weight:600">${subFmtDate(s.licMirrorExpiry)}</span>`:null,'(nguồn sự thật cho gia hạn)')}
+    </div>
+    <div class="sub-field-row">
+      ${cell('Khách hàng',`<span style="color:var(--primary);cursor:pointer;text-decoration:underline" onclick="showModule('customer');showCustomer360('${s.customerId}')">${s.customerName}</span>`)}
+      ${cell('Hợp đồng',`<span style="font-family:monospace;color:var(--primary);cursor:pointer;text-decoration:underline" onclick="showModule('contract');conOpenDetail('${s.contractId}')">${s.contractCode}</span>`)}
+      ${cell('Đồng bộ lần cuối',licLastSyncText(s))}
+    </div>
+  </div>
+  ${licUsageCard(s)}
+  ${licInstancesCard(s)}
+  ${(Array.isArray(s.licMetadata)&&s.licMetadata.length)?`<div class="card" style="padding:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div class="section-hdr" style="margin-bottom:0">Thông tin bổ sung từ sản phẩm</div>
+      <span style="font-size:11px;color:var(--gray-400);">metadata · đồng bộ ${licLastSyncText(s)}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px 24px;">
+      ${s.licMetadata.map(m=>`<div><div class="sub-info-label">${m.label}</div><div class="sub-info-value">${m.value}</div></div>`).join('')}
+    </div>
+  </div>`:''}`;
+}
+
+/* ── FORCE SYNC USAGE (FR-LIC-04) ────────────────────────────
+   CRM publish intent usage.force_sync_requested qua Outbox → product
+   push lại usage bằng webhook. HTTP 202, không cam kết thời gian
+   (BR-04.5). Rate limit 1 lần / sub / 5 phút (BR-04.4). */
+function licForceSync(subId){
+  const s=subFindById(subId);if(!s)return;
+  if(!licCanForceSync(s)){                                   // BR-04.1 / AC-04.2
+    toast('error','Không thể đồng bộ','Chỉ subscription đang Active hoặc Suspended mới yêu cầu được.');return;
+  }
+  const last=licForceSyncAt[subId];
+  const now=Date.now();
+  if(last&&(now-last)<LIC_FORCE_SYNC_COOLDOWN*60*1000){      // BR-04.4 / AC-04.3 → 429
+    const left=Math.ceil((LIC_FORCE_SYNC_COOLDOWN*60*1000-(now-last))/60000);
+    toast('error','429 — Vượt giới hạn tần suất',`Mỗi subscription chỉ được đồng bộ 1 lần / ${LIC_FORCE_SYNC_COOLDOWN} phút. Thử lại sau ${left} phút.`);return;
+  }
+  licForceSyncAt[subId]=now;
+  toast('success','Đã gửi yêu cầu đồng bộ (202)',`${s.id} · đang chờ ${licProductName(s.productId)} gửi lại usage. Thời gian phản hồi không cam kết.`);
+  const raw=licSub(subId);
+  if(raw){
+    (raw.timeline=raw.timeline||[]).unshift({icon:'🔄',cls:'tl-dot-blue',source:'UI',actor:currentUser?.name||'Sales',title:'Yêu cầu đồng bộ lại usage',time:'2026-07-13 09:15',detail:'Outbox: usage.force_sync_requested · chờ webhook usage.report'});
+    (raw.audit=raw.audit||[]).unshift({time:'2026-07-13 09:15',source:'UI',actor:currentUser?.name||'Sales',action:'Force-sync usage',detail:'usage.force_sync_requested published',result:'SUCCESS'});
+  }
+  if(document.getElementById('lic-view-detail').classList.contains('active'))licRenderDetail(subId);
+}
+
+licSeedData();
 
 init();
 </script>

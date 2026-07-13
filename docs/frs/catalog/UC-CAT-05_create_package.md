@@ -41,8 +41,6 @@
 
 ![BPMN 2.0 — UC-CAT-05 Tạo Gói sản phẩm](../../assets/M-04_catalog/UC-CAT-05_bpmn.png)
 
-> ⏳ Ảnh BPMN sẽ được sinh sau — path theo convention, file chưa tồn tại.
-
 ### 2.1 Luồng chính
 
 > Trigger (click "＋ Thêm gói" / "＋ Tạo gói" ở UC-CAT-03) là **điểm vào**, không đánh số bước. Modal là **wizard 2 bước**: header cố định chứa stepper (① Thông tin chung — ② Tính năng của gói), `modal-body` chỉ đổi content theo step. Bước **4** là Gateway (XOR) tại điểm validate Step 1.
@@ -269,6 +267,7 @@ Với mọi EF-01: System giữ nguyên Step 1, không đóng modal, không cho 
 | Phiên bản | Ngày | Người cập nhật | Nội dung |
 |---|---|---|---|
 | 1.0 | 10/07/2026 | BA Team | Khởi tạo tài liệu — Draft for Review. Đặc tả màn Tạo gói (wizard 2 bước): Step 1 Thông tin chung (Sản phẩm ACTIVE, Mã gói nhập tay + unique trong sản phẩm + không đổi sau khi tạo, Tên gói, Thời hạn, Seat/Số thiết bị theo `has_instances`) · Step 2 Tính năng (lưới 3 cột, tính năng Mặc định khóa) · gateway validate Step 1 · tạo gói DRAFT version 1 → điều hướng UC-CAT-04 + toast. Đồng bộ demo v2.5.0 (`pkgOpenCreate`, `pkgValidateStep1`, `pkgCheckCode`, `pkgFormOnProduct`, `pkgSubmitForm`). |
+| 1.1 | 10/07/2026 | Claude (AI) | Nhúng ảnh BPMN; đối chiếu §2 ↔ BPMN: **khớp hoàn toàn** (7 step, gateway ④ "Step 1 hợp lệ?", AF-01 Hủy / AF-02 đổi sản phẩm, EF-01 validate loop, End 1 Success / End 2 Cancelled) — không cần sửa luồng. Gỡ ghi chú placeholder. |
 
 ### Review Checklist (self-review)
 
@@ -288,4 +287,4 @@ Với mọi EF-01: System giữ nguyên Step 1, không đóng modal, không cho 
 - ✅ Field Mã gói ghi rõ "Không thể thay đổi sau khi tạo"
 - ✅ Điều kiện hiển thị Seat/Số thiết bị theo `has_instances`
 - ✅ Tên nút đúng UI kèm icon: "Hủy", "Tiếp theo: Tính năng →", "← Quay lại", "💾 Tạo"; toast khớp demo
-- ✅ Screenshot đã chèn; ⏳ Ảnh BPMN chưa sinh (demo-first)
+- ✅ Screenshot + ảnh BPMN đã chèn; §2 đã đối chiếu khớp BPMN (7 step, gateway ④, AF-01/02, EF-01, End 1–2)

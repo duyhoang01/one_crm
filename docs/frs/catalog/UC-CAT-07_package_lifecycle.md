@@ -39,8 +39,6 @@
 
 ![BPMN 2.0 — UC-CAT-07 Quản lý vòng đời Gói sản phẩm](../../assets/M-04_catalog/UC-CAT-07_bpmn.png)
 
-> ⏳ Ảnh BPMN sẽ được sinh sau — path theo convention, file chưa tồn tại.
-
 ### 2.1 Tổng quan vòng đời (State machine)
 
 Gói có 3 trạng thái. Sơ đồ chuyển trạng thái:
@@ -316,6 +314,7 @@ Mọi thao tác mở modal xác nhận `pkgConfirmModal` với bố cục chung:
 | Phiên bản | Ngày | Người cập nhật | Nội dung |
 |---|---|---|---|
 | 1.0 | 10/07/2026 | BA Team | Khởi tạo tài liệu — Draft for Review. Gộp 4 thao tác vòng đời gói (Xuất bản / Ngừng bán / Xóa nháp / Rollback) vào 1 UC. §2.1 tổng quan state machine DRAFT→ACTIVE→RETIRED + rollback clone-forward; §2.2–§2.5 mỗi thao tác 1 luồng con với gateway guard quyền + guard trạng thái; §2.6 AF-01/EF-01/EF-02 dùng chung; §2.7 gồm 7 End Events. §3 mô tả 4 modal xác nhận + nút hero theo trạng thái. §4 gồm 25 AC chia 5 nhóm (mỗi thao tác 1 nhóm + hủy modal chung), phủ happy path + phân quyền + guard trạng thái sai (race). Bám sát demo `v2.5.0_catalog.html` (`pkgConfirm`, `pkgDoConfirm`, `pkgCanPublish/Retire/Delete`, `pkgFamilyMaxVer`). Cross-ref UC-CAT-03/04/05/06. |
+| 1.1 | 10/07/2026 | Claude (AI) | Nhúng ảnh BPMN; đối chiếu §2 ↔ BPMN: **khớp hoàn toàn** (4 track P1–P6 / R1–R6 / D1–D6 / B1–B6; mỗi track có gateway "Người dùng quyết định?" + gateway gộp "Đủ quyền VÀ trạng thái hợp lệ?"; AF-01 Hủy → End 5; EF-01 thiếu quyền → End 6; EF-02 trạng thái sai → End 7; tổng 7 End Events) — không cần sửa luồng. Gỡ ghi chú placeholder. |
 
 ### Review Checklist
 
@@ -334,7 +333,7 @@ Mọi thao tác mở modal xác nhận `pkgConfirmModal` với bố cục chung:
 - ✅ Wireframe hero theo trạng thái + bố cục chung `pkgConfirmModal`; bảng 4 modal (tiêu đề/body/nút chính xác theo UI)
 - ✅ Trạng thái nút hero (active/disabled + tooltip) mô tả rõ; nút Xóa disabled khi ≠ DRAFT (BR-09)
 - ✅ Text toast/nút/modal khớp sự thật nghiệp vụ
-- ✅ Screenshot đã chèn; ⏳ Ảnh BPMN chưa sinh (demo-first)
+- ✅ Screenshot + ảnh BPMN đã chèn; §2 đã đối chiếu khớp BPMN (4 track P/R/D/B, guard quyền+trạng thái, 7 End)
 
 #### Cross-reference
 - ✅ UC-CAT-04 (Chi tiết gói — điểm bấm nút, điều hướng sau rollback), UC-CAT-03 (Danh sách gói — sau khi xóa), UC-CAT-05 (Tạo gói), UC-CAT-06 (Sửa gói — cũng sinh phiên bản mới)

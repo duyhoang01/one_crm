@@ -1,6 +1,6 @@
 # UC-CON-03 — Xem Chi tiết Hợp đồng
 
-> Module: M-02 Contract Management | Phiên bản: 1.3 | Ngày: 07/07/2026
+> Module: M-02 Contract Management | Phiên bản: 1.5 | Ngày: 13/07/2026
 > Trạng thái: Draft for Review
 
 ---
@@ -72,7 +72,7 @@
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **AF-03a** | Sales | Nhấn **"＋ Thêm Pool"** hoặc **"＋ Thêm sản phẩm vào Pool"** trong accordion Pool License. |
+| **AF-03a** | Sales | Nhấn **"＋ Thêm Pool"** hoặc **"＋ Thêm gói vào Pool"** trong accordion Pool License. |
 | **AF-03b** | System | Điều hướng sang AF-01 của UC-CON-04 (Cập nhật Hợp đồng — Thêm Pool). |
 | → | — | **End 3 (Điều hướng UC-CON-04)** — Sales tiếp tục tại UC-CON-04. |
 
@@ -154,18 +154,20 @@ Layout 2 cột (label — value), font-size 14px:
 
 Không hiển thị với hợp đồng DIRECT.
 
-**Header accordion:** `🏊 Pool License [N sản phẩm]` · chevron ▼/▲ toggle
+**Header accordion:** `🏊 Pool License [N gói]` · chevron ▼/▲ toggle
+
+> **Pool ghim theo GÓI** (`packageId` = 1 phiên bản cụ thể), không theo sản phẩm. Hai gói khác nhau của cùng một sản phẩm là **2 pool riêng biệt**.
 
 **Nội dung khi có pool items:**
 
 - Summary row — 3 stat cards: **Tổng pool** (total seats), **Đã dùng** (allocated), **Còn lại** (available)
 - Mỗi pool item hiển thị:
-  - Tên sản phẩm (bold) + `Immutable` badge (xanh lá nhạt)
+  - **Tên gói + phiên bản** (bold), dòng phụ: tên sản phẩm · `pool id` + `Immutable` badge (xanh lá nhạt)
   - `{allocatedQty} / {poolTotal} seats`
   - Progress bar: màu cam nếu `allocated/total > 80%` (BR-05)
   - `Available: {remaining} seats | {pct}% đã dùng`
-  - Sub-list "Subscriptions thuộc pool này" (nếu có) — mỗi dòng: tên beneficiary + seats
-- Nút **＋ Thêm sản phẩm vào Pool** → AF-03
+  - Sub-list "Subscriptions thuộc pool này" — các sub có `packageId` trùng pool (nếu có) — mỗi dòng: tên beneficiary + seats
+- Nút **＋ Thêm gói vào Pool** → AF-03
 
 **Nội dung khi chưa có pool:**
 
@@ -208,7 +210,7 @@ Tab này hiển thị với **cả DIRECT và RESELLER** (BR-01).
 |---|---|---|---|
 | ID | ✅ | ✅ | Monospace, color: text-secondary |
 | Đơn vị thụ hưởng | ❌ | ✅ | `beneficiaryName`. "—" nếu null |
-| Gói sản phẩm | ✅ | ✅ | `packageName` (bold) + `productId` (nhỏ, nhạt) |
+| Gói sản phẩm | ✅ | ✅ | `packageName` kèm phiên bản (bold) + `productId` (nhỏ, nhạt) |
 | Ngày bắt đầu | ✅ | ✅ | dd/MM/yyyy + label *(dự kiến)* |
 | Ngày hết hạn | ✅ | ✅ | dd/MM/yyyy + label *(dự kiến)* |
 | Seats | ✅ | ❌ | `seatCount` |
@@ -243,7 +245,7 @@ Tab này hiển thị lịch sử sự kiện của hợp đồng, tương đư�
 | 📄 | Xanh dương | `Hợp đồng {code} được tạo` | Luôn có |
 | ✍️ | Cam | `Ngày ký hợp đồng được ghi nhận` | Chỉ khi `signedDate` không null |
 | 🔑 | Xanh lá | `Subscription {sub.id} được tạo` | Một entry per sub |
-| 🏊 | Xanh dương | `Pool License thêm mới — {productName}` | Một entry per pool item (RESELLER) |
+| 🏊 | Xanh dương | `Pool License thêm mới — {packageName}` | Một entry per pool item (RESELLER) |
 
 **Mỗi entry hiển thị:**
 
@@ -319,7 +321,8 @@ Search bar cố định ở đầu panel (ngoài scroll container).
 |---|---|---|---|
 | AC-CON-03-07 | HĐ DIRECT, `signedDate = null` | Sales xem tab Thông tin HĐ | Trường Ngày ký hiển thị text *"Chưa có"* (italic, màu nhạt). |
 | AC-CON-03-08 | HĐ DIRECT, `description = null` | Sales xem tab Thông tin HĐ | Hàng Mô tả **không xuất hiện** (ẩn hoàn toàn — không hiện label trống). |
-| AC-CON-03-09 | HĐ RESELLER có 1 pool item (CMC EDR, total=200, allocated=140, pct=70%) | Sales xem accordion Pool License | Summary cards hiển thị đúng. Progress bar CMC EDR màu **xanh** (70% ≤ 80%). |
+| AC-CON-03-09 | HĐ RESELLER có 1 pool item (gói "CMC EDR v2", total=200, allocated=140, pct=70%) | Sales xem accordion Pool License | Header ghi "1 gói". Card hiển thị tên gói **"CMC EDR v2"** + dòng phụ sản phẩm. Summary cards đúng. Progress bar màu **xanh** (70% ≤ 80%). |
+| AC-CON-03-13b | HĐ RESELLER có 2 pool cùng sản phẩm CMC EDR: gói "CMC EPP v1" (100) và gói "CMC EDR v2" (200). | Sales xem accordion Pool License | Hiển thị **2 card pool riêng biệt**, mỗi card 1 gói — không gộp thành 1 pool theo sản phẩm. |
 | AC-CON-03-10 | HĐ RESELLER, pool item allocated=170/200 (85%) | Sales xem accordion Pool License | Progress bar màu **cam** (85% > 80%). |
 | AC-CON-03-11 | HĐ DIRECT | Sales xem tab Thông tin HĐ | Accordion "Pool License" **không xuất hiện**. |
 | AC-CON-03-12 | HĐ RESELLER chưa có pool nào | Sales mở accordion Pool License | Text *"Chưa cấu hình pool."* + nút "＋ Thêm Pool". |
@@ -340,7 +343,7 @@ Search bar cố định ở đầu panel (ngoài scroll container).
 |---|---|---|---|
 | AC-CON-03-18 | HĐ DIRECT có `signedDate` và 2 subs | Sales nhấn tab Timeline | Ít nhất 4 entries: tạo HĐ, ghi nhận ngày ký, 2 × tạo sub. Sort DESC. |
 | AC-CON-03-19 | HĐ DIRECT có `signedDate = null` | Sales nhấn tab Timeline | Entry "Ngày ký" **không xuất hiện**. |
-| AC-CON-03-20 | HĐ RESELLER có 1 pool item và 2 subs | Sales nhấn tab Timeline | Có entry "Pool License thêm mới — {productName}" + 2 entry tạo sub. |
+| AC-CON-03-20 | HĐ RESELLER có 1 pool item và 2 subs | Sales nhấn tab Timeline | Có entry "Pool License thêm mới — {packageName}" + 2 entry tạo sub. |
 
 ### Nhóm 5: Tab Audit Log
 
@@ -363,6 +366,7 @@ Search bar cố định ở đầu panel (ngoài scroll container).
 | 1.2 | 06/07/2026 | Claude (AI) | Self-review theo checklist FRS: tách gateway bước 5, chuẩn ngôn ngữ, thêm End Events, bổ sung AC còn thiếu. |
 | 1.3 | 07/07/2026 | Claude (AI) | Cập nhật theo quyết định BA: (A-01) đổi sang tab-based layout 4 tabs; (A-02/A-03) Pool & Đính kèm accordion trong tab Thông tin HĐ; (A-04) Subs tab hiển thị cả DIRECT & RESELLER; (A-05) Sales & Manager đều xóa được; (A-07) "+ Thêm Sub" chỉ trong tab Subs; (B-01) bổ sung mô tả tab Timeline; (B-02) đổi Subs panel sang table layout; (B-03) Ngày ký trong info grid; (C-01) Audit Log đồng bộ lazy load với UC-CUS-03; (C-02) cột Nguồn: gray badge per demo. |
 | 1.4 | 08/07/2026 | Claude (AI) | Cập nhật section 2 theo BPMN UC-CON-03: nhúng ảnh BPMN, tách bước 2 (API check gateway) ra khỏi bước redirect, đánh lại số bước 3-11 khớp badge BPMN, cập nhật AF-01/AF-02/AF-03 dùng prefix chuẩn, thêm section 2.4 End Events. |
+| 1.5 | 13/07/2026 | Claude (AI) | **Pool ghim theo GÓI, không theo sản phẩm**: accordion Pool License hiển thị tên gói + phiên bản (header "N gói"), sub-list lọc theo `packageId`, nút đổi thành "＋ Thêm gói vào Pool", timeline entry dùng `{packageName}`. Thêm AC-CON-03-13b (2 gói cùng sản phẩm = 2 pool riêng). Nguồn: `docs/plans/M-04_versioning_decisions.md` (D3). |
 
 ### Quyết định đã chốt
 

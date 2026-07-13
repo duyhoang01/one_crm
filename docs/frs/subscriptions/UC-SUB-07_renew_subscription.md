@@ -1,6 +1,6 @@
 # UC-SUB-07 — Gia hạn Subscription
 
-> Module: M-03 Subscription Management | Phiên bản: 1.0 | Ngày: 09/07/2026
+> Module: M-03 Subscription Management | Phiên bản: 1.2 | Ngày: 13/07/2026
 > Trạng thái: Draft for Review
 
 ---
@@ -24,6 +24,8 @@
 |---|---|
 | **BR-01** | Nút "🔄 Gia hạn" hiển thị khi `sub.status ∈ {ACTIVE, SUSPENDED, EXPIRED}`. Không hiển thị với các trạng thái DRAFT, REVOKED, RENEWED, PENDING_PROVISION. Role Auditor không thấy nút này. |
 | **BR-02** | Subscription mới kế thừa toàn bộ thông tin từ sub cũ: `contractId`, `contractType`, `customerId`, `beneficiaryId`, `beneficiaryName`, `packageId`, `packageName`, `productId`, `seatCount`/`licenseQty`. |
+| **BR-10** | **Gia hạn giữ nguyên `package_id` của sub cũ — kể cả khi gói đó đã `RETIRED` (grandfathering).** "Ngừng bán" là quyết định thương mại (không chào bán cho KH **mới**), **không** chấm dứt dịch vụ với KH hiện hữu: HĐ đã ký ghi rõ gói + giá + điều khoản. Hệ thống **KHÔNG** tự thay gói sang bản `ACTIVE` mới và **KHÔNG** chặn gia hạn vì lý do gói `RETIRED`. `duration_months` cũng lấy từ **đúng phiên bản gói đã ghim**. |
+| **BR-11** | **Đổi sub sang phiên bản gói mới KHÔNG phải gia hạn — đó là Upgrade.** Upgrade cần KH đồng ý (thay đổi điều khoản thương mại) và thuộc **OQ-06 (Upgrade/Downgrade)** — **Phase 1 chưa hỗ trợ**, API trả `501 NOT_IMPLEMENTED`. Modal gia hạn **không có** lựa chọn đổi gói. |
 | **BR-03** | Subscription mới có `status = ACTIVE` ngay khi tạo và `previousSubId = sub_cũ.id`. Không qua trạng thái DRAFT hay PENDING_PROVISION. |
 | **BR-04** | Sub cũ chuyển thành `status = RENEWED` ngay khi gia hạn thành công. |
 | **BR-05** | Tính ngày hết hạn mới theo quy tắc: (a) Nếu `sub.status = SUSPENDED`: base = today (ngày hiện tại); (b) Nếu `sub.status ∈ {ACTIVE, EXPIRED}`: base = `sub.endDate` (ngày hết hạn cũ); `newEndDate = base + duration_months - 1 ngày`. `duration_months` lấy từ gói sản phẩm (`package.duration_months`). Người dùng có thể chỉnh ngày hết hạn mới trong form trước khi xác nhận. Ngày hết hạn mới **bắt buộc phải sau ngày hiện tại**. |
@@ -48,12 +50,12 @@
 |---|---|---|---|
 | **1** | User (Sales / CSKH / License Admin / Manager) | Click "🔄 Gia hạn" trong hero section UC-SUB-03. | Nút chỉ hiện khi `sub.status ∈ {ACTIVE, SUSPENDED, EXPIRED}` — BR-01 |
 | **2** | System | **[Gateway — Sub tồn tại VÀ `sub.status ∈ {ACTIVE, SUSPENDED, EXPIRED}`?]** Có → tiếp bước 3. Không → **EF-01**. | Kiểm tra tại thời điểm click |
-| **3** | System | Tính Ngày hết hạn mới pre-fill theo BR-05 (xem QUY TẮC NGÀY); lấy `duration_months` từ `package.duration_months`. | BR-05 |
+| **3** | System | Tính Ngày hết hạn mới pre-fill theo BR-05 (xem QUY TẮC NGÀY); lấy `duration_months` từ **đúng phiên bản gói đã ghim** (`sub.packageId`), kể cả khi gói đó `RETIRED`. | BR-05, BR-10 |
 | **4** | System | Mở modal "Gia hạn Subscription": tóm tắt sub cũ (readonly), Ngày tính từ (readonly), Ngày hết hạn mới (pre-filled, sửa được), Deal Code + Ghi chú (trống). | BR-02, BR-06 |
 | **5** | User | Review; (tuỳ chọn) chỉnh Ngày hết hạn mới, nhập Deal Code, nhập Ghi chú. | — |
 | **6** | User | Click "🔄 Gia hạn". ["Hủy" / click overlay ngoài modal → **AF-01**] | — |
 | **7** | System | **[Gateway — Ngày hết hạn mới hợp lệ? (không trống VÀ sau hôm nay)]** Có → tiếp bước 8. Không → **EF-02**. | Validate trước khi tạo record |
-| **8** | System | Tạo subscription MỚI: `status = ACTIVE`, `previousSubId = sub_cũ.id`, `startDate = today`; kế thừa contract / customer / beneficiary / package / seats-license từ sub cũ. | BR-02, BR-03 |
+| **8** | System | Tạo subscription MỚI: `status = ACTIVE`, `previousSubId = sub_cũ.id`, `startDate = today`; kế thừa contract / customer / beneficiary / **package (giữ nguyên `package_id`, kể cả `RETIRED`)** / seats-license từ sub cũ. | BR-02, BR-03, BR-10 |
 | **9** | System | Cập nhật sub CŨ: `status = RENEWED`. | BR-04 |
 | **10** | System | Ghi timeline + audit log cho cả sub cũ và sub mới. | BR-08 |
 | **11** | System | Publish event `subscription.renewed` qua Outbox → RabbitMQ. | BR-09 |
@@ -181,6 +183,14 @@
 | AC-SUB-07-11 | Gia hạn thành công. | Hệ thống xử lý xong (**bước 12–13**). | Modal đóng. Toast hiển thị "Đã gia hạn thành công — [newId] kích hoạt từ hôm nay đến [endDate]". Hệ thống điều hướng sang UC-SUB-03 của sub mới (status = ACTIVE). Kết thúc tại **End 1 (Success)**. |
 | AC-SUB-07-18 | Gia hạn hợp lệ, đã qua gateway bước 7; sub mới `ACTIVE` (bước 8), sub cũ `RENEWED` (bước 9). | Sau khi cập nhật trạng thái xong. | Event `subscription.renewed` được publish vào Outbox → RabbitMQ (**bước 11**, BR-09) để Product Module tạo Tenant License mới. CRM **không** gọi Product API trực tiếp (YT-3). |
 
+### Nhóm 3b: Gia hạn trên gói đã ngừng bán (grandfathering — BR-10, BR-11)
+
+| Mã | Given | When | Then |
+|---|---|---|---|
+| AC-SUB-07-19 | Sub ACTIVE ghim gói "CMC EDR v2". Catalog đã chuyển v2 sang `RETIRED` và publish "CMC EDR v3" (`ACTIVE`). | Mở màn UC-SUB-03 của sub đó. | Nút "🔄 Gia hạn" **vẫn hiển thị và bấm được** — gói `RETIRED` không chặn gia hạn (BR-10). |
+| AC-SUB-07-20 | Cùng bối cảnh AC-19. | Click "🔄 Gia hạn" rồi xác nhận. | Sub mới tạo với **`packageId` của "CMC EDR v2"** (không nhảy sang v3). `duration_months` lấy từ v2. Modal **không** có lựa chọn đổi gói (BR-11). |
+| AC-SUB-07-21 | Sales muốn chuyển KH sang "CMC EDR v3". | Tìm chức năng đổi phiên bản gói trong modal gia hạn. | Không có. Đây là **Upgrade** — thuộc OQ-06, **Phase 1 chưa hỗ trợ**; API Upgrade trả `501 NOT_IMPLEMENTED` (BR-11). |
+
 ### Nhóm 4: Tính ngày hết hạn theo trạng thái sub cũ
 
 | Mã | Given | When | Then |
@@ -205,6 +215,7 @@
 |---|---|---|---|
 | 1.0 | 09/07/2026 | BA | Khởi tạo tài liệu — Draft for Review |
 | 1.1 | 09/07/2026 | Claude (AI) | Đồng bộ §2 theo BPMN UC-SUB-07: nhúng ảnh; chuẩn hoá bước **1–13** khớp badge; gộp Gateway bước 2 & 7 vào một ô; thêm note "QUY TẮC NGÀY (BR-05)"; đưa End 1 vào cuối luồng chính; §2.4 End Events (End 1/2/3). AC: căn lại tham chiếu bước/End, thêm **AC-SUB-07-18** (publish `subscription.renewed` qua Outbox — bước 11). |
+| 1.2 | 13/07/2026 | Claude (AI) | **Đồng bộ versioning gói (M-04)**: thêm **BR-10** (gia hạn **giữ nguyên `package_id`, kể cả gói `RETIRED`** — grandfathering theo chuẩn thị trường VN) và **BR-11** (đổi phiên bản gói = **Upgrade**, thuộc **OQ-06**, Phase 1 trả `501 NOT_IMPLEMENTED`; modal gia hạn không có lựa chọn đổi gói). Bước 3 & 8 lấy `duration_months` / package từ **đúng phiên bản đã ghim**. Thêm **Nhóm 3b** (AC-SUB-07-19..21). Nguồn: `docs/plans/M-04_versioning_decisions.md` (D1, D4). |
 
 ### Review Checklist
 

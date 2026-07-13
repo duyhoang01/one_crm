@@ -1,6 +1,23 @@
 {
   "permissions": {
-    "allow": [],
-    "deny": []
+    "allow": [
+      "Bash(git status)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git add docs/*)",
+      "Bash(git add .claude/*)",
+      "Bash(git commit*)",
+      "Bash(git push origin main)",
+      "Bash(start chrome*)",
+      "Bash(node .gitnexus/run.cjs*)",
+      "Read(**)",
+      "Write(docs/**)",
+      "Edit(docs/**)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "Bash(rm -rf*)"
+    ]
   }
 }
