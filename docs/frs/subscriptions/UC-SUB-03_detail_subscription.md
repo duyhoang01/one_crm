@@ -1,6 +1,6 @@
 # UC-SUB-03 — Chi tiết Subscription
 
-> Module: M-03 Subscription Management | Phiên bản: 1.2 | Ngày: 10/07/2026
+> Module: M-03 Subscription Management | Phiên bản: 1.3 | Ngày: 13/07/2026
 > Trạng thái: Draft for Review
 
 ---
@@ -70,8 +70,8 @@
 
 | Bước | Tác nhân | Hành động / Phản hồi |
 |---|---|---|
-| **AF-01a** | User | Click tab "License" trên tab bar. |
-| **AF-01b** | System | Gọi `subRenderLicense(sub)`. Render `sub-tp-license` theo trạng thái: (a) `sub.status = DRAFT` hoặc `licMirrorStatus = N/A` → placeholder "Chưa có thông tin license"; (b) `licMirrorStatus = PENDING` → placeholder "Đang chờ kích hoạt"; (c) các trạng thái khác → card "Thông tin License" (badge, ngày kích hoạt, ngày hết hạn), guidance banner (GRACE/SUSPENDED/EXPIRED/REVOKED), quota/bar chart (DIRECT: seats; RESELLER: license đang active), metadata từ sản phẩm. Nếu `sub.status ≠ license_mirror.status` (GRACE không tính) và lệch > 15 phút SLA → warning banner mismatch. |
+| **AF-01a** | User | Nhấn tab "License & Usage" trên thanh tab. |
+| **AF-01b** | System | Render tab bằng **component dùng chung với [UC-LIC-02](../licenses/UC-LIC-02_view_license_detail.md)**: cảnh báo (nếu có) → khối **Trạng thái license + Mức sử dụng** → **Thông tin từ sản phẩm** (chỉ khi sản phẩm có metadata riêng) → hàng **hành động theo ngữ cảnh**. Hai trạng thái đặc biệt: subscription **Draft/chưa có license** → "Chưa có license"; license **đang chờ kích hoạt** → "Đang chờ {sản phẩm} kích hoạt" (**không** vẽ thanh mức dùng 0%). Chi tiết đầy đủ + 7 trường hợp hiển thị: **UC-LIC-02 §3**. |
 | → | — | **Ở lại trang, tiếp tục bước 5.** |
 
 **[AF-02: Chuyển tab Timeline]** — kích hoạt tại bước 6 khi user click tab "Timeline".
@@ -266,20 +266,36 @@ Trang Chi tiết Subscription gồm 4 khu vực xếp dọc từ trên xuống:
 | 10 | Ngày hết hạn | `sub.endDate` | Định dạng dd/MM/yyyy. Màu đỏ nếu đã qua và `status = ACTIVE`. |
 | 11 | Deal Code | `sub.dealCode` | Hiển thị "—" nếu null. |
 | 12 | Ghi chú | `sub.notes` | Hiển thị "—" nếu null. |
-| 13 | Trạng thái License Mirror | `sub.licMirrorStatus` | Badge trạng thái + nhãn. |
-| 14 | Lần đồng bộ cuối | `sub.licMirrorLastSync` | Định dạng dd/MM/yyyy HH:mm. Hiển thị "—" nếu chưa đồng bộ. |
-| 15 | Sub Chain | `sub.previousSubId`, `sub.successorSubId` | Chỉ hiện khi có predecessor hoặc successor (BR-12). Link đến sub tương ứng. |
+| 13 | Sub Chain | `sub.previousSubId`, `sub.successorSubId` | Chỉ hiện khi có predecessor hoặc successor (BR-12). Link đến sub tương ứng. |
+| 14 | Link "Xem trạng thái license & mức sử dụng →" | — | Đặt ở header card "Gói sản phẩm & kỳ hạn". Chuyển sang tab **License & Usage**. |
 
-### 3.5 Tab License (`sub-tp-license`)
+> **Không hiển thị ở tab này** (v1.3): trạng thái license mirror và thời điểm đồng bộ cuối — chúng thuộc tab **License & Usage** (§3.5). Trước đây hiện ở cả hai tab → **trùng lặp**. Tab Thông tin chung thuần **thương mại** (bán gì, cho ai, kỳ hạn nào); tab License & Usage thuần **thực tế phía sản phẩm**.
 
-Được render bởi `subRenderLicense(sub)`. Nội dung phụ thuộc vào trạng thái:
+### 3.5 Tab License & Usage (`sub-tp-license`)
 
-| Điều kiện | Nội dung hiển thị |
+> ⚠️ **Nguồn mô tả duy nhất: [UC-LIC-02 — Xem chi tiết License](../licenses/UC-LIC-02_view_license_detail.md).**
+> Tab này và màn chi tiết của module License & Usage **dùng chung một component** (cùng cảnh báo, cùng khối Trạng thái + Mức sử dụng, cùng section Thông tin từ sản phẩm, cùng hành động ngữ cảnh).
+> **Mọi thay đổi nội dung phải sửa tại UC-LIC-02** — mục này chỉ ghi **điểm khác biệt**, tránh hai tài liệu trôi dạt mỗi nơi một kiểu.
+
+![Tab License & Usage trong Subscription](../../assets/M-05_licenses/UC-SUB-03_screen_tab_license_usage.png)
+
+**Nội dung dùng chung** (chi tiết xem UC-LIC-02 §3): cảnh báo theo trạng thái → khối **Trạng thái license** (cặp `SẢN PHẨM` = / ≠ `CRM`, mã định danh, ngày kích hoạt, ngày hết hạn) + **Mức sử dụng** (số, thanh, thời điểm cập nhật, nút **Đồng bộ lại** — UC-LIC-03) → **Thông tin từ sản phẩm** (chỉ khi sản phẩm có metadata riêng) → hàng **hành động theo ngữ cảnh**.
+
+**Điểm khác biệt của tab này so với UC-LIC-02:**
+
+| # | Khác biệt |
 |---|---|
-| `sub.status = DRAFT` hoặc `licMirrorStatus = N/A` | Placeholder: icon + "Chưa có thông tin license". |
-| `licMirrorStatus = PENDING` | Placeholder: icon + "Đang chờ kích hoạt". |
-| Các trạng thái còn lại | Card "Thông tin License" gồm: (1) Badge trạng thái license; (2) Ngày kích hoạt (từ Product Module); (3) Ngày hết hạn license; (4) Guidance banner theo trạng thái (GRACE: cảnh báo hết hạn sớm; SUSPENDED: thông báo tạm dừng; EXPIRED: đã hết hạn; REVOKED: đã thu hồi); (5) Quota/bar chart (DIRECT: tổng seats / đã dùng; RESELLER: license đang active / tổng); (6) Section metadata từ Product Module (nếu có). |
-| Mismatch: `sub.status ≠ license_mirror.status` (GRACE không tính) VÀ lệch > 15 phút SLA | Warning banner: "⚠️ Trạng thái subscription và license mirror không đồng bộ — vui lòng kiểm tra lại." |
+| 1 | **Không có** header điều hướng riêng (không có nút "← License & Usage", không có link KH/HĐ) — người dùng đã ở trong trang subscription; các link đó nằm ở tab **Thông tin chung** (§3.4). |
+| 2 | **Có** nút **"🛡️ Xem trong module License & Usage"** ở cuối tab → mở **UC-LIC-02**. |
+| 3 | Hành động ngữ cảnh **không cần điều hướng lại**: "Xem tiến độ triển khai" chuyển thẳng sang tab Timeline (§3.6) trong cùng trang; "Gia hạn" mở modal UC-SUB-07 tại chỗ. |
+| 4 | **Không có** thao tác vòng đời (Tạm dừng / Thu hồi / Gia hạn) **trong thân tab** — chúng nằm ở Hero section (§3.2). Đặt lại ở đây sẽ khiến người dùng tưởng đang thao tác lên license. |
+
+**Trạng thái đặc biệt** (giống UC-LIC-02):
+
+| Điều kiện | Hiển thị |
+|---|---|
+| Subscription **Draft** / chưa có license | "Chưa có license — Subscription chưa được xác nhận nên CRM chưa gửi yêu cầu sang {sản phẩm}." |
+| License **đang chờ kích hoạt** | "Đang chờ {sản phẩm} kích hoạt" + badge trạng thái. **Không** vẽ thanh mức dùng 0%. Nếu là sub **vừa gia hạn** → thêm ghi chú "khoảng chờ bình thường, không tính là lệch" + link tới sub trước. |
 
 ### 3.6 Tab Timeline (`sub-tp-timeline`)
 
@@ -341,15 +357,20 @@ Trang Chi tiết Subscription gồm 4 khu vực xếp dọc từ trên xuống:
 | AC-SUB-03-13 | Sub thuộc HĐ "HĐ-2024-001", KH "FPT Software". | Click link "HĐ-2024-001" trong tab Thông tin chung. | Hệ thống mở UC-CON-03 của hợp đồng đó (AF-04). Kết thúc tại **End 6**. |
 | AC-SUB-03-13b | Sub thuộc KH "FPT Software". | Click link "FPT Software" trong tab Thông tin chung. | Hệ thống mở UC-CUS-03 (Khách hàng 360°) của KH đó (AF-05). Kết thúc tại **End 7**. |
 
-### Nhóm 4: Tab License
+### Nhóm 4: Tab License & Usage
+
+> Nội dung tab dùng chung component với UC-LIC-02 → **AC đầy đủ nằm ở UC-LIC-02 §4**. Nhóm này chỉ kiểm **điểm khác biệt và điểm nối** của tab.
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-SUB-03-14 | Sub có `status = DRAFT`. | Click tab "License". | Placeholder "Chưa có thông tin license" hiển thị. Không có card thông tin license. |
-| AC-SUB-03-15 | Sub có `licMirrorStatus = PENDING`. | Click tab "License". | Placeholder "Đang chờ kích hoạt" hiển thị. |
-| AC-SUB-03-16 | Sub có `status = ACTIVE`, `licMirrorStatus = ACTIVE`. DIRECT với 300 / 500 seats đang dùng. | Click tab "License". | Card "Thông tin License" hiển thị badge ACTIVE, ngày kích hoạt, ngày hết hạn. Bar chart hiển thị "300 / 500 seats". Không có warning banner mismatch. |
-| AC-SUB-03-17 | Sub có `status = ACTIVE`, `licMirrorStatus = GRACE`. | Click tab "License". | Tab License hiển thị guidance banner GRACE. Warning banner mismatch KHÔNG hiển thị (GRACE không tính là mismatch). |
-| AC-SUB-03-18 | Sub có `status = ACTIVE`, `licMirrorStatus = SUSPENDED`, lệch > 15 phút. | Click tab "License". | Warning banner mismatch hiển thị: "⚠️ Trạng thái subscription và license mirror không đồng bộ — vui lòng kiểm tra lại." |
+| AC-SUB-03-14 | Sub có `status = DRAFT`. | Click tab "License & Usage". | Hiển thị "Chưa có license — subscription chưa được xác nhận…". Không có khối trạng thái/mức dùng. |
+| AC-SUB-03-15 | License đang chờ kích hoạt. | Click tab "License & Usage". | Hiển thị "Đang chờ {sản phẩm} kích hoạt" + badge. **Không** vẽ thanh mức dùng 0%. |
+| AC-SUB-03-15b | Sub **vừa gia hạn**, license đang chờ kích hoạt. | Click tab "License & Usage". | Thêm ghi chú "khoảng chờ bình thường, **không** tính là lệch trạng thái" + link tới sub trước. |
+| AC-SUB-03-16 | License đã kích hoạt. | Click tab "License & Usage". | Hiển thị **đúng component của UC-LIC-02**: cặp `SẢN PHẨM = / ≠ CRM`, mã định danh, ngày kích hoạt/hết hạn, mức sử dụng, thời điểm cập nhật. |
+| AC-SUB-03-17 | Bất kỳ sub nào. | Mở tab **Thông tin chung** rồi mở tab **License & Usage**. | **Không có trường nào xuất hiện ở cả hai tab** — trạng thái license và thời điểm đồng bộ chỉ có ở tab License & Usage (§3.4 v1.3). |
+| AC-SUB-03-18 | Bất kỳ sub nào có license. | Click tab "License & Usage" → bấm **"🛡️ Xem trong module License & Usage"**. | Mở **UC-LIC-02** của license đó. |
+| AC-SUB-03-18b | License đang chờ kích hoạt **hoặc** đang lệch trạng thái. | Click tab "License & Usage" → bấm **"📅 Xem tiến độ triển khai"**. | Chuyển sang tab **Timeline** (§3.6) trong cùng trang, **không** rời trang subscription. |
+| AC-SUB-03-18c | Bất kỳ vai trò nào. | Rà thân tab "License & Usage". | **Không có** nút Tạm dừng / Thu hồi / Gia hạn trong thân tab — chúng chỉ nằm ở Hero section (§3.2). |
 
 ### Nhóm 5: Tab Timeline và Audit
 
@@ -390,6 +411,7 @@ Trang Chi tiết Subscription gồm 4 khu vực xếp dọc từ trên xuống:
 | 1.0 | 09/07/2026 | BA Team | Khởi tạo tài liệu — Draft for Review. |
 | 1.1 | 09/07/2026 | Claude (AI) | Đồng bộ §2/§4 theo BPMN UC-SUB-03 (trang chi tiết hub): §2.1 đánh lại 6 bước khớp badge, gộp thao tác vào gateway "Loại thao tác" (bước 6) fan ra 9 End Event; AF-01/02/03 gộp thành AF-Tabs (ở lại trang), AF-04→End 6, AF-05→End 7; EF-01→End 9; thêm §2.4 với 9 End Events. §4: căn AC theo bước/End, thêm AC-13b, AC-25→31 cho các nhánh điều hướng. Đồng bộ mục tiêu điều hướng: ⏸ Tạm dừng → UC-SUB-09, ▶ Khôi phục → UC-SUB-10 (BR-09, BR-10, §1 Liên kết). |
 | 1.2 | 10/07/2026 | Claude (AI) | Bổ sung hiển thị **Cấu hình sản phẩm (scope)** trong tab Thông tin chung: §3.4 thêm trường "Kiểu tổ chức" (`sub.scope.tenant_mode`, chỉ hiện với sản phẩm EDR có `scope_schema`); §4 thêm AC-11b. Đồng bộ demo `v2.4.0_subscriptions.html` (`subScopeInfoRows`) + PRD §5.3.4. |
+| 1.3 | 13/07/2026 | Claude (AI) | **Đồng bộ theo demo `v2.6.0_license.html` (M-05).** (1) Tab "License" đổi tên thành **"License & Usage"**; §3.5 **viết lại**: tab dùng **chung component** với [UC-LIC-02](../licenses/UC-LIC-02_view_license_detail.md) → mục này chỉ mô tả **điểm khác biệt**, AC đầy đủ nằm ở UC-LIC-02 (chống trôi dạt tài liệu). (2) **§3.4 bỏ 2 trường trùng lặp**: "Trạng thái License Mirror" và "Lần đồng bộ cuối" — chúng thuộc tab License & Usage; thay bằng link "Xem trạng thái license & mức sử dụng →". (3) §4 Nhóm 4 viết lại theo điểm khác biệt + thêm AC-15b/17/18b/18c (không trùng lặp giữa 2 tab; hành động ngữ cảnh; không có thao tác vòng đời trong thân tab). |
 
 > Claude tự review — đánh dấu ✅/❌ trước khi submit cho BA review.
 

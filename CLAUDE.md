@@ -146,6 +146,38 @@ UC-{MOD}-{NN}_{type}_{mô_tả}.png
 - Dùng đúng convention `_screen_` (không phải `_screenshot_`).
 - Khi embed ảnh vào FRS, dùng đường dẫn tương đối từ thư mục `frs/` về `assets/`.
 
+### Về demo HTML — 6 QUY TẮC BẮT BUỘC
+
+> Áp dụng **mỗi khi tạo mới demo** và **mỗi khi sửa/update UI của demo đã có**.
+> Sau khi làm xong, **tự review lại theo đúng 6 mục này với tư duy PO 20 năm kinh nghiệm**
+> (vừa hiểu nghiệp vụ, vừa giỏi UI/UX) — không chờ người dùng phát hiện lỗi.
+
+1. **Demo = ảnh sản phẩm cuối.** Mọi chữ trên màn hình là chữ **người dùng thật sẽ đọc**.
+   TUYỆT ĐỐI không để lọt: tên field/bảng (`license_mirror.expiration_date`, `runtime_config`),
+   tên sự kiện kỹ thuật (`license.active`, webhook, outbox), mã tài liệu (BR-xx, FR-xx, P1/P2),
+   ghi chú phạm vi ("Phase 1", "chưa lưu lịch sử"), từ lóng nội bộ ("Sub", "mirror", "ops").
+   → Nói **hậu quả với khách hàng**, không nói **trạng thái hệ thống**.
+
+2. **Đủ thông tin cho nghiệp vụ vận hành của TỪNG persona.** Trước khi dựng màn, liệt kê:
+   persona nào vào màn này, vào lúc nào, để trả lời câu hỏi gì, rồi mới chọn trường hiển thị.
+   Thiếu một trường mà persona cần → màn vô dụng; thừa trường → nhiễu.
+
+3. **Gom nhóm & sắp xếp theo mức độ quan trọng + tần suất sử dụng.**
+   Thông tin hỏi mỗi lần → trên cùng, không cần cuộn. Thông tin hiếm dùng → xuống dưới.
+   Thông tin chỉ dùng khi có sự cố → chỉ hiện khi có sự cố (cảnh báo không thường trực).
+
+4. **KHÔNG trùng lặp.** Một dữ liệu chỉ xuất hiện **một chỗ** — không lặp ở 2 tab, 2 section,
+   hay 2 lần trong cùng màn. Nếu 2 màn cùng cần → **tách component dùng chung**, không copy code
+   (copy code = hai màn sẽ trôi dạt mỗi nơi một kiểu).
+
+5. **Layout cân đối.** Không để một cột/nửa màn trống trong khi nửa kia đầy.
+   Các ô cùng hàng phải thẳng lưới. Badge/nhãn cùng nhóm phải cùng kích thước, cùng đường nền.
+
+6. **Có link & action đúng chỗ để vận hành.** Mỗi màn phải trả lời được *"rồi sao nữa?"*:
+   nút đặt **cạnh dữ liệu mà nó tác động**; hành động theo **ngữ cảnh** (chỉ hiện khi thực sự cần);
+   liên kết chéo tới màn liên quan (KH / HĐ / Subscription / Timeline). Ngưỡng cấu hình
+   (SLA, ngưỡng cảnh báo, chu kỳ...) **không hardcode** — đọc từ cấu hình sản phẩm.
+
 ### Về git
 - Không tự push lên remote trừ khi được yêu cầu rõ ràng.
 - Tạo commit message rõ ràng theo format: `docs(UC-XXX-NN): mô tả ngắn`.
