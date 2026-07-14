@@ -6961,27 +6961,57 @@ function intRenderHealth(){
 /* ── MÀN 2: SỰ KIỆN GỬI ĐI ─────────────────────────────────────── */
 const INT_OUT_STATUS={PENDING:{l:'Chờ gửi',c:'sub-mirror-pending'},PUBLISHED:{l:'Đã gửi',c:'sub-mirror-active'},
   RETRYING:{l:'Đang thử lại',c:'sub-mirror-grace'},DEAD_LETTER:{l:'Thất bại vĩnh viễn',c:'sub-mirror-revoked'}};
+/* ── PHÂN TRANG (15 dòng/trang, giống module License & Usage) ─────
+   Danh sách sự kiện có thể lên hàng nghìn dòng; đổ hết ra một mạch thì
+   không ai đọc được, và trình duyệt cũng đuối. */
+const INT_PER_PAGE=15;
+let _intPage={out:1,in:1};
+function intGoPage(which,n){_intPage[which]=n;which==='out'?intRenderOutbox():intRenderInbox();}
+function intSlice(which,rows){
+  const total=rows.length;
+  const totalPages=Math.max(1,Math.ceil(total/INT_PER_PAGE));
+  if(_intPage[which]>totalPages)_intPage[which]=1;             // lọc xong mà đang đứng ở trang cuối cũ → về trang 1
+  const cur=_intPage[which];
+  return {total,totalPages,cur,rows:rows.slice((cur-1)*INT_PER_PAGE,cur*INT_PER_PAGE)};
+}
+function intPager(which,pg,nhan){
+  if(pg.total===0)return '';
+  const from=(pg.cur-1)*INT_PER_PAGE+1, to=Math.min(pg.cur*INT_PER_PAGE,pg.total);
+  const btn=(n,label,disabled)=>`<button class="btn btn-ghost btn-sm" ${disabled?"disabled":""} onclick="intGoPage('${which}',${n})">${label}</button>`;
+  const nums=[];
+  for(let i=1;i<=pg.totalPages;i++){
+    if(i===1||i===pg.totalPages||Math.abs(i-pg.cur)<=1)
+      nums.push(`<button class="btn ${i===pg.cur?"btn-primary":"btn-ghost"} btn-sm" onclick="intGoPage('${which}',${i})">${i}</button>`);
+    else if(Math.abs(i-pg.cur)===2) nums.push('<span style="color:var(--text-secondary);padding:0 2px;">…</span>');
+  }
+  return `<div style="display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap;">
+    <div style="font-size:12px;color:var(--text-secondary);margin-right:auto;">${nhan.replace("{from}",from).replace("{to}",to).replace("{total}",pg.total)}</div>
+    ${btn(pg.cur-1,"‹",pg.cur===1)}${nums.join("")}${btn(pg.cur+1,"›",pg.cur===pg.totalPages)}
+  </div>`;
+}
+
 function intRenderOutbox(){
   const el=document.getElementById('int-pane-out');if(!el)return;
   const rows=INT_OUTBOX.filter(e=>(!_intFilter.outStatus||e.status===_intFilter.outStatus)&&(!_intFilter.outProduct||e.productId===_intFilter.outProduct))
     .sort((a,b)=>a.ageMin-b.ageMin);
   const dead=rows.filter(e=>e.status==='DEAD_LETTER');
+  const pg=intSlice('out',rows);
   el.innerHTML=`
   <div class="toolbar">
-    <select class="filter-select" onchange="_intFilter.outStatus=this.value;intRenderOutbox()">
+    <select class="filter-select" onchange="_intFilter.outStatus=this.value;_intPage.out=1;intRenderOutbox()">
       <option value="">Mọi trạng thái</option>
       ${Object.keys(INT_OUT_STATUS).map(k=>`<option value="${k}" ${_intFilter.outStatus===k?'selected':''}>${INT_OUT_STATUS[k].l}</option>`).join('')}
     </select>
-    <select class="filter-select" onchange="_intFilter.outProduct=this.value;intRenderOutbox()">
+    <select class="filter-select" onchange="_intFilter.outProduct=this.value;_intPage.out=1;intRenderOutbox()">
       <option value="">Tất cả sản phẩm</option>
       ${CAT_PRODUCTS.map(p=>`<option value="${p.id}" ${_intFilter.outProduct===p.id?'selected':''}>${catEsc(p.name)}</option>`).join('')}
     </select>
-    <button class="btn btn-ghost btn-sm" onclick="_intFilter.outStatus='';_intFilter.outProduct='';intRenderOutbox()">Xoá lọc</button>
+    <button class="btn btn-ghost btn-sm" onclick="_intFilter.outStatus='';_intFilter.outProduct='';_intPage.out=1;intRenderOutbox()">Xoá lọc</button>
     ${(dead.length&&intCan('integration:retry'))?`<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="intOpenBulk('out')">🔁 Gửi lại ${dead.length} lệnh thất bại</button>`:''}
   </div>
   <div class="table-wrap lic-table"><table>
     <thead><tr><th>Trạng thái</th><th>Lệnh gửi đi</th><th>Khách hàng</th><th>Sản phẩm</th><th style="width:90px;text-align:center">Số lần thử</th><th>Lỗi cuối</th><th>Thời điểm</th><th></th></tr></thead>
-    <tbody>${rows.length?rows.map(e=>{
+    <tbody>${pg.rows.length?pg.rows.map(e=>{
       const st=INT_OUT_STATUS[e.status];
       const s=subFindById(e.subId);
       return`<tr>
@@ -6992,10 +7022,11 @@ function intRenderOutbox(){
         <td style="text-align:center;font-weight:600;color:${e.attempts>=10?'var(--red)':'inherit'}">${e.attempts}/10</td>
         <td style="font-size:12px;color:var(--text-secondary);max-width:280px;">${e.lastError||'—'}</td>
         <td style="font-size:12px;color:var(--text-secondary);">${licFmtMins(e.ageMin)} trước</td>
-        <td>${(['DEAD_LETTER','RETRYING'].includes(e.status)&&intCan('integration:retry'))?`<button class="btn btn-secondary btn-sm" onclick="intRetryOut('${e.id}')">Gửi lại</button>`:''}</td>
+        <td>${(e.status==='DEAD_LETTER'&&intCan('integration:retry'))?`<button class="btn btn-secondary btn-sm" onclick="intRetryOut('${e.id}')">Gửi lại</button>`
+          :(e.status==='RETRYING'?`<span style="font-size:11px;color:var(--text-secondary);">Hệ thống đang tự thử lại</span>`:'')}</td>
       </tr>`;}).join(''):`<tr><td colspan="8"><div style="padding:40px;text-align:center;color:var(--text-secondary)">Không có sự kiện nào khớp bộ lọc</div></td></tr>`}
     </tbody></table></div>
-  <div style="margin-top:10px;font-size:12px;color:var(--text-secondary);">${rows.length} sự kiện gửi đi</div>`;
+  ${intPager('out',pg,'{total} sự kiện gửi đi · đang xem {from}–{to}')}`;
 }
 
 /* ── MÀN 3: SỰ KIỆN NHẬN VỀ ────────────────────────────────────── */
@@ -7007,22 +7038,23 @@ function intRenderInbox(){
   const rows=INT_INBOX.filter(e=>(!_intFilter.inStatus||e.status===_intFilter.inStatus)&&(!_intFilter.inProduct||e.productId===_intFilter.inProduct))
     .sort((a,b)=>a.ageMin-b.ageMin);
   const failed=rows.filter(e=>e.status==='FAILED'&&e.failStage!=='SIGNATURE');
+  const pg=intSlice('in',rows);
   el.innerHTML=`
   <div class="toolbar">
-    <select class="filter-select" onchange="_intFilter.inStatus=this.value;intRenderInbox()">
+    <select class="filter-select" onchange="_intFilter.inStatus=this.value;_intPage.in=1;intRenderInbox()">
       <option value="">Mọi trạng thái</option>
       ${Object.keys(INT_IN_STATUS).map(k=>`<option value="${k}" ${_intFilter.inStatus===k?'selected':''}>${INT_IN_STATUS[k].l}</option>`).join('')}
     </select>
-    <select class="filter-select" onchange="_intFilter.inProduct=this.value;intRenderInbox()">
+    <select class="filter-select" onchange="_intFilter.inProduct=this.value;_intPage.in=1;intRenderInbox()">
       <option value="">Tất cả sản phẩm</option>
       ${CAT_PRODUCTS.map(p=>`<option value="${p.id}" ${_intFilter.inProduct===p.id?'selected':''}>${catEsc(p.name)}</option>`).join('')}
     </select>
-    <button class="btn btn-ghost btn-sm" onclick="_intFilter.inStatus='';_intFilter.inProduct='';intRenderInbox()">Xoá lọc</button>
+    <button class="btn btn-ghost btn-sm" onclick="_intFilter.inStatus='';_intFilter.inProduct='';_intPage.in=1;intRenderInbox()">Xoá lọc</button>
     ${(failed.length&&intCan('integration:retry'))?`<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="intOpenBulk('in')">🔁 Xử lý lại ${failed.length} tin lỗi</button>`:''}
   </div>
   <div class="table-wrap lic-table"><table>
-    <thead><tr><th>Trạng thái</th><th>Sản phẩm báo về</th><th>Khách hàng</th><th>Sản phẩm</th><th>Xác thực</th><th>Lỗi ở bước nào</th><th>Nhận lúc</th><th></th></tr></thead>
-    <tbody>${rows.length?rows.map(e=>{
+    <thead><tr><th>Trạng thái</th><th>Nội dung báo về</th><th>Khách hàng</th><th>Sản phẩm</th><th>Xác thực</th><th>Lỗi ở bước nào</th><th>Nhận lúc</th><th></th></tr></thead>
+    <tbody>${pg.rows.length?pg.rows.map(e=>{
       const st=INT_IN_STATUS[e.status];
       const canRetry=e.status==='FAILED'&&e.failStage!=='SIGNATURE'&&intCan('integration:retry');
       return`<tr>
@@ -7039,11 +7071,58 @@ function intRenderInbox(){
         <td>${canRetry?`<button class="btn btn-secondary btn-sm" onclick="intOpenReplay('${e.id}')">Xử lý lại</button>`:''}</td>
       </tr>`;}).join(''):`<tr><td colspan="8"><div style="padding:40px;text-align:center;color:var(--text-secondary)">Không có sự kiện nào khớp bộ lọc</div></td></tr>`}
     </tbody></table></div>
-  <div style="margin-top:10px;font-size:12px;color:var(--text-secondary);">${rows.length} sự kiện nhận về · tin có chữ ký không hợp lệ <strong>không được xử lý lại</strong> (nguồn gửi chưa xác thực được)</div>`;
+  ${intPager('in',pg,'{total} sự kiện nhận về · đang xem {from}–{to} · tin có chữ ký không hợp lệ không được xử lý lại')}`;
 }
 
 /* ── MÀN 4: TRA CỨU THEO SUBSCRIPTION ──────────────────────────── */
 function intTrace(subId){intTraceSubId=subId;intSwitchTab('trace');}
+/* Gộp sự kiện liên tiếp giống hệt nhau — 40 dòng lặp không kể thêm được gì,
+   chúng chỉ chôn mất những sự kiện thật sự giải thích vấn đề. */
+function intTraceGroup(events){
+  const out=[];
+  for(const e of events){
+    const last=out[out.length-1];
+    const sameAs = last && last.dir===e.dir && last.eventKey===e.eventKey && last.status===e.status
+      && (last.failReason||null)===(e.failReason||null) && (last.lastError||null)===(e.lastError||null);
+    if(sameAs){ last.count++; last.oldestMin=e.ageMin; last.ids.push(e.id); }
+    else out.push({...e,count:1,oldestMin:e.ageMin,newestMin:e.ageMin,ids:[e.id]});
+  }
+  return out;
+}
+/* Kết luận: license đang ra sao, vướng ở đâu, ai phải làm gì. */
+function intTraceVerdict(s,events){
+  const failedIn=events.filter(e=>e.dir==='in'&&e.status==='FAILED'&&e.failStage!=='SIGNATURE');
+  const deadOut=events.filter(e=>e.dir==='out'&&e.status==='DEAD_LETTER');
+  if(deadOut.length) return {icon:"🚨",tone:"bad",
+    title:`${deadOut.length} lệnh của CRM chưa tới được ${licProductName(s.productId)}`,
+    body:"Khách hàng có thể <strong>vẫn dùng được dịch vụ</strong> dù CRM đã ghi nhận là dừng. Báo vận hành, rồi gửi lại các lệnh này ở màn <strong>Sự kiện gửi đi</strong>.",
+    act:{label:'Xem sự kiện gửi đi →',fn:`intSwitchTab('out')`}};
+  if(failedIn.length) return {icon:"🛠️",tone:"bad",
+    title:`${failedIn.length} tin từ ${licProductName(s.productId)} mà CRM xử lý lỗi`,
+    body:`Sản phẩm <strong>có gửi dữ liệu</strong>, nhưng CRM không đọc được — <strong>lỗi phía CRM</strong>, đừng gọi đội sản phẩm. Lý do phổ biến nhất: <em>${failedIn[0].failReason}</em>. Sửa quy tắc đọc dữ liệu rồi xử lý lại theo đúng thứ tự thời gian.`,
+    act:intCan('integration:retry')?{label:`Xử lý lại ${failedIn.length} tin →`,fn:`intOpenReplay('${failedIn[failedIn.length-1].id}')`}:null};
+  return {icon:"✅",tone:"ok",title:"Không có sự cố tích hợp nào với subscription này",
+    body:"Mọi lệnh CRM gửi đều tới nơi, mọi tin sản phẩm báo về đều xử lý được. Nếu khách vẫn kêu, vấn đề nằm ngoài kênh tích hợp.",act:null};
+}
+
+/* Subscription đang có sự cố tích hợp — dùng cho gợi ý ở màn Tra cứu.
+   Người dùng không thuộc mã sub; bắt họ gõ tay là bắt họ đi tìm ở màn khác rồi quay lại. */
+function intTroubledSubs(){
+  const m=new Map();
+  const add=(subId,kind)=>{
+    if(!subId)return;
+    const r=m.get(subId)||{subId,dead:0,failed:0};
+    kind==='dead'?r.dead++:r.failed++;
+    m.set(subId,r);
+  };
+  INT_OUTBOX.filter(e=>e.status==='DEAD_LETTER').forEach(e=>add(e.subId,'dead'));
+  INT_INBOX.filter(e=>e.status==='FAILED'&&e.failStage!=='SIGNATURE').forEach(e=>add(e.subId,'failed'));
+  return [...m.values()]
+    .map(r=>({...r,sub:subFindById(r.subId)}))
+    .filter(r=>r.sub)
+    .sort((a,b)=>(b.dead-a.dead)||(b.failed-a.failed));
+}
+
 function intRenderTrace(){
   const el=document.getElementById('int-pane-trace');if(!el)return;
   const s=intTraceSubId?subFindById(intTraceSubId):null;
@@ -7059,11 +7138,31 @@ function intRenderTrace(){
     </div>
     <button class="btn btn-secondary btn-sm" onclick="intTrace(document.getElementById('intTraceInput').value.trim().toUpperCase())">Tra cứu</button>
   </div>
-  ${!s?`<div class="card" style="padding:48px;text-align:center;color:var(--text-secondary)">
-      <div style="font-size:36px;margin-bottom:10px">🔍</div>
-      <div style="font-weight:600;color:var(--text-primary)">${intTraceSubId?'Không tìm thấy subscription '+intTraceSubId:'Nhập mã subscription để xem toàn bộ trao đổi dữ liệu'}</div>
-      <div style="font-size:13px;margin-top:4px">Dùng khi Sales báo "khách hàng này chưa dùng được" — xem CRM đã gửi gì và sản phẩm đã báo về những gì.</div>
-    </div>`
+  ${!s?(()=>{const tr=intTroubledSubs();return `
+    <div class="card" style="padding:24px;">
+      <div style="text-align:center;color:var(--text-secondary);padding-bottom:${tr.length?18:24}px;">
+        <div style="font-size:32px;margin-bottom:8px">🔍</div>
+        <div style="font-weight:600;color:var(--text-primary)">${intTraceSubId?'Không tìm thấy subscription '+intTraceSubId:'Nhập mã subscription để xem toàn bộ trao đổi dữ liệu'}</div>
+        <div style="font-size:13px;margin-top:4px">Dùng khi Sales báo "khách hàng này chưa dùng được" — xem CRM đã gửi gì và sản phẩm đã báo về những gì.</div>
+      </div>
+      ${tr.length?`
+      <div class="section-hdr" style="margin-top:4px;">Đang có sự cố — nhiều khả năng bạn đang tìm một trong số này</div>
+      <div class="int-trace">
+        ${tr.slice(0,6).map(r=>`
+        <div class="int-trace-row" style="cursor:pointer;" onclick="intTrace('${r.subId}')">
+          <div class="int-trace-body">
+            <div style="font-weight:600;">${r.sub.customerName}</div>
+            <div style="font-size:12px;color:var(--text-secondary);">${licProduct(r.sub.productId)?.icon||""} ${licProductName(r.sub.productId)} · <span style="font-family:monospace;">${r.subId}</span></div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            ${r.dead?`<span class="sub-mirror-badge red">${r.dead} lệnh chưa tới nơi</span>`:""}
+            ${r.failed?`<span class="sub-mirror-badge amber">${r.failed} tin CRM xử lý lỗi</span>`:""}
+          </div>
+        </div>`).join("")}
+      </div>
+      ${tr.length>6?`<div style="font-size:12px;color:var(--text-secondary);margin-top:8px;">và ${tr.length-6} subscription khác — xem đầy đủ ở tab Sự kiện gửi đi / Sự kiện nhận về.</div>`:""}
+      `:`<div style="text-align:center;font-size:13px;color:#059669;">Hiện không có subscription nào gặp sự cố tích hợp.</div>`}
+    </div>`;})()
   :`<div class="card" style="padding:20px;margin-bottom:16px;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
         <div>
@@ -7076,17 +7175,27 @@ function intRenderTrace(){
         </div>
       </div>
     </div>
+    ${(()=>{const v=intTraceVerdict(s,events);return `
+    <div class="int-verdict" style="border-color:${v.tone==="bad"?"#FECACA":"#BBF7D0"};background:${v.tone==="bad"?"#FEF2F2":"#F0FDF4"};margin-bottom:16px;">
+      <div style="font-size:18px;">${v.icon}</div>
+      <div style="flex:1;">
+        <div style="font-weight:600;margin-bottom:2px;">${v.title}</div>
+        <div>${v.body}</div>
+        ${v.act?`<button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="${v.act.fn}">${v.act.label}</button>`:""}
+      </div>
+    </div>`;})()}
     <div class="card" style="padding:20px;">
-      <div class="section-hdr">Trao đổi dữ liệu với ${licProductName(s.productId)} (${events.length} sự kiện)</div>
-      ${events.length?`<div class="int-trace">${events.map(e=>{
+      <div class="section-hdr">Trao đổi dữ liệu với ${licProductName(s.productId)} — ${events.length} sự kiện, gộp thành ${intTraceGroup(events).length} dòng</div>
+      ${events.length?`<div class="int-trace">${intTraceGroup(events).map(e=>{
         const isOut=e.dir==='out';
         const st=isOut?INT_OUT_STATUS[e.status]:INT_IN_STATUS[e.status];
         const bad=['DEAD_LETTER','FAILED'].includes(e.status);
         return`<div class="int-trace-row ${bad?'bad':''}">
-          <div class="int-trace-time">${licFmtMins(e.ageMin)} trước</div>
+          <div class="int-trace-time">${e.count>1?`${licFmtMins(e.oldestMin)} → ${licFmtMins(e.newestMin)} trước`:`${licFmtMins(e.ageMin)} trước`}</div>
           <div class="int-trace-dir">${isOut?'📤 CRM gửi':'📥 Sản phẩm báo'}</div>
           <div class="int-trace-body">
-            <div style="font-weight:600;">${isOut?(INT_OUT_LABEL[e.eventKey]||e.eventKey):(INT_IN_LABEL[e.eventKey]||'Sự kiện không xác định')}</div>
+            <div style="font-weight:600;">${isOut?(INT_OUT_LABEL[e.eventKey]||e.eventKey):(INT_IN_LABEL[e.eventKey]||'Sự kiện không xác định')}
+              ${e.count>1?`<span class="lic-tag-onprem" style="margin-left:6px;">× ${e.count} tin giống nhau</span>`:""}</div>
             ${bad?`<div style="font-size:12px;color:#B91C1C;margin-top:2px;">${isOut?e.lastError:e.failReason}</div>`:''}
           </div>
           <div><span class="sub-mirror-badge ${st.c}">${st.l}</span></div>
@@ -7099,6 +7208,14 @@ function intRenderTrace(){
 function intRetryOut(id){
   const e=INT_OUTBOX.find(x=>x.id===id);if(!e)return;
   if(!intCan('integration:retry')){toast('error','Không có quyền','Chỉ quản trị vận hành mới gửi lại được.');return;}
+  // Chỉ lệnh đã THẤT BẠI VĨNH VIỄN mới gửi lại tay. Lệnh đang được hệ thống tự thử lại
+  // mà can thiệp vào thì thành hai lần gửi cùng một lệnh.
+  if(e.status!=='DEAD_LETTER'){
+    toast('error','Chưa cần gửi lại',e.status==='RETRYING'
+      ?`Hệ thống đang tự thử lại lệnh này (lần ${e.attempts}/10). Chờ hết số lần thử rồi mới gửi lại tay.`
+      :'Lệnh này chưa thất bại — không cần gửi lại.');
+    return;
+  }
   e.status='PENDING';e.attempts=0;e.lastError=null;
   toast('success','Đã đưa lại vào hàng đợi',`${INT_OUT_LABEL[e.eventKey]||e.eventKey} · ${e.subId} — sẽ gửi lại tới ${licProductName(e.productId)}.`);
   intRenderCounts();intRenderOutbox();
@@ -7209,11 +7326,11 @@ init();
 </script>
 
 <!-- ════════════ MODAL: XỬ LÝ LẠI / GỬI LẠI (M-07) ════════════ -->
-<div class="modal-overlay" id="intModalReplay">
+<div class="overlay" id="intModalReplay">
   <div class="modal" style="max-width:640px;">
     <div class="modal-header">
       <div class="modal-title" id="intReplayTitle">Xử lý lại sự kiện</div>
-      <button class="modal-close" onclick="intCloseModal('intModalReplay')">×</button>
+      <button class="close-btn" onclick="intCloseModal('intModalReplay')">✕</button>
     </div>
     <div class="modal-body">
       <div id="intReplayBody"></div>
