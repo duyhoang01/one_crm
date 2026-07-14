@@ -29,57 +29,93 @@
 | **BR-05** | Mức sử dụng là **số liệu hiện tại do sản phẩm gửi về**. Sản phẩm chưa gửi → hiển thị "— / {tổng} {đơn vị} đã bán", **không** vẽ thanh 0% (0% nghĩa là "đã có dữ liệu và bằng 0" — người dùng sẽ hiểu nhầm là license hỏng). |
 | **BR-06** | License **đã ngừng** (Hết hạn / Thu hồi): vẫn hiển thị số liệu cuối cùng nhưng **bắt buộc gắn nhãn "Số liệu cuối trước khi ngừng"** và tô xám — không được hiển thị như số đang chạy. |
 | **BR-07** | **Cảnh báo chỉ hiện khi có việc phải làm.** License khoẻ mạnh → không có banner nào. |
-| **BR-08** | Ngưỡng hiển thị **lấy theo cấu hình của từng sản phẩm** — không hardcode. Giá trị hiện hành *(chốt 13/07/2026, tạm dùng đến khi có số thật từ đội sản phẩm)*: chu kỳ cập nhật mức dùng **24 giờ** (→ ngưỡng "chưa cập nhật" = **48 giờ**) · SLA lệch trạng thái **15 phút** · báo gia hạn trước **60 ngày** · "sắp dùng hết" khi **≥ 90%**. |
+| **BR-08** | Ngưỡng hiển thị **lấy theo cấu hình của từng sản phẩm** (`PRODUCT_MODULE_CONFIG.runtime_config`) — **không hardcode**. Giá trị hiện hành *(chốt 14/07/2026, đổi được bằng cấu hình)*: chu kỳ cập nhật mức dùng **3 giờ** (→ ngưỡng "chưa cập nhật" = **6 giờ**) · SLA lệch trạng thái **15 phút** · báo gia hạn trước **60 ngày** · "sắp dùng hết" khi **≥ 90%**. |
 | **BR-09** | **Khách hàng triển khai tại chỗ (on-premise)**: hiển thị nhãn **"Không theo dõi tự động"**, không có mức sử dụng / thời điểm cập nhật, không có cảnh báo, không có nút Đồng bộ lại. |
 
 ---
 
 ## 2. Luồng nghiệp vụ
 
+![BPMN 2.0 — UC-LIC-02 Xem chi tiết License](../../assets/M-05_licenses/UC-LIC-02_bpmn.png)
+
 ### 2.1 Luồng chính
+
+> Số bước khớp badge trong ảnh BPMN. Bước **2** và **4** là Gateway (XOR).
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **1** | Người dùng | Mở chi tiết license (từ UC-LIC-01 hoặc UC-SUB-03). |
-| **2** | System | Đọc license mirror của subscription; đánh giá cảnh báo (UC-LIC-04) theo ngưỡng cấu hình của sản phẩm. |
-| **3** | System | Render: (a) cảnh báo — nếu có; (b) khối **Trạng thái license + Mức sử dụng**; (c) **Thông tin từ sản phẩm** — nếu có metadata; (d) hàng **hành động theo ngữ cảnh**. |
-| **4** | Người dùng | [Điểm quyết định — Người dùng muốn làm gì?]<br>→ Chọn: đồng bộ lại · gia hạn · xem tiến độ triển khai · mở trang quản trị sản phẩm · điều hướng (KH / HĐ / Sub) · quay lại. |
+| **1** | Người dùng | Mở chi tiết license (từ UC-LIC-01 hoặc từ tab License & Usage của UC-SUB-03). |
+| **2** | System | **[Gateway — Subscription tồn tại và đã có license?]** Không tồn tại → **EF-01** (**End 6**). Chưa có license (Draft) → **EF-02** (**End 1**). Có → tiếp bước 3. |
+| **3** | System | Đọc license mirror; đánh giá cảnh báo (UC-LIC-04) theo ngưỡng cấu hình của sản phẩm; render: (a) cảnh báo — nếu có; (b) khối **Trạng thái license + Mức sử dụng**; (c) **Thông tin từ sản phẩm** — nếu sản phẩm có metadata riêng; (d) hàng **hành động theo ngữ cảnh**. |
+| **4** | Người dùng | **[Gateway — Người dùng muốn làm gì?]**<br>→ Đồng bộ lại → **AF-01** (**End 2**) · Gia hạn → **AF-02** (**End 3**) · Xem tiến độ triển khai → **AF-03** (**End 4**) · Mở trang quản trị sản phẩm → **AF-04** (**End 5**) · Điều hướng chéo (KH / HĐ / Sub) → **AF-05** (**End 7 / End 8 / End 9**) · Quay lại / không thao tác → **End 1**. |
 
 ### 2.2 Luồng phụ
 
-**[AF-01: Đồng bộ lại mức sử dụng]** — tại bước 4 → **UC-LIC-03**. Kết thúc tại **End 2**.
-
-**[AF-02: Gia hạn]** — tại bước 4, chỉ hiện khi license còn hiệu lực và sắp/đã quá hạn → mở modal **UC-SUB-07**. Kết thúc tại **End 3**.
-
-**[AF-03: Xem tiến độ triển khai]** — tại bước 4, chỉ hiện khi license đang chờ kích hoạt **hoặc** đang lệch trạng thái → mở tab Timeline của **UC-SUB-03**. Kết thúc tại **End 4**.
-
-**[AF-04: Mở trang quản trị sản phẩm]** — tại bước 4, theo quyền.
+**[AF-01: Đồng bộ lại mức sử dụng]** — kích hoạt tại bước 4, chỉ hiện theo điều kiện §3.6.
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **4a** | Người dùng | Bấm **↗ Mở trang quản trị sản phẩm**. |
-| **4b** | System | **Ghi audit** (ai, subscription nào, mã định danh nào) rồi mở tab mới tới URL sinh từ cấu hình sản phẩm. |
-| **4c** | Product portal | Tự xác thực. Người dùng không có tài khoản → portal từ chối. **CRM không xác thực hộ.** |
+| **AF-01a** | Người dùng | Bấm **🔄 Đồng bộ lại** → chuyển sang **UC-LIC-03**. |
+| → | — | Kết thúc tại **End 2**. |
+
+**[AF-02: Gia hạn]** — kích hoạt tại bước 4, chỉ hiện khi license còn hiệu lực và sắp/đã quá hạn.
+
+| Bước | Actor | Hành động / Phản hồi |
+|---|---|---|
+| **AF-02a** | Người dùng | Bấm **Gia hạn** → mở modal gia hạn (**UC-SUB-07**). |
+| → | — | Kết thúc tại **End 3**. |
+
+**[AF-03: Xem tiến độ triển khai]** — kích hoạt tại bước 4, chỉ hiện khi license **đang chờ kích hoạt** hoặc **đang lệch trạng thái**.
+
+| Bước | Actor | Hành động / Phản hồi |
+|---|---|---|
+| **AF-03a** | Người dùng | Bấm **Xem tiến độ triển khai** → mở tab Timeline của **UC-SUB-03**. |
+| → | — | Kết thúc tại **End 4**. |
+
+**[AF-04: Mở trang quản trị sản phẩm]** — kích hoạt tại bước 4, chỉ với người có quyền `license:view_portal`.
+
+| Bước | Actor | Hành động / Phản hồi |
+|---|---|---|
+| **AF-04a** | Người dùng | Bấm **↗ Mở trang quản trị sản phẩm**. |
+| **AF-04b** | System | **Ghi nhật ký hoạt động** (ai · subscription nào · mã định danh nào) rồi mở tab mới tới địa chỉ sinh từ cấu hình sản phẩm. |
+| **AF-04c** | Trang quản trị sản phẩm | Tự xác thực người dùng. Không có tài khoản → sản phẩm từ chối. **CRM không xác thực hộ.** |
 | → | — | Kết thúc tại **End 5**. |
 
-**[AF-05: Điều hướng chéo]** — tại bước 4: tên KH → **UC-CUS-03**; mã hợp đồng → **UC-CON-03**; nút "Mở subscription" → **UC-SUB-03**.
+**[AF-05: Điều hướng chéo]** — kích hoạt tại bước 4.
+
+| Bước | Actor | Hành động / Phản hồi |
+|---|---|---|
+| **AF-05a** | Người dùng | Bấm tên khách hàng → **UC-CUS-03** (**End 7**) · mã hợp đồng → **UC-CON-03** (**End 8**) · **Mở subscription** → **UC-SUB-03** (**End 9**). |
 
 ### 2.3 Luồng ngoại lệ
 
-**[EF-01: Subscription không tồn tại]** — tại bước 2 → HTTP 404, quay lại danh sách + thông báo ngắn lỗi. Kết thúc tại **End 6**.
+**[EF-01: Subscription không tồn tại]** — kích hoạt tại bước 2.
 
-**[EF-02: Sub chưa có license]** — subscription ở trạng thái Draft / chưa gửi sang sản phẩm → không nằm trong danh sách UC-LIC-01; nếu truy cập trực tiếp → hiển thị trạng thái "Chưa có license".
+| Bước | Actor | Hành động / Phản hồi |
+|---|---|---|
+| **EF-01a** | System | Không mở được trang chi tiết; quay lại danh sách UC-LIC-01 kèm thông báo ngắn "Không tìm thấy subscription". |
+| → | — | Kết thúc tại **End 6**. |
+
+**[EF-02: Subscription chưa có license]** — kích hoạt tại bước 2, subscription ở trạng thái Draft / chưa gửi sang sản phẩm.
+
+| Bước | Actor | Hành động / Phản hồi |
+|---|---|---|
+| **EF-02a** | System | Hiển thị trạng thái **"Chưa có license"**; không có mức sử dụng, không có cảnh báo, không có hành động. *(Nhóm này không nằm trong danh sách UC-LIC-01 — BR-03; chỉ tới được khi truy cập trực tiếp hoặc từ tab License & Usage của UC-SUB-03.)* |
+| → | — | **Ở lại màn chi tiết** (**End 1**). |
 
 ### 2.4 Điểm kết thúc
 
-| End | Mô tả |
-|---|---|
-| **End 1** | Ở lại màn chi tiết. |
-| **End 2** | Đã gửi yêu cầu đồng bộ (UC-LIC-03). |
-| **End 3** | Mở modal gia hạn (UC-SUB-07). |
-| **End 4** | Chuyển sang Timeline của subscription (UC-SUB-03). |
-| **End 5** | Mở trang quản trị sản phẩm (tab mới). |
-| **End 6** | Lỗi — quay lại danh sách. |
+| End | Mô tả | Đến từ |
+|---|---|---|
+| **End 1** | Ở lại màn chi tiết (mặc định; cũng là kết thúc của EF-02 "Chưa có license"). | Bước 4 · EF-02 |
+| **End 2** | Đã gửi yêu cầu đồng bộ (UC-LIC-03). | AF-01 |
+| **End 3** | Mở modal gia hạn (UC-SUB-07). | AF-02 |
+| **End 4** | Chuyển sang Timeline của subscription (UC-SUB-03). | AF-03 |
+| **End 5** | Mở trang quản trị sản phẩm (tab mới). | AF-04 |
+| **End 6** | Không tìm thấy subscription — quay lại danh sách UC-LIC-01. | EF-01 |
+| **End 7** | Điều hướng sang Khách hàng 360° (UC-CUS-03). | AF-05 |
+| **End 8** | Điều hướng sang Chi tiết hợp đồng (UC-CON-03). | AF-05 |
+| **End 9** | Điều hướng sang Chi tiết subscription (UC-SUB-03). | AF-05 |
 
 ---
 
@@ -179,7 +215,7 @@ Badge phía sản phẩm = nhãn viền đứt **"Không theo dõi tự động"
 | # | Nút | Điều kiện hiển thị |
 |---|---|---|
 | 1 | **🔄 Đồng bộ lại** | Có quyền `license:force_sync` **và** sản phẩm khai báo `supports_force_sync = true` **và** không phải on-premise. Sub không ở Active/Tạm dừng → **disable + tooltip** |
-| 2 | **🔄 Gia hạn** | License còn hiệu lực **và** sắp/đã quá hạn (theo ngưỡng sản phẩm) **và** subscription đủ điều kiện gia hạn → mở UC-SUB-07 |
+| 2 | **🔄 Gia hạn** | License còn hiệu lực **và** sắp/đã quá hạn (theo ngưỡng sản phẩm) **và** subscription đủ điều kiện gia hạn → mở UC-SUB-07.<br>⚠️ **Chỉ hiện ở màn này.** Khi component chạy trong tab License & Usage của UC-SUB-03 → **ẩn nút**, vì trang subscription đã có nút Gia hạn ở Hero — một hành động chỉ được xuất hiện một chỗ trên cùng một màn *(chốt 14/07/2026)*. |
 | 3 | **📅 Xem tiến độ triển khai** | License đang chờ kích hoạt **hoặc** đang lệch trạng thái → tab Timeline của UC-SUB-03 |
 | 4 | **↗ Mở trang quản trị sản phẩm** | Có quyền `license:view_portal` **và** đã có mã định danh **và** sản phẩm khai báo link. Ghi audit khi nhấn |
 | 5 | *(không nút nào)* | License khoẻ mạnh, còn xa hạn, dữ liệu mới → **trang sạch** |

@@ -25,7 +25,7 @@
 | **BR-01** | Chỉ áp dụng cho subscription **Active** hoặc **Tạm dừng**. Trạng thái khác → từ chối **400**. **Vẫn cho phép khi license đã ngừng** (Hết hạn / Thu hồi) — đúng lúc lệch trạng thái là lúc cần hỏi lại sản phẩm để xác minh *(chốt 13/07/2026)*. | BR-04.1 |
 | **BR-02** | **Giới hạn theo subscription**: tối đa **1 lần / subscription / 5 phút**. Vượt → **429**. | BR-04.4 |
 | **BR-03** | **KHÔNG giới hạn số lượt theo người dùng.** *Lý do (chốt 13/07/2026): sau sự cố kết nối, vận hành cần đồng bộ lại nhiều license cùng lúc để lấy trạng thái mới nhất — chặn theo người dùng sẽ cản đúng lúc cần nhất. Bảo vệ tải là việc của sản phẩm (backpressure).* | Chốt mới |
-| **BR-04** | Quyền bấm gán theo **** (cấu hình vận hành, không hardcode theo vai trò). Mặc định: Sales, CSKH, Manager, License Admin. **Auditor KHÔNG có** — hành động này để lại dấu vết trong hệ thống mà auditor đang kiểm toán. Gọi API khi không có quyền → **403**. | BR-04.6 |
+| **BR-04** | Quyền bấm gán theo **`license:force_sync`** (cấu hình vận hành, không hardcode theo vai trò). Mặc định: Sales, CSKH, Manager, License Admin. **Auditor KHÔNG có** — hành động này để lại dấu vết trong hệ thống mà auditor đang kiểm toán. Gọi API khi không có quyền → **403**. | BR-04.6 |
 | **BR-05** | Sản phẩm khai báo **không hỗ trợ** gửi lại số liệu theo yêu cầu → **ẩn hẳn nút**, không phát sinh yêu cầu. Gọi thẳng API → **400 NOT_SUPPORTED**. | BR-04.8 |
 | **BR-06** | **Không cam kết thời gian phản hồi.** Giao diện phải nói rõ đang chờ sản phẩm. | BR-04.5 |
 | **BR-07** | Ghi **nhật ký hoạt động** (ai, subscription nào, lúc nào) và **một dòng tiến độ** trong Timeline của subscription. | BR-04.2 |
@@ -35,36 +35,42 @@
 
 ## 2. Luồng nghiệp vụ
 
+![BPMN 2.0 — UC-LIC-03 Đồng bộ lại mức sử dụng](../../assets/M-05_licenses/UC-LIC-03_bpmn.png)
+
 ### 2.1 Luồng chính
+
+> Số bước khớp badge trong ảnh BPMN. Bước **2** là chuỗi 4 Gateway (XOR) kiểm tra tuần tự — mỗi Gateway rẽ về một EF riêng.
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
 | **1** | Người dùng | Bấm **🔄 Đồng bộ lại** (cạnh khối Mức sử dụng). |
-| **2** | System | Kiểm tra: quyền (BR-04) → sản phẩm có hỗ trợ (BR-05) → trạng thái sub (BR-01) → giới hạn theo sub (BR-02) → hạn mức theo người dùng (BR-03). |
-| **3** | System | Ghi nhận yêu cầu (**202**), gửi sang sản phẩm; ghi nhật ký + một dòng tiến độ vào Timeline (BR-07). |
-| **4** | System | Hiển thị thông báo *"Đã gửi yêu cầu đồng bộ — đang chờ {sản phẩm} gửi lại số liệu. Thời gian phản hồi không cam kết."* |
-| **5** | System | Nút đổi thành chỉ báo tại chỗ **"⏳ Đang chờ {sản phẩm} phản hồi…"** (không chỉ thông báo ngắn — thông báo ngắn biến mất, người dùng tưởng nút hỏng). |
+| **2** | System | **[Chuỗi Gateway]** Kiểm tra tuần tự: quyền `license:force_sync` (BR-04 → **EF-01**) → sản phẩm có hỗ trợ gửi lại số liệu (BR-05 → **EF-02**) → subscription đang Active/Tạm dừng (BR-01 → **EF-03**) → chưa vượt giới hạn 1 lần / 5 phút của subscription này (BR-02 → **EF-04**). **Không kiểm tra hạn mức theo người dùng** (BR-03). |
+| **3** | System | Ghi nhận yêu cầu (**202**), gửi sang sản phẩm; ghi nhật ký hoạt động + một dòng tiến độ vào Timeline của subscription (BR-07). |
+| **4** | System | Hiển thị thông báo *"Đã gửi yêu cầu đồng bộ — đang chờ {sản phẩm} gửi lại số liệu. Thời gian phản hồi không cam kết."* (BR-06) |
+| **5** | System | Nút đổi thành chỉ báo tại chỗ **"⏳ Đang chờ {sản phẩm} phản hồi…"**. *(Chỉ dùng thông báo ngắn là không đủ — nó biến mất, người dùng tưởng nút hỏng và bấm lại.)* Quá ngưỡng chờ mà chưa có số liệu → **AF-01**. |
 | **6** | Sản phẩm | Gửi lại số liệu mức sử dụng. |
 | **7** | System | Cập nhật mức sử dụng + thời điểm cập nhật; chỉ báo chờ biến mất. Kết thúc tại **End 1**. |
 
 ### 2.2 Luồng phụ
 
-**[AF-01: Sản phẩm không phản hồi]** — sau bước 5.
+**[AF-01: Sản phẩm không phản hồi]** — kích hoạt sau bước 5.
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **5a** | System | Quá ngưỡng chờ mà chưa nhận được số liệu → đổi chỉ báo thành **"⚠️ {Sản phẩm} chưa phản hồi — kết nối có thể đang chậm hoặc gián đoạn"**. |
-| → | — | Số liệu **giữ nguyên** (BR-08). Kết thúc tại **End 2**. |
+| **AF-01a** | System | Quá ngưỡng chờ mà chưa nhận được số liệu → đổi chỉ báo thành **"⚠️ {Sản phẩm} chưa phản hồi — kết nối có thể đang chậm hoặc gián đoạn"**. |
+| **AF-01b** | System | Số liệu mức sử dụng **giữ nguyên** — CRM không tự sửa số (BR-08). |
+| → | — | Kết thúc tại **End 2**. |
 
 ### 2.3 Luồng ngoại lệ
 
+Tất cả kích hoạt tại **bước 2**; đều kết thúc tại **End 3** — **không phát sinh yêu cầu nào** sang sản phẩm.
+
 | Mã | Điều kiện | Xử lý |
 |---|---|---|
-| **EF-01** | Không có quyền | **403**; giao diện **không render nút**. |
-| **EF-02** | Sản phẩm không hỗ trợ | Nút **ẩn hẳn**; gọi API → **400 NOT_SUPPORTED**, không sinh yêu cầu nào. |
-| **EF-03** | Sub không ở trạng thái Active/Tạm dừng | Nút **disable** kèm tooltip giải thích; gọi API → **400**. |
-| **EF-04** | Vượt giới hạn 1 lần/5 phút cho cùng subscription | **429 RATE_LIMITED** + thông báo còn bao nhiêu phút nữa được thử lại. |
-| **EF-05** | Vượt hạn mức 20 lượt/giờ/người | **429 QUOTA_EXCEEDED** + thông báo hạn mức. |
+| **EF-01** | Không có quyền `license:force_sync` (BR-04) | Giao diện **không render nút**; gọi thẳng API → **403**. |
+| **EF-02** | Sản phẩm khai báo **không hỗ trợ** gửi lại số liệu (BR-05) | Nút **ẩn hẳn**; gọi thẳng API → **400 NOT_SUPPORTED**. |
+| **EF-03** | Subscription không ở trạng thái Active / Tạm dừng (BR-01) | Nút **disable** kèm tooltip giải thích; gọi thẳng API → **400**. |
+| **EF-04** | Vượt giới hạn **1 lần / 5 phút** cho cùng subscription (BR-02) | **429 RATE_LIMITED** + thông báo còn bao nhiêu phút nữa được thử lại. |
 
 > **Nguyên tắc hiển thị:** *sản phẩm không hỗ trợ* → **ẩn nút** (tính năng không tồn tại); *các lý do khác* → **disable + tooltip** (tính năng có, nhưng lúc này chưa dùng được) — ẩn im lặng khiến người dùng tưởng tính năng biến mất.
 
@@ -96,7 +102,7 @@ Banner xám "Chưa cập nhật {X}" + dòng "Cập nhật {X}" tô **đỏ** (�
 
 | # | Thành phần | Nội dung |
 |---|---|---|
-| 1 | Thông báo ngắn | *"Đã gửi yêu cầu đồng bộ (202) — {mã sub} · đang chờ {sản phẩm} gửi lại usage. Thời gian phản hồi không cam kết."* |
+| 1 | Thông báo ngắn | *"Đã gửi yêu cầu đồng bộ — đang chờ {sản phẩm} gửi lại số liệu. Thời gian phản hồi không cam kết."* — **chuỗi duy nhất**, khớp §2.1 bước 4. *(Không hiển thị mã trạng thái kỹ thuật hay từ tiếng Anh cho người dùng cuối.)* |
 | 2 | Nút | Đổi thành chỉ báo tại chỗ **"⏳ Đang chờ {sản phẩm} phản hồi…"** (nền xanh nhạt) |
 | 3 | Số liệu | **Giữ nguyên** — chỉ đổi khi sản phẩm gửi về (BR-08) |
 | 4 | Timeline + nhật ký | Ghi 1 dòng tiến độ + 1 dòng nhật ký (BR-07) |

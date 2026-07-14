@@ -26,7 +26,7 @@ Một license vào **"Cần xử lý"** khi có **ít nhất một** trong 3 d�
 |---|---|---|---|
 | **BR-01** | **Lệch trạng thái** | Trạng thái trên CRM ≠ thực tế tại sản phẩm, kéo dài quá **`mismatch_sla_minutes`** (chốt: **15 phút** cho mọi sản phẩm). 3 kiểu: **(A)** Subscription đã dừng nhưng license vẫn hoạt động · **(B)** Subscription còn hiệu lực nhưng license đã ngừng · **(C)** Chờ kích hoạt quá `auto_reconcile_after_hours` mà sản phẩm chưa phản hồi. | FR-LIC-07 |
 | **BR-01b** | **Kiểu (C) chỉ kiểm tra khi sản phẩm CÓ KHAI BÁO `auto_reconcile_after_hours`.** Sản phẩm chưa có số liệu thật để trống → **không kiểm tra**. *Lý do (chốt 13/07/2026): EDR triển khai kéo dài **1–2 tháng là bình thường**; áp ngưỡng cứng sẽ gắn cờ **mọi** subscription EDR mới → dashboard vô dụng ngay ngày đầu.* | Chốt mới |
-| **BR-02** | **Chưa cập nhật** | License còn hiệu lực nhưng sản phẩm không gửi số liệu mức dùng quá ngưỡng = **2 × chu kỳ đẩy đã khai báo của sản phẩm**. Chốt 13/07/2026: chu kỳ đẩy **24 giờ** cho mọi sản phẩm → **ngưỡng 48 giờ**. *Công thức "2 ×" thay cho số cứng, để sản phẩm nào đẩy dày hơn thì được phát hiện sớm hơn — không phải sửa lõi.* | FR-LIC-06 / US-07 |
+| **BR-02** | **Chưa cập nhật** | License còn hiệu lực nhưng sản phẩm không gửi số liệu mức dùng quá ngưỡng = **2 × chu kỳ đẩy đã khai báo của sản phẩm** (`runtime_config.usage_push_interval`). Giá trị hiện hành *(chốt 14/07/2026)*: chu kỳ đẩy **3 giờ** cho mọi sản phẩm → **ngưỡng 6 giờ**. *Công thức "2 ×" thay cho số cứng, để sản phẩm nào đẩy dày hơn thì được phát hiện sớm hơn — không phải sửa lõi. Con số 3 giờ là **cấu hình**, đổi được mà không sửa code.* | FR-LIC-06 / US-07 |
 | **BR-03** | **Bất thường dữ liệu** | Sản phẩm báo số dùng **> số đã bán** — không thể xảy ra vì sản phẩm chặn cài vượt số lượng. | BR-03.6 |
 
 **Cố ý KHÔNG đưa vào hàng đợi** (cảnh báo sai làm người dùng mù cảnh báo):
@@ -82,6 +82,10 @@ Khi nhiều license **cùng một sản phẩm** cùng hỏng theo **cùng một
 
 ## 2. Luồng nghiệp vụ
 
+![BPMN 2.0 — UC-LIC-04 Phát hiện & cảnh báo sự cố license](../../assets/M-05_licenses/UC-LIC-04_bpmn.png)
+
+> Sơ đồ gồm **hai luồng độc lập**: luồng trên do **System** chạy (quét → chấm mức độ → đẩy vào hàng đợi), luồng dưới do **License Admin** chạy (mở hàng đợi → xử lý). Hai luồng không nối trực tiếp: hệ thống **chỉ cảnh báo**, người mới là bên hành động (BR-17).
+
 ### 2.1 Luồng chính (System)
 
 | Bước | Actor | Hành động / Phản hồi |
@@ -132,30 +136,30 @@ Khi nhiều license **cùng một sản phẩm** cùng hỏng theo **cùng một
 | AC-LIC-04-01 | Sub **Tạm dừng** nhưng license vẫn **Active**, kéo dài quá SLA của sản phẩm. | Hệ thống quét. | Vào hàng đợi, mức độ **Cao**, kèm việc cần làm "Kiểm tra vì sao sản phẩm chưa ngừng dịch vụ…" (BR-01, BR-09). |
 | AC-LIC-04-02 | License **trong ân hạn**, subscription vẫn còn hiệu lực. | Hệ thống quét. | **KHÔNG** vào hàng đợi (BR-04). Vẫn hiển thị banner ân hạn ở UC-LIC-02. |
 | AC-LIC-04-03 | Subscription **vừa gia hạn**, license đang chờ kích hoạt. | Hệ thống quét. | **KHÔNG** vào hàng đợi (BR-05) — nếu không thì mỗi lần gia hạn đều đẻ ra một cảnh báo giả. |
-| AC-LIC-04-04 | License còn hiệu lực, chưa cập nhật **30 giờ**; chu kỳ đẩy 24h → ngưỡng 48h. | Hệ thống quét. | **KHÔNG** vào hàng đợi (BR-02) — chưa vượt ngưỡng. |
-| AC-LIC-04-05 | License còn hiệu lực, chưa cập nhật **60 giờ** (> ngưỡng 48h). | Hệ thống quét. | **Vào** hàng đợi, mức độ **Trung bình** (BR-02, BR-12). |
-| AC-LIC-04-05b | Subscription EDR **chờ kích hoạt 20 ngày**; EDR **không khai báo** `auto_reconcile_after_hours`. | Hệ thống quét. | **KHÔNG** vào hàng đợi (BR-01b) — triển khai EDR kéo dài là bình thường. |
-| AC-LIC-04-05c | Subscription của sản phẩm **có khai báo** ngưỡng 24h, chờ kích hoạt **96 giờ**. | Hệ thống quét. | **Vào** hàng đợi, mức độ **Trung bình** (BR-11). |
-| AC-LIC-04-05d | Khách hàng **triển khai tại chỗ**, không có dữ liệu cập nhật nào. | Hệ thống quét. | **KHÔNG** vào hàng đợi và **không** tính vào banner (BR-08b, BR-20). Vẫn hiện trong danh sách với nhãn "Không theo dõi tự động". |
-| AC-LIC-04-06 | Sản phẩm báo dùng **63/60** license. | Hệ thống quét. | Vào hàng đợi, mức độ **Thấp** (BR-03, BR-13). Số liệu **vẫn được lưu**, không chặn. |
+| AC-LIC-04-04 | License còn hiệu lực, chưa cập nhật **4 giờ**; chu kỳ đẩy 3h → ngưỡng 6h. | Hệ thống quét. | **KHÔNG** vào hàng đợi (BR-02) — chưa vượt ngưỡng. |
+| AC-LIC-04-05 | License còn hiệu lực, chưa cập nhật **8 giờ** (> ngưỡng 6h). | Hệ thống quét. | **Vào** hàng đợi, mức độ **Trung bình** (BR-02, BR-12). |
+| AC-LIC-04-06 | Subscription EDR **chờ kích hoạt 20 ngày**; EDR **không khai báo** `auto_reconcile_after_hours`. | Hệ thống quét. | **KHÔNG** vào hàng đợi (BR-01b) — triển khai EDR kéo dài là bình thường. |
+| AC-LIC-04-07 | Subscription của sản phẩm **có khai báo** ngưỡng 24h, chờ kích hoạt **96 giờ**. | Hệ thống quét. | **Vào** hàng đợi, mức độ **Trung bình** (BR-11). |
+| AC-LIC-04-08 | Khách hàng **triển khai tại chỗ**, không có dữ liệu cập nhật nào. | Hệ thống quét. | **KHÔNG** vào hàng đợi và **không** tính vào banner (BR-08b, BR-20). Vẫn hiện trong danh sách với nhãn "Không theo dõi tự động". |
+| AC-LIC-04-09 | Sản phẩm báo dùng **63/60** license. | Hệ thống quét. | Vào hàng đợi, mức độ **Thấp** (BR-03, BR-13). Số liệu **vẫn được lưu**, không chặn. |
 
 ### Nhóm 2: Sự cố diện rộng
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-LIC-04-07 | **3** subscription EDR đã tạm dừng trên CRM nhưng license vẫn chạy. | Mở màn License & Usage. | Banner **"CMC EDR không thực thi lệnh từ CRM — nguy cơ thất thoát doanh thu"** hiển thị **trên cùng**, trước banner khác (BR-14). |
-| AC-LIC-04-08 | Sản phẩm có **13** license đang hoạt động, **3** cái chưa cập nhật (23% < 30%). | Mở màn. | Banner "Không nhận được dữ liệu" **KHÔNG** hiển thị (BR-15, BR-16) — 3 cái vẫn nằm trong hàng đợi từng dòng. |
-| AC-LIC-04-08b | Sản phẩm chỉ có **1** license đang hoạt động và nó chưa cập nhật (**100%** ≥ 30%, nhưng chỉ 1 bản ghi). | Mở màn. | Banner **KHÔNG** hiển thị (BR-16) — không có gì để gộp; license đó vẫn nằm trong hàng đợi. |
-| AC-LIC-04-09 | EDR có 13 license đang hoạt động, **4** cái chưa cập nhật (31% ≥ 30%). | Mở màn. | Banner hiển thị: "Không nhận được dữ liệu từ CMC EDR — **4/13 license** … nhiều khả năng là **một sự cố kết nối**, không phải 4 sự cố riêng lẻ." |
-| AC-LIC-04-10 | Vận hành đã khắc phục, sản phẩm cập nhật lại bình thường. | Mở lại màn. | Banner **tự biến mất**, không cần bấm "đã đọc" (BR-18). |
-| AC-LIC-04-11 | Sales đăng nhập. | Mở màn License & Usage. | **Không** thấy banner sự cố diện rộng và không thấy hàng đợi (UC-LIC-01 BR-02). |
+| AC-LIC-04-10 | **3** subscription EDR đã tạm dừng trên CRM nhưng license vẫn chạy. | Mở màn License & Usage. | Banner **"CMC EDR không thực thi lệnh từ CRM — nguy cơ thất thoát doanh thu"** hiển thị **trên cùng**, trước banner khác (BR-14). |
+| AC-LIC-04-11 | Sản phẩm có **13** license đang hoạt động, **3** cái chưa cập nhật (23% < 30%). | Mở màn. | Banner "Không nhận được dữ liệu" **KHÔNG** hiển thị (BR-15, BR-16) — 3 cái vẫn nằm trong hàng đợi từng dòng. |
+| AC-LIC-04-12 | Sản phẩm chỉ có **1** license đang hoạt động và nó chưa cập nhật (**100%** ≥ 30%, nhưng chỉ 1 bản ghi). | Mở màn. | Banner **KHÔNG** hiển thị (BR-16) — không có gì để gộp; license đó vẫn nằm trong hàng đợi. |
+| AC-LIC-04-13 | EDR có 13 license đang hoạt động, **4** cái chưa cập nhật (31% ≥ 30%). | Mở màn. | Banner hiển thị: "Không nhận được dữ liệu từ CMC EDR — **4/13 license** … nhiều khả năng là **một sự cố kết nối**, không phải 4 sự cố riêng lẻ." |
+| AC-LIC-04-14 | Vận hành đã khắc phục, sản phẩm cập nhật lại bình thường. | Mở lại màn. | Banner **tự biến mất**, không cần bấm "đã đọc" (BR-18). |
+| AC-LIC-04-15 | Sales đăng nhập. | Mở màn License & Usage. | **Không** thấy banner sự cố diện rộng và không thấy hàng đợi (UC-LIC-01 BR-02). |
 
 ### Nhóm 3: Ranh giới
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-LIC-04-12 | Bất kỳ sự cố nào. | Hệ thống xử lý. | **Không** có thay đổi nào lên `license_mirror.status` hay `subscription.status`; **không** gọi sang sản phẩm (BR-17). |
-| AC-LIC-04-13 | Bất kỳ hàng đợi nào. | Xem giao diện. | Có ghi chú "Hệ thống chỉ phát hiện và cảnh báo — không tự sửa trạng thái. Mỗi dòng cần một người xử lý." |
+| AC-LIC-04-16 | Bất kỳ sự cố nào. | Hệ thống xử lý. | **Không** có thay đổi nào lên `license_mirror.status` hay `subscription.status`; **không** gọi sang sản phẩm (BR-17). |
+| AC-LIC-04-17 | Bất kỳ hàng đợi nào. | Xem giao diện. | Có ghi chú "Hệ thống chỉ phát hiện và cảnh báo — không tự sửa trạng thái. Mỗi dòng cần một người xử lý." |
 
 ---
 
@@ -167,9 +171,10 @@ Khi nhiều license **cùng một sản phẩm** cùng hỏng theo **cùng một
 |---|---|---|---|
 | 1.0 | 13/07/2026 | Claude (AI) | Khởi tạo — base theo demo `v2.6.0_license.html`. Trace: PRD v2.6 §6.5.8 FR-LIC-07, §6.5.7 FR-LIC-06, BR-03.6. |
 | 1.1 | 13/07/2026 | Claude (AI) | **Chốt theo phiên trả lời Open Question (`docs/plans/M-05_open_questions.md`).** (1) BR-01b: kiểu C chỉ kiểm tra khi sản phẩm khai báo ngưỡng — EDR để trống *(Q1)*. (2) BR-02: chu kỳ đẩy **24h** cho mọi sản phẩm → ngưỡng chưa-cập-nhật **48h** *(Q4)*; SLA lệch **15 phút** cho mọi sản phẩm *(Q5)*. (3) **Viết lại phần chấm mức độ thành bảng quyết định BR-09…BR-13** — 3 câu hỏi, chỉ dùng 4 trường CRM đã có, hai người chấm độc lập ra cùng kết quả *(Q14, Q15)*. (4) BR-16: viết lại **lý do ngưỡng kép** — tỷ lệ chặn đầu sản phẩm lớn, số tuyệt đối chặn đầu sản phẩm nhỏ (banner không gộp được gì khi chỉ 1–2 dòng) *(Q16)*. (5) BR-08b/BR-20: **on-premise** loại khỏi mọi cảnh báo, vẫn hiện trong danh sách *(Q13)*. |
+| 1.2 | 14/07/2026 | Claude (AI) | **Chu kỳ đẩy mức sử dụng: 24h → 3h** (BA thiết kế, chưa gửi đội EDR) → ngưỡng "chưa cập nhật" **48h → 6h**. Cập nhật BR-02 và AC-LIC-04-04/05 (ví dụ 30h/60h không còn đúng với ngưỡng mới). Con số nằm ở  — **đổi được bằng cấu hình, không sửa code**. |
 
 ### Nghiệp vụ
-- ✅ Chỉ cảnh báo, không tự sửa (BR-15)
+- ✅ Chỉ cảnh báo, không tự sửa (BR-17)
 - ✅ Loại trừ đúng các trạng thái hợp lệ (ân hạn, vừa gia hạn) — chống báo động giả
 - ✅ Chấm mức độ theo **hậu quả**, không theo độ lạ kỹ thuật
 - ✅ Ngưỡng theo cấu hình từng sản phẩm — không hardcode

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%230F766E'/><stop offset='1' stop-color='%2334D399'/></linearGradient></defs><rect width='64' height='64' rx='14' fill='url(%23g)'/><path d='M32 12l14 6v12c0 10-6 17.5-14 22-8-4.5-14-12-14-22V18l14-6z' fill='%23fff'/><path d='M32 26a5 5 0 00-2.5 9.33V42h5v-6.67A5 5 0 0032 26z' fill='%230F766E'/></svg>">
-<title>OneCRM — License Mirror &amp; Usage Tracking v2.6</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23C2410C'/><stop offset='1' stop-color='%23FB923C'/></linearGradient></defs><rect width='64' height='64' rx='14' fill='url(%23g)'/><path d='M20 26h6v-8h4v8h8v-8h4v8h6v10a12 12 0 01-8 11.3V56h-4v-8.7a12 12 0 01-8-11.3V26z' fill='%23fff'/></svg>"><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%230F766E'/><stop offset='1' stop-color='%2334D399'/></linearGradient></defs><rect width='64' height='64' rx='14' fill='url(%23g)'/><path d='M32 12l14 6v12c0 10-6 17.5-14 22-8-4.5-14-12-14-22V18l14-6z' fill='%23fff'/><path d='M32 26a5 5 0 00-2.5 9.33V42h5v-6.67A5 5 0 0032 26z' fill='%230F766E'/></svg>">
+<title>OneCRM — Integration Layer v2.7</title>
 <style>
 :root{--primary:#0268C5;--azure:#00ADEE;--navy:#1F2533;--bg-page:#F2F6FA;--bg-sidebar:#F1F5F9;--text-primary:#111827;--text-secondary:#636363;--border:#E5E5E5;--border-active:#0268C5;--red:#FB2C36;--amber:#F59E0B;--green:#10B981;--gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;--gray-400:#9CA3AF;--gray-600:#4B5563;--r-sm:8px;--r-md:12px;--r-lg:16px;--shadow-md:0 4px 12px rgba(0,0,0,.1);--shadow-lg:0 20px 40px rgba(0,0,0,.12);--sidebar-w:240px;--font:'Inter',ui-sans-serif,system-ui,-apple-system,sans-serif;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -362,6 +362,21 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
 .lic-prio{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;}
 .lic-prio-p1{background:#FEE2E2;color:#B91C1C;}
 .lic-prio-p2{background:#FFEDD5;color:#C2410C;}
+
+/* ── M-07 TÍCH HỢP ── */
+.int-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:14px;}
+.int-card{padding:18px;}
+.int-half{flex:1 1 170px;min-width:0;}
+.int-half-t{font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px;}
+.int-stat{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0;color:var(--text-secondary);}
+.int-stat>span{white-space:nowrap;}
+.int-stat b{font-size:13px;color:var(--text-primary);white-space:nowrap;}
+.int-verdict{display:flex;gap:10px;align-items:flex-start;border:1px solid;border-radius:8px;padding:11px 13px;font-size:13px;margin-top:8px;}
+.int-trace-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.int-trace-row.bad{background:#FEF2F2;margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:6px;}
+.int-trace-time{font-size:12px;color:var(--text-secondary);width:110px;flex-shrink:0;}
+.int-trace-dir{font-size:12px;font-weight:600;width:120px;flex-shrink:0;}
+.int-trace-body{flex:1;min-width:0;}
 .lic-banner{border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;font-size:13px;}
 .sub-field-row{display:grid;grid-template-columns:repeat(3,1fr);padding:16px 0;border-bottom:1px solid var(--border);}
 .sub-field-row:last-child{border-bottom:none;}
@@ -499,8 +514,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
       <div class="nav-item" id="navProduct" onclick="showModule('product')"><span class="nav-icon">📦</span> Sản phẩm</div>
       <div class="nav-item" id="navPackage" onclick="showModule('package')"><span class="nav-icon">🎁</span> Gói sản phẩm</div>
       <div class="sidebar-section">Tích hợp</div>
-      <div class="nav-item"><span class="nav-icon">📤</span> Outbox Events</div>
-      <div class="nav-item"><span class="nav-icon">📥</span> Webhook Inbox</div>
+      <div class="nav-item" id="navIntegration" onclick="showModule('integration')"><span class="nav-icon">🔌</span> Tích hợp</div>
       <div class="sidebar-section">Hệ thống</div>
       <div class="nav-item"><span class="nav-icon">👤</span> Người dùng</div>
       <div class="nav-item"><span class="nav-icon">📋</span> Audit log</div>
@@ -860,6 +874,31 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
         <!-- ── DETAIL (FR-LIC-01 / 04 / 05) ── -->
         <div class="pkg-pane" id="lic-view-detail"></div>
       </div>
+
+      <!-- ════════════════ MODULE: TÍCH HỢP (M-07 Integration Layer) ════════════════ -->
+      <div id="module-integration" class="hidden">
+        <div class="pkg-pane active" id="int-view-list">
+          <div class="page-header">
+            <div>
+              <div class="page-title">Tích hợp</div>
+              <div class="page-subtitle">Theo dõi trao đổi dữ liệu giữa CRM và các sản phẩm. Chỉ dành cho quản trị vận hành.</div>
+            </div>
+          </div>
+
+          <div class="tabs" style="margin-bottom:14px;">
+            <div class="tab active" id="intTabHealth" onclick="intSwitchTab('health')">🩺 Tình trạng kết nối <span class="lic-cnt zero" id="intHealthCount">0</span></div>
+            <div class="tab" id="intTabOut" onclick="intSwitchTab('out')">📤 Sự kiện gửi đi <span class="lic-cnt zero" id="intOutCount">0</span></div>
+            <div class="tab" id="intTabIn" onclick="intSwitchTab('in')">📥 Sự kiện nhận về <span class="lic-cnt zero" id="intInCount">0</span></div>
+            <div class="tab" id="intTabTrace" onclick="intSwitchTab('trace')">🔍 Tra cứu theo subscription</div>
+          </div>
+
+          <div id="int-pane-health"></div>
+          <div id="int-pane-out" class="hidden"></div>
+          <div id="int-pane-in" class="hidden"></div>
+          <div id="int-pane-trace" class="hidden"></div>
+        </div>
+      </div>
+
     </div>
   </main>
 </div>
@@ -2122,6 +2161,9 @@ function showModule(mod){
   document.getElementById('navProduct').classList.toggle('active',mod==='product');
   document.getElementById('navPackage').classList.toggle('active',mod==='package');
   document.getElementById('navLicense').classList.toggle('active',mod==='license');
+  document.getElementById('navIntegration').classList.toggle('active',mod==='integration');
+  document.getElementById('navIntegration').style.display=intCan('integration:view')?'':'none';   // dữ liệu vận hành nhạy cảm
+  document.getElementById('module-integration').classList.toggle('hidden',mod!=='integration');
   document.getElementById('module-license').classList.toggle('hidden',mod!=='license');
   document.getElementById('module-customer').classList.toggle('hidden',mod!=='customer');
   document.getElementById('module-contract').classList.toggle('hidden',mod!=='contract');
@@ -2146,6 +2188,10 @@ function showModule(mod){
     pkgShowView('list');
     document.getElementById('breadcrumbCurrent').textContent='Gói sản phẩm';
     pkgRenderTable();
+  } else if(mod==='integration'){
+    document.getElementById('breadcrumbCurrent').textContent='Tích hợp';
+    intShowView('list');
+    intSwitchTab(intTab||'health');
   } else if(mod==='license'){
     document.getElementById('breadcrumbCurrent').textContent='License & Usage';
     licShowView('list');
@@ -5596,7 +5642,7 @@ const LIC_CAPS={
   'CSKH':['license:view','license:force_sync'],
   'Manager':['license:view','license:force_sync','license:view_portal','license:view_issues'],
   'License Admin':['license:view','license:force_sync','license:view_portal','license:view_issues'],
-  'Auditor':['license:view','license:view_issues','license:view_portal'],   // xem được tất cả, không có nút tạo tác động (không có force_sync)
+  'Auditor':['license:view'],
 };
 function licCan(cap){return !!currentUser&&(LIC_CAPS[currentUser.role]||[]).includes(cap);}
 
@@ -5885,8 +5931,8 @@ function licIsUpsell(sub){
   return u.pct!=null&&!u.anomaly&&u.pct>=LIC_UPSELL_PCT;
 }
 function licStaleHours(sub){return sub.lastSyncMins==null?null:Math.floor(sub.lastSyncMins/60);}
-/* Ngưỡng "lâu chưa cập nhật" phải theo CHU KỲ ĐẨY của từng sản phẩm, không dùng số cứng.
-   Lấy gấp đôi chu kỳ đã khai báo: sản phẩm đẩy dày hơn thì được phát hiện sớm hơn, không phải sửa lõi. */
+/* Ngưỡng "lâu chưa cập nhật" phải theo CHU KỲ ĐẨY của từng sản phẩm, không dùng số cứng:
+   AV đẩy 24h/lần → ngưỡng 24h sẽ báo động giả liên tục. Lấy gấp đôi chu kỳ đã khai báo. */
 function licPushIntervalHours(productId){
   const raw=String(licProduct(productId)?.runtime_config?.usage_push_interval||'');
   const m=raw.match(/^(\d+)\s*h$/i);
@@ -6180,9 +6226,8 @@ function licContextActions(s,inSub){
   if(licCanViewPortal(s))
     acts.push(`<a class="btn btn-ghost btn-sm" href="${licPortalUrl(s)}" target="_blank" rel="noopener" onclick="event.stopPropagation();licAuditPortalClick('${s.id}')">↗ Mở trang quản trị sản phẩm</a>`);
   const d=licDaysLeft(s), live=['ACTIVE','GRACE'].includes(s.licMirrorStatus);
-  // Sắp hết hạn / đã vào ân hạn → dẫn thẳng tới thao tác gia hạn (thay vì bắt người dùng tự tìm).
-  // Trong tab của Subscription thì KHÔNG hiện: nút Gia hạn đã nằm ở hero của trang — một hành động chỉ ở một chỗ.
-  if(!inSub&&live&&d!=null&&d<=licRenewalDays(s)&&subCanRenew(s))
+  // Sắp hết hạn / đã vào ân hạn → dẫn thẳng tới thao tác gia hạn (thay vì bắt người dùng tự tìm)
+  if(live&&d!=null&&d<=licRenewalDays(s)&&subCanRenew(s))
     acts.push(`<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();${go}subOpenRenew('${s.id}')">🔄 Gia hạn</button>`);
   // Đang chờ kích hoạt hoặc đang lệch → xem tiến độ để biết sản phẩm đã làm tới đâu
   if(['PENDING','PROVISIONING'].includes(s.licMirrorStatus)||licMismatch(s))
@@ -6375,7 +6420,9 @@ function licRenderSystemAlert(){
       <span style="font-size:16px">🔌</span>
       <div><div style="font-weight:600;margin-bottom:2px;">Không nhận được dữ liệu từ ${prod}</div>
       <div><strong>${a.count}/${a.total} license</strong> đang hoạt động của sản phẩm này cùng không được cập nhật quá ${a.thresholdH} giờ — nhiều khả năng là <strong>một sự cố kết nối</strong>, không phải ${a.count} sự cố riêng lẻ.
-      <div style="margin-top:4px;"><strong>Nên làm:</strong> báo bộ phận vận hành kiểm tra kết nối với ${prod} trước khi xử lý từng license. Mức sử dụng của các khách hàng này hiện không đáng tin.</div></div></div>
+      <div style="margin-top:4px;"><strong>Nên làm:</strong> kiểm tra nhật ký tích hợp để biết <strong>lỗi ở phía sản phẩm hay phía CRM</strong> — hai nguyên nhân cần xử lý ngược nhau.</div>
+      ${intCan('integration:view')?`<button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="showModule('integration');intSwitchTab('health')">🔌 Xem tình trạng kết nối →</button>`:''}
+      </div></div>
     </div>`;
   }).join('');
 }
@@ -6679,7 +6726,507 @@ function licAuditPortalClick(subId){
 
 licSeedData();
 
+
+/* ══════════════════════════════════════════════════════════════════
+   M-07 — INTEGRATION LAYER (Tích hợp)
+   Chỉ 2 FR của PRD có giao diện: FR-INT-05 (xem outbox/inbox) và
+   FR-INT-06 (gửi lại / xử lý lại). Bổ sung FR-INT-07 (đề xuất):
+   Tình trạng kênh — phân biệt "sản phẩm không gửi" vs "CRM xử lý lỗi",
+   hai nguyên nhân cần hành động NGƯỢC NHAU (đóng OQ-LIC-03 của M-05).
+
+   Ranh giới (YT-3): CRM chỉ QUAN SÁT + gửi lại/xử lý lại.
+   TUYỆT ĐỐI không có: tạo sự kiện thủ công, sửa nội dung rồi gửi.
+   ══════════════════════════════════════════════════════════════════ */
+let intTab='health';
+let intTraceSubId='';
+const INT_BATCH_MAX=500;              // giới hạn 1 lô xử lý lại (BR-06.8)
+
+/* Quyền — theo quy ước {tài_nguyên}:{hành_động} */
+const INT_CAPS={
+  'License Admin':['integration:view','integration:retry'],
+  'Auditor':['integration:view'],          // xem được, không có hành động tạo tác động
+};
+function intCan(cap){return !!currentUser&&(INT_CAPS[currentUser.role]||[]).includes(cap);}
+
+/* ── DỮ LIỆU ────────────────────────────────────────────────────
+   Tên sự kiện lấy đúng theo docs/prd/inbound_outbound_concept.md.
+   Hiển thị cho người dùng bằng TÊN NGHIỆP VỤ, không phải mã kỹ thuật. */
+const INT_OUT_LABEL={
+  'subscription.submitted':'Yêu cầu khởi tạo license',
+  'subscription.suspended':'Tạm dừng dịch vụ',
+  'subscription.reactivated':'Khôi phục dịch vụ',
+  'subscription.terminated':'Thu hồi license',
+  'subscription.renewed':'Gia hạn license',
+  'usage.force_sync_requested':'Yêu cầu cập nhật mức sử dụng',
+};
+const INT_IN_LABEL={
+  'license.pending':'Đã tiếp nhận yêu cầu',
+  'license.provisioning':'Đang triển khai license',
+  'license.activated':'License đã kích hoạt',
+  'license.suspended':'License đã tạm dừng',
+  'license.expired':'License đã hết hạn',
+  'license.renewed':'License cũ chuyển sang đã gia hạn',
+  'license.usage_synced':'Báo cáo mức sử dụng',
+  'tenant.suspended':'Đã tạm dừng hệ thống khách hàng',
+  'subscription.provisioning.done':'Triển khai hoàn tất',
+  'subscription.provisioning.failed':'Triển khai thất bại',
+};
+let INT_OUTBOX=[];
+let INT_INBOX=[];
+
+function intSeed(){
+  const now=new Date('2026-07-13T09:00:00');
+  const mins=m=>new Date(now.getTime()-m*60000).toISOString().slice(0,16).replace('T',' ');
+  const subOf=id=>subFindById(id);
+  let seq=1;
+  const out=(subId,key,status,ageMin,attempts,err)=>{
+    const s=subOf(subId);if(!s)return;
+    INT_OUTBOX.push({id:'OUT-'+String(seq++).padStart(4,'0'),subId,customerName:s.customerName,productId:s.productId,
+      eventKey:key,status,attempts:attempts||0,lastError:err||null,
+      createdAt:mins(ageMin),sentAt:status==='PUBLISHED'?mins(ageMin-1):null,ageMin});
+  };
+  let iseq=1;
+  const inn=(subId,key,status,ageMin,opt)=>{
+    const s=subId?subOf(subId):null;
+    INT_INBOX.push(Object.assign({
+      id:'IN-'+String(iseq++).padStart(4,'0'),subId:subId||null,
+      customerName:s?s.customerName:null,productId:(opt&&opt.productId)||(s?s.productId:null),
+      eventKey:key,status,signatureOk:true,failStage:null,failReason:null,
+      receivedAt:mins(ageMin),processedAt:status==='PROCESSED'?mins(ageMin-1):null,ageMin,
+    },opt||{}));
+  };
+
+  /* ── KỊCH BẢN 1: CMC EDR — LỆNH KHÔNG TỚI NƠI ──
+     3 lệnh tạm dừng thất bại vĩnh viễn → đúng gốc rễ của banner
+     "CMC EDR không thực thi lệnh từ CRM" ở màn License & Usage. */
+  ['SUB-2026-010','SUB-D12','SUB-D06'].forEach((id,i)=>
+    out(id,'subscription.suspended','DEAD_LETTER',135+i*40,10,'Không kết nối được tới hàng đợi của CMC EDR (hết số lần thử)'));
+
+  /* ── KỊCH BẢN 2: CMC EDR — IM LẶNG (không nhận được gì) ──
+     Webhook cuối cùng nhận cách đây 31 giờ → nghi sự cố phía sản phẩm. */
+  inn('SUB-2026-008','license.usage_synced','PROCESSED',61*60);
+  inn('SUB-2026-016','license.usage_synced','PROCESSED',61*60+40);
+  inn('SUB-2026-007','license.usage_synced','PROCESSED',63*60);
+
+  /* ── KỊCH BẢN 3: CMC ANTIVIRUS — NHẬN ĐỦ NHƯNG CRM XỬ LÝ LỖI ──
+     Sản phẩm đổi định dạng: thiếu trường ngày hết hạn → 42 tin lỗi cùng một lý do.
+     Đây là lý do license AV của Hoàng Long lệch trạng thái (sub còn hiệu lực, license đã ngừng). */
+  const AV_FAIL={signatureOk:true,failStage:'MAPPING',failReason:'Thiếu trường bắt buộc "ngày hết hạn" trong dữ liệu nhận được'};
+  inn('SUB-2026-021','license.activated','FAILED',72*60,AV_FAIL);
+  inn('SUB-2026-021','license.suspended','PROCESSED',48*60);
+  inn('SUB-2026-021','license.usage_synced','FAILED',24*60,AV_FAIL);
+  inn('SUB-2026-021','license.usage_synced','FAILED',12*60,AV_FAIL);
+  for(let i=0;i<38;i++) inn('SUB-2026-021','license.usage_synced','FAILED',60+i*20,AV_FAIL);
+
+  /* ── KỊCH BẢN 4: C-Shield — KÊNH KHOẺ MẠNH ── */
+  inn('SUB-2026-020','license.usage_synced','PROCESSED',35);
+  inn('SUB-2026-020','license.activated','PROCESSED',400);
+  out('SUB-2026-020','subscription.submitted','PUBLISHED',420,1);
+
+  /* ── Các ca lẻ cần dev xử lý đúng ── */
+  inn('SUB-2026-006','license.provisioning','PROCESSED',180);
+  inn(null,'license.activated','FAILED',95,{productId:'CA',failStage:'CORRELATION',
+      failReason:'Không tìm thấy subscription khớp mã tham chiếu "TENANT-XX-999"'});           // orphan
+  inn('SUB-2026-005','license.usage_synced','FAILED',150,{signatureOk:false,failStage:'SIGNATURE',
+      failReason:'Chữ ký không hợp lệ — nguồn gửi không xác thực được'});                      // chữ ký sai
+  inn('SUB-2026-011','license.grace_started','PROCESSED',66*60);                              // loại sự kiện lạ → vẫn ghi nhận, không áp dụng
+  inn('SUB-2026-020','license.usage_synced','RETRYING',40,{failStage:'MAPPING',failReason:'Tạm thời không đọc được dữ liệu — đang thử lại (2/5)'});
+
+  /* Sự kiện gửi đi bình thường */
+  out('SUB-2026-019','subscription.renewed','PUBLISHED',60,1);
+  out('SUB-2026-016','usage.force_sync_requested','PUBLISHED',45,1);
+  out('SUB-2026-009','subscription.submitted','PUBLISHED',20*24*60,1);   // EDR: lệnh gửi đi vẫn tới nơi — nhưng sản phẩm không báo về gì
+  out('SUB-2026-005','subscription.suspended','RETRYING',25,3,'Hàng đợi của CMC CA chưa phản hồi — đang thử lại (3/10)');
+  out('SUB-2026-007','usage.force_sync_requested','PENDING',2,0);
+}
+
+/* ── TÍNH TÌNH TRẠNG KÊNH (FR-INT-07 đề xuất) ──────────────────── */
+function intProductHealth(pid){
+  const outs=INT_OUTBOX.filter(e=>e.productId===pid);
+  const ins=INT_INBOX.filter(e=>e.productId===pid);
+  const dead=outs.filter(e=>e.status==='DEAD_LETTER').length;
+  const retryOut=outs.filter(e=>e.status==='RETRYING').length;
+  const pending=outs.filter(e=>e.status==='PENDING').length;
+  const in24=ins.filter(e=>e.ageMin<=1440).length;
+  const failed=ins.filter(e=>e.status==='FAILED').length;
+  const lastIn=ins.length?Math.min(...ins.map(e=>e.ageMin)):null;
+  // Ngưỡng im lặng: 2 × chu kỳ đẩy đã khai báo của sản phẩm (dùng chung công thức với M-05)
+  const silentH=licStaleThresholdHours({productId:pid});
+  const silent=lastIn==null||lastIn/60>=silentH;
+  const failRate=ins.length?Math.round(failed/ins.length*100):0;
+
+  /* KẾT LUẬN — phần quan trọng nhất: nói ra AI PHẢI XỬ LÝ, không chỉ đổ số */
+  const verdicts=[];
+  if(dead) verdicts.push({sev:3,icon:'🚨',
+    title:`${dead} lệnh chưa tới được ${licProductName(pid)}`,
+    body:'Khách hàng có thể vẫn dùng dịch vụ dù đã bị tạm dừng/thu hồi trên CRM. <strong>Báo vận hành ngay</strong>, rồi gửi lại các lệnh này.',
+    act:{label:'Xem sự kiện gửi đi',fn:`intSwitchTab('out');intSetFilter('outStatus','DEAD_LETTER','${pid}')`}});
+  if(failed>=3&&failRate>=50) verdicts.push({sev:3,icon:'🛠️',
+    title:`Nhận được dữ liệu nhưng CRM xử lý lỗi (${failed}/${ins.length} tin)`,
+    body:`Lý do phổ biến nhất: <em>${intTopFailReason(pid)}</em>. Đây là <strong>lỗi phía CRM</strong> — <strong>đừng gọi sản phẩm</strong>. Sửa quy tắc đọc dữ liệu rồi xử lý lại.`,
+    act:{label:'Xem sự kiện nhận về',fn:`intSwitchTab('in');intSetFilter('inStatus','FAILED','${pid}')`}});
+  // Chữ ký không hợp lệ = tín hiệu bảo mật, KHÔNG được im lặng dù số lượng ít
+  const badSig=ins.filter(e=>e.signatureOk===false).length;
+  if(badSig) verdicts.push({sev:2,icon:'🔐',
+    title:`${badSig} tin gửi tới với chữ ký không hợp lệ`,
+    body:'Nguồn gửi <strong>không xác thực được</strong> — có thể sản phẩm vừa đổi khoá bảo mật, hoặc có bên thứ ba giả mạo. <strong>Không xử lý lại được</strong> các tin này. Đối chiếu khoá bảo mật với đội sản phẩm.',
+    act:{label:'Xem sự kiện nhận về',fn:`intSwitchTab('in');intSetFilter('inStatus','FAILED','${pid}')`}});
+  if(silent&&!failed) verdicts.push({sev:3,icon:'🔌',
+    title:lastIn==null?`Chưa từng nhận dữ liệu nào từ ${licProductName(pid)}`:`Không nhận được dữ liệu nào từ ${licProductName(pid)} trong ${Math.floor(lastIn/60)} giờ`,
+    body:`Vượt ngưỡng ${silentH} giờ. CRM <strong>không nhận được tin nào</strong> — nghi ngờ sự cố phía sản phẩm hoặc đường truyền. <strong>Liên hệ đội ${licProductName(pid)}.</strong>`,
+    act:null});
+  if(!verdicts.length) verdicts.push({sev:0,icon:'✅',
+    title:'Kênh hoạt động bình thường',
+    body:lastIn!=null?`Nhận dữ liệu gần nhất ${licFmtMins(lastIn)} trước.`:'Chưa có trao đổi nào trong thời gian gần đây.',act:null});
+
+  return{pid,dead,retryOut,pending,in24,failed,failRate,lastIn,silentH,silent,
+    outTotal:outs.length,inTotal:ins.length,
+    verdicts:verdicts.sort((a,b)=>b.sev-a.sev)};
+}
+function intTopFailReason(pid){
+  const c={};
+  INT_INBOX.filter(e=>e.productId===pid&&e.status==='FAILED').forEach(e=>{c[e.failReason]=(c[e.failReason]||0)+1;});
+  const k=Object.keys(c).sort((a,b)=>c[b]-c[a])[0];
+  return k?k+` (${c[k]} tin)`:'—';
+}
+function intAllHealth(){return CAT_PRODUCTS.map(p=>intProductHealth(p.id));}
+function intIssueCount(){return intAllHealth().filter(h=>h.verdicts[0].sev>0).length;}
+
+/* ── VIEW SWITCH ────────────────────────────────────────────────── */
+function intShowView(v){const el=document.getElementById('int-view-list');if(el)el.classList.toggle('active',v==='list');}
+function intSwitchTab(t){
+  intTab=t;
+  [['intTabHealth','health'],['intTabOut','out'],['intTabIn','in'],['intTabTrace','trace']].forEach(([id,k])=>{
+    const el=document.getElementById(id);if(el)el.classList.toggle('active',t===k);});
+  ['health','out','in','trace'].forEach(k=>{
+    const el=document.getElementById('int-pane-'+k);if(el)el.classList.toggle('hidden',t!==k);});
+  intRenderCounts();
+  if(t==='health')intRenderHealth();
+  else if(t==='out')intRenderOutbox();
+  else if(t==='in')intRenderInbox();
+  else intRenderTrace();
+}
+function intRenderCounts(){
+  const set=(id,n)=>{const el=document.getElementById(id);if(!el)return;el.textContent=n;el.classList.toggle('zero',!n);};
+  set('intHealthCount',intIssueCount());
+  set('intOutCount',INT_OUTBOX.filter(e=>e.status==='DEAD_LETTER').length);
+  set('intInCount',INT_INBOX.filter(e=>e.status==='FAILED').length);
+}
+let _intFilter={outStatus:'',outProduct:'',inStatus:'',inProduct:''};
+function intSetFilter(k,v,pid){
+  if(k==='outStatus'){_intFilter.outStatus=v;_intFilter.outProduct=pid||'';intRenderOutbox();}
+  if(k==='inStatus'){_intFilter.inStatus=v;_intFilter.inProduct=pid||'';intRenderInbox();}
+}
+
+/* ── MÀN 1: TÌNH TRẠNG KẾT NỐI ──────────────────────────────────── */
+function intRenderHealth(){
+  const el=document.getElementById('int-pane-health');if(!el)return;
+  el.innerHTML=`<div class="lic-note">Mỗi sản phẩm một thẻ: <strong>kênh gửi đi</strong> (lệnh của CRM có tới nơi không) và <strong>kênh nhận về</strong> (sản phẩm có báo về không, ta có xử lý được không). Kết luận nói rõ <strong>lỗi ở phía ai</strong>.</div>
+  <div class="int-cards">${intAllHealth().map(h=>{
+    const prod=licProduct(h.pid);
+    const v=h.verdicts[0];
+    const bg=v.sev===3?'#FEF2F2':v.sev===2?'#FFF7ED':'#F0FDF4';
+    const bd=v.sev===3?'#FCA5A5':v.sev===2?'#FDBA74':'#86EFAC';
+    const fg=v.sev===3?'#B91C1C':v.sev===2?'#9A3412':'#166534';
+    return`<div class="card int-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;">
+        <div style="font-size:15px;font-weight:700;color:var(--navy);">${prod?.icon||''} ${licProductName(h.pid)}</div>
+        <span style="font-size:11px;color:var(--text-secondary);">Ngưỡng im lặng ${h.silentH} giờ</span>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;">
+        <div class="int-half">
+          <div class="int-half-t">📤 Gửi đi (CRM → sản phẩm)</div>
+          <div class="int-stat"><span>Chờ gửi</span><b>${h.pending}</b></div>
+          <div class="int-stat"><span>Đang thử lại</span><b>${h.retryOut}</b></div>
+          <div class="int-stat"><span>Thất bại vĩnh viễn</span><b style="color:${h.dead?'var(--red)':'inherit'}">${h.dead}</b></div>
+        </div>
+        <div class="int-half">
+          <div class="int-half-t">📥 Nhận về (sản phẩm → CRM)</div>
+          <div class="int-stat"><span>Nhận gần nhất</span><b style="color:${h.silent?'var(--red)':'inherit'}">${h.lastIn==null?'chưa có':licFmtMins(h.lastIn)+' trước'}</b></div>
+          <div class="int-stat"><span>Nhận trong 24 giờ</span><b>${h.in24}</b></div>
+          <div class="int-stat"><span>Xử lý lỗi</span><b style="color:${h.failed?'var(--red)':'inherit'}">${h.failed}${h.inTotal?` (${h.failRate}%)`:''}</b></div>
+        </div>
+      </div>
+      ${h.verdicts.map(vd=>`<div class="int-verdict" style="background:${vd.sev===3?'#FEF2F2':vd.sev===2?'#FFF7ED':'#F0FDF4'};border-color:${vd.sev===3?'#FCA5A5':vd.sev===2?'#FDBA74':'#86EFAC'};color:${vd.sev===3?'#B91C1C':vd.sev===2?'#9A3412':'#166534'};">
+        <span style="font-size:16px;line-height:1.3">${vd.icon}</span>
+        <div style="flex:1;">
+          <div style="font-weight:600;margin-bottom:2px;">${vd.title}</div>
+          <div>${vd.body}</div>
+          ${vd.act?`<button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="${vd.act.fn}">${vd.act.label} →</button>`:''}
+        </div>
+      </div>`).join('')}
+    </div>`;}).join('')}</div>`;
+}
+
+/* ── MÀN 2: SỰ KIỆN GỬI ĐI ─────────────────────────────────────── */
+const INT_OUT_STATUS={PENDING:{l:'Chờ gửi',c:'sub-mirror-pending'},PUBLISHED:{l:'Đã gửi',c:'sub-mirror-active'},
+  RETRYING:{l:'Đang thử lại',c:'sub-mirror-grace'},DEAD_LETTER:{l:'Thất bại vĩnh viễn',c:'sub-mirror-revoked'}};
+function intRenderOutbox(){
+  const el=document.getElementById('int-pane-out');if(!el)return;
+  const rows=INT_OUTBOX.filter(e=>(!_intFilter.outStatus||e.status===_intFilter.outStatus)&&(!_intFilter.outProduct||e.productId===_intFilter.outProduct))
+    .sort((a,b)=>a.ageMin-b.ageMin);
+  const dead=rows.filter(e=>e.status==='DEAD_LETTER');
+  el.innerHTML=`
+  <div class="toolbar">
+    <select class="filter-select" onchange="_intFilter.outStatus=this.value;intRenderOutbox()">
+      <option value="">Mọi trạng thái</option>
+      ${Object.keys(INT_OUT_STATUS).map(k=>`<option value="${k}" ${_intFilter.outStatus===k?'selected':''}>${INT_OUT_STATUS[k].l}</option>`).join('')}
+    </select>
+    <select class="filter-select" onchange="_intFilter.outProduct=this.value;intRenderOutbox()">
+      <option value="">Tất cả sản phẩm</option>
+      ${CAT_PRODUCTS.map(p=>`<option value="${p.id}" ${_intFilter.outProduct===p.id?'selected':''}>${catEsc(p.name)}</option>`).join('')}
+    </select>
+    <button class="btn btn-ghost btn-sm" onclick="_intFilter.outStatus='';_intFilter.outProduct='';intRenderOutbox()">Xoá lọc</button>
+    ${(dead.length&&intCan('integration:retry'))?`<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="intOpenBulk('out')">🔁 Gửi lại ${dead.length} lệnh thất bại</button>`:''}
+  </div>
+  <div class="table-wrap lic-table"><table>
+    <thead><tr><th>Trạng thái</th><th>Lệnh gửi đi</th><th>Khách hàng</th><th>Sản phẩm</th><th style="width:90px;text-align:center">Số lần thử</th><th>Lỗi cuối</th><th>Thời điểm</th><th></th></tr></thead>
+    <tbody>${rows.length?rows.map(e=>{
+      const st=INT_OUT_STATUS[e.status];
+      const s=subFindById(e.subId);
+      return`<tr>
+        <td><span class="sub-mirror-badge ${st.c}">${st.l}</span></td>
+        <td><div style="font-weight:600;font-size:13px;">${INT_OUT_LABEL[e.eventKey]||e.eventKey}</div><div style="font-size:11px;color:var(--gray-400);font-family:monospace;">${e.id}</div></td>
+        <td><div style="font-weight:600;">${e.customerName}</div><div style="font-size:11px;color:var(--primary);cursor:pointer;text-decoration:underline;font-family:monospace;" onclick="intTrace('${e.subId}')">${e.subId}</div></td>
+        <td style="font-size:13px;">${licProduct(e.productId)?.icon||''} ${licProductName(e.productId)}</td>
+        <td style="text-align:center;font-weight:600;color:${e.attempts>=10?'var(--red)':'inherit'}">${e.attempts}/10</td>
+        <td style="font-size:12px;color:var(--text-secondary);max-width:280px;">${e.lastError||'—'}</td>
+        <td style="font-size:12px;color:var(--text-secondary);">${licFmtMins(e.ageMin)} trước</td>
+        <td>${(['DEAD_LETTER','RETRYING'].includes(e.status)&&intCan('integration:retry'))?`<button class="btn btn-secondary btn-sm" onclick="intRetryOut('${e.id}')">Gửi lại</button>`:''}</td>
+      </tr>`;}).join(''):`<tr><td colspan="8"><div style="padding:40px;text-align:center;color:var(--text-secondary)">Không có sự kiện nào khớp bộ lọc</div></td></tr>`}
+    </tbody></table></div>
+  <div style="margin-top:10px;font-size:12px;color:var(--text-secondary);">${rows.length} sự kiện gửi đi</div>`;
+}
+
+/* ── MÀN 3: SỰ KIỆN NHẬN VỀ ────────────────────────────────────── */
+const INT_IN_STATUS={RECEIVED:{l:'Đã nhận',c:'sub-mirror-pending'},PROCESSED:{l:'Đã xử lý',c:'sub-mirror-active'},
+  RETRYING:{l:'Đang thử lại',c:'sub-mirror-grace'},FAILED:{l:'Xử lý lỗi',c:'sub-mirror-revoked'}};
+const INT_FAIL_STAGE={SIGNATURE:'Xác thực nguồn gửi',CORRELATION:'Nhận diện subscription',MAPPING:'Đọc dữ liệu'};
+function intRenderInbox(){
+  const el=document.getElementById('int-pane-in');if(!el)return;
+  const rows=INT_INBOX.filter(e=>(!_intFilter.inStatus||e.status===_intFilter.inStatus)&&(!_intFilter.inProduct||e.productId===_intFilter.inProduct))
+    .sort((a,b)=>a.ageMin-b.ageMin);
+  const failed=rows.filter(e=>e.status==='FAILED'&&e.failStage!=='SIGNATURE');
+  el.innerHTML=`
+  <div class="toolbar">
+    <select class="filter-select" onchange="_intFilter.inStatus=this.value;intRenderInbox()">
+      <option value="">Mọi trạng thái</option>
+      ${Object.keys(INT_IN_STATUS).map(k=>`<option value="${k}" ${_intFilter.inStatus===k?'selected':''}>${INT_IN_STATUS[k].l}</option>`).join('')}
+    </select>
+    <select class="filter-select" onchange="_intFilter.inProduct=this.value;intRenderInbox()">
+      <option value="">Tất cả sản phẩm</option>
+      ${CAT_PRODUCTS.map(p=>`<option value="${p.id}" ${_intFilter.inProduct===p.id?'selected':''}>${catEsc(p.name)}</option>`).join('')}
+    </select>
+    <button class="btn btn-ghost btn-sm" onclick="_intFilter.inStatus='';_intFilter.inProduct='';intRenderInbox()">Xoá lọc</button>
+    ${(failed.length&&intCan('integration:retry'))?`<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="intOpenBulk('in')">🔁 Xử lý lại ${failed.length} tin lỗi</button>`:''}
+  </div>
+  <div class="table-wrap lic-table"><table>
+    <thead><tr><th>Trạng thái</th><th>Sản phẩm báo về</th><th>Khách hàng</th><th>Sản phẩm</th><th>Xác thực</th><th>Lỗi ở bước nào</th><th>Nhận lúc</th><th></th></tr></thead>
+    <tbody>${rows.length?rows.map(e=>{
+      const st=INT_IN_STATUS[e.status];
+      const canRetry=e.status==='FAILED'&&e.failStage!=='SIGNATURE'&&intCan('integration:retry');
+      return`<tr>
+        <td><span class="sub-mirror-badge ${st.c}">${st.l}</span></td>
+        <td><div style="font-weight:600;font-size:13px;">${INT_IN_LABEL[e.eventKey]||'Sự kiện không xác định'}</div>
+          <div style="font-size:11px;color:var(--gray-400);font-family:monospace;">${e.id}</div>
+          ${!INT_IN_LABEL[e.eventKey]?`<div style="font-size:11px;color:#92400E;">Loại sự kiện lạ — vẫn ghi nhận, không áp dụng</div>`:''}</td>
+        <td>${e.subId?`<div style="font-weight:600;">${e.customerName}</div><div style="font-size:11px;color:var(--primary);cursor:pointer;text-decoration:underline;font-family:monospace;" onclick="intTrace('${e.subId}')">${e.subId}</div>`
+          :`<span class="lic-tag-onprem">Không xác định được subscription</span>`}</td>
+        <td style="font-size:13px;">${licProduct(e.productId)?.icon||''} ${licProductName(e.productId)}</td>
+        <td>${e.signatureOk?'<span style="color:#059669;font-size:13px;">✔ Hợp lệ</span>':'<span style="color:var(--red);font-size:13px;font-weight:600;">✘ Không hợp lệ</span>'}</td>
+        <td style="font-size:12px;color:var(--text-secondary);max-width:300px;">${e.failStage?`<div style="font-weight:600;color:#B91C1C;">${INT_FAIL_STAGE[e.failStage]||e.failStage}</div>${e.failReason}`:'—'}</td>
+        <td style="font-size:12px;color:var(--text-secondary);">${licFmtMins(e.ageMin)} trước</td>
+        <td>${canRetry?`<button class="btn btn-secondary btn-sm" onclick="intOpenReplay('${e.id}')">Xử lý lại</button>`:''}</td>
+      </tr>`;}).join(''):`<tr><td colspan="8"><div style="padding:40px;text-align:center;color:var(--text-secondary)">Không có sự kiện nào khớp bộ lọc</div></td></tr>`}
+    </tbody></table></div>
+  <div style="margin-top:10px;font-size:12px;color:var(--text-secondary);">${rows.length} sự kiện nhận về · tin có chữ ký không hợp lệ <strong>không được xử lý lại</strong> (nguồn gửi chưa xác thực được)</div>`;
+}
+
+/* ── MÀN 4: TRA CỨU THEO SUBSCRIPTION ──────────────────────────── */
+function intTrace(subId){intTraceSubId=subId;intSwitchTab('trace');}
+function intRenderTrace(){
+  const el=document.getElementById('int-pane-trace');if(!el)return;
+  const s=intTraceSubId?subFindById(intTraceSubId):null;
+  const events=intTraceSubId?[
+    ...INT_OUTBOX.filter(e=>e.subId===intTraceSubId).map(e=>({dir:'out',...e})),
+    ...INT_INBOX.filter(e=>e.subId===intTraceSubId).map(e=>({dir:'in',...e})),
+  ].sort((a,b)=>a.ageMin-b.ageMin):[];
+  el.innerHTML=`
+  <div class="toolbar">
+    <div class="search-wrap" style="flex:1;"><span class="search-icon">🔍</span>
+      <input class="search-input" id="intTraceInput" placeholder="Nhập mã subscription (vd SUB-2026-021)" value="${intTraceSubId}"
+        onkeydown="if(event.key==='Enter')intTrace(this.value.trim().toUpperCase())">
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="intTrace(document.getElementById('intTraceInput').value.trim().toUpperCase())">Tra cứu</button>
+  </div>
+  ${!s?`<div class="card" style="padding:48px;text-align:center;color:var(--text-secondary)">
+      <div style="font-size:36px;margin-bottom:10px">🔍</div>
+      <div style="font-weight:600;color:var(--text-primary)">${intTraceSubId?'Không tìm thấy subscription '+intTraceSubId:'Nhập mã subscription để xem toàn bộ trao đổi dữ liệu'}</div>
+      <div style="font-size:13px;margin-top:4px">Dùng khi Sales báo "khách hàng này chưa dùng được" — xem CRM đã gửi gì và sản phẩm đã báo về những gì.</div>
+    </div>`
+  :`<div class="card" style="padding:20px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--navy);">${s.customerName} · ${s.packageName}</div>
+          <div style="font-size:12px;color:var(--text-secondary);">${licProduct(s.productId)?.icon||''} ${licProductName(s.productId)} · ${s.id}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="licOpenDetail('${s.id}')">🛡️ Xem license</button>
+          <button class="btn btn-ghost btn-sm" onclick="showModule('subscription');subOpenDetail('${s.id}');subSwitchTab(document.querySelector('#sub-view-detail .tab:nth-child(3)'),'sub-tp-timeline')">📅 Tiến độ khách hàng thấy</button>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="padding:20px;">
+      <div class="section-hdr">Trao đổi dữ liệu với ${licProductName(s.productId)} (${events.length} sự kiện)</div>
+      ${events.length?`<div class="int-trace">${events.map(e=>{
+        const isOut=e.dir==='out';
+        const st=isOut?INT_OUT_STATUS[e.status]:INT_IN_STATUS[e.status];
+        const bad=['DEAD_LETTER','FAILED'].includes(e.status);
+        return`<div class="int-trace-row ${bad?'bad':''}">
+          <div class="int-trace-time">${licFmtMins(e.ageMin)} trước</div>
+          <div class="int-trace-dir">${isOut?'📤 CRM gửi':'📥 Sản phẩm báo'}</div>
+          <div class="int-trace-body">
+            <div style="font-weight:600;">${isOut?(INT_OUT_LABEL[e.eventKey]||e.eventKey):(INT_IN_LABEL[e.eventKey]||'Sự kiện không xác định')}</div>
+            ${bad?`<div style="font-size:12px;color:#B91C1C;margin-top:2px;">${isOut?e.lastError:e.failReason}</div>`:''}
+          </div>
+          <div><span class="sub-mirror-badge ${st.c}">${st.l}</span></div>
+        </div>`;}).join('')}</div>`
+      :`<div style="color:var(--text-secondary);font-size:13px;">Chưa có trao đổi dữ liệu nào cho subscription này.</div>`}
+    </div>`}`;
+}
+
+/* ── HÀNH ĐỘNG: GỬI LẠI (outbox) ───────────────────────────────── */
+function intRetryOut(id){
+  const e=INT_OUTBOX.find(x=>x.id===id);if(!e)return;
+  if(!intCan('integration:retry')){toast('error','Không có quyền','Chỉ quản trị vận hành mới gửi lại được.');return;}
+  e.status='PENDING';e.attempts=0;e.lastError=null;
+  toast('success','Đã đưa lại vào hàng đợi',`${INT_OUT_LABEL[e.eventKey]||e.eventKey} · ${e.subId} — sẽ gửi lại tới ${licProductName(e.productId)}.`);
+  intRenderCounts();intRenderOutbox();
+}
+
+/* ── HÀNH ĐỘNG: XỬ LÝ LẠI = REPLAY CHUỖI (BR-06.10…06.13) ────────
+   KHÔNG xử lý lẻ một tin cũ: sẽ ghi đè ngược trạng thái.
+   Gom toàn bộ tin của CÙNG subscription có thời điểm ≥ tin được chọn
+   (kể cả tin đã xử lý xong), chạy TUẦN TỰ theo thời gian tăng dần.
+   Replay KHÔNG bắn thông báo cho khách hàng và KHÔNG sinh lệnh gửi đi mới. */
+function intReplayChain(evId){
+  const e=INT_INBOX.find(x=>x.id===evId);if(!e||!e.subId)return[];
+  return INT_INBOX.filter(x=>x.subId===e.subId&&x.ageMin<=e.ageMin&&x.failStage!=='SIGNATURE')
+    .sort((a,b)=>b.ageMin-a.ageMin);   // cũ → mới
+}
+const INT_EFFECT={'license.activated':'Đang hoạt động','license.suspended':'Tạm dừng','license.expired':'Hết hạn',
+  'license.renewed':'Đã gia hạn','license.pending':'Chờ kích hoạt','license.provisioning':'Đang triển khai'};
+function intExpectedState(chain){
+  let st=null;chain.forEach(e=>{if(INT_EFFECT[e.eventKey])st=INT_EFFECT[e.eventKey];});
+  return st;
+}
+let _intReplayCtx=null;
+function intOpenReplay(evId){
+  const chain=intReplayChain(evId);if(!chain.length)return;
+  const e=INT_INBOX.find(x=>x.id===evId);
+  _intReplayCtx={type:'single',evId,chain};
+  const expected=intExpectedState(chain);
+  document.getElementById('intReplayBody').innerHTML=`
+    <div class="lic-banner" style="background:#FFFBEB;border:1px solid #FCD34D;color:#92400E;">
+      <span style="font-size:16px">⚠️</span>
+      <div>Để trạng thái cuối cùng <strong>đúng</strong>, hệ thống sẽ xử lý lại <strong>cả ${chain.length} sự kiện</strong> của ${e.subId} kể từ tin được chọn, <strong>theo đúng thứ tự thời gian</strong>. Xử lý lại một tin cũ đơn lẻ sẽ kéo ngược trạng thái về quá khứ.</div>
+    </div>
+    <div style="margin:14px 0;">
+      ${chain.map((c,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:11px;color:var(--gray-400);width:18px;">${i+1}</span>
+        <span style="font-size:12px;color:var(--text-secondary);width:110px;">${licFmtMins(c.ageMin)} trước</span>
+        <span style="flex:1;font-size:13px;font-weight:${c.status==='FAILED'?'600':'400'};">${INT_IN_LABEL[c.eventKey]||c.eventKey}</span>
+        <span class="sub-mirror-badge ${INT_IN_STATUS[c.status].c}">${INT_IN_STATUS[c.status].l}</span>
+      </div>`).join('')}
+    </div>
+    ${expected?`<div style="font-size:13px;background:#F8FAFC;border:1px solid var(--border);border-radius:6px;padding:10px 12px;">
+      Trạng thái license sau khi xử lý xong: <strong>${expected}</strong>
+    </div>`:''}
+    <div style="font-size:12px;color:var(--text-secondary);margin-top:10px;">Đây là thao tác kỹ thuật nội bộ — <strong>không gửi thông báo cho khách hàng</strong> và không phát sinh lệnh mới sang sản phẩm.</div>`;
+  document.getElementById('intReplayTitle').textContent=`Xử lý lại ${chain.length} sự kiện của ${e.subId}`;
+  document.getElementById('intReplayReason').value='';
+  intOpenModal('intModalReplay');
+}
+function intOpenBulk(kind){
+  if(kind==='out'){
+    const list=INT_OUTBOX.filter(e=>e.status==='DEAD_LETTER');
+    _intReplayCtx={type:'bulk-out',list};
+    document.getElementById('intReplayTitle').textContent=`Gửi lại ${list.length} lệnh thất bại`;
+    document.getElementById('intReplayBody').innerHTML=`
+      <div class="lic-banner" style="background:#EFF6FF;border:1px solid #BFDBFE;color:#1E3A8A;">
+        <span style="font-size:16px">🔁</span>
+        <div>Đưa lại ${list.length} lệnh vào hàng đợi gửi. Chỉ làm sau khi <strong>đã khắc phục nguyên nhân</strong> (kết nối / hàng đợi), nếu không chúng sẽ lại thất bại.</div>
+      </div>
+      <div style="margin-top:12px;font-size:13px;">${list.map(e=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);">${INT_OUT_LABEL[e.eventKey]||e.eventKey} · <span style="font-family:monospace;">${e.subId}</span> · ${e.customerName}</div>`).join('')}</div>`;
+  }else{
+    const failed=INT_INBOX.filter(e=>e.status==='FAILED'&&e.failStage!=='SIGNATURE');
+    const bySub={};failed.forEach(e=>{const k=e.subId||'(không xác định)';bySub[k]=(bySub[k]||0)+1;});
+    const capped=failed.length>INT_BATCH_MAX;
+    _intReplayCtx={type:'bulk-in',list:failed.slice(0,INT_BATCH_MAX)};
+    document.getElementById('intReplayTitle').textContent=`Xử lý lại ${Math.min(failed.length,INT_BATCH_MAX)} sự kiện lỗi`;
+    document.getElementById('intReplayBody').innerHTML=`
+      <div class="lic-banner" style="background:#FFFBEB;border:1px solid #FCD34D;color:#92400E;">
+        <span style="font-size:16px">⚠️</span>
+        <div>Xử lý lại theo <strong>từng subscription</strong>, mỗi subscription chạy <strong>tuần tự theo thứ tự thời gian</strong> để trạng thái cuối cùng đúng. Các subscription khác nhau chạy song song.
+        ${capped?`<div style="margin-top:4px;"><strong>Giới hạn ${INT_BATCH_MAX} sự kiện/lô</strong> — phần còn lại chạy ở lô sau.</div>`:''}</div>
+      </div>
+      <div style="margin-top:12px;font-size:13px;">
+        ${Object.keys(bySub).map(k=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-family:monospace;">${k}</span><span>${bySub[k]} sự kiện</span></div>`).join('')}
+      </div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:10px;">Thao tác kỹ thuật nội bộ — <strong>không gửi thông báo cho khách hàng</strong>, không phát sinh lệnh mới sang sản phẩm.</div>`;
+  }
+  document.getElementById('intReplayReason').value='';
+  intOpenModal('intModalReplay');
+}
+function intOpenModal(id){const el=document.getElementById(id);if(el)el.classList.add('open');}
+function intCloseModal(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
+function intConfirmReplay(){
+  const reason=document.getElementById('intReplayReason').value.trim();
+  if(!reason){toast('error','Cần nhập lý do','Ghi rõ vì sao xử lý lại — để người sau hiểu trạng thái đã "nhảy" vì việc gì.');return;}
+  const c=_intReplayCtx;if(!c)return;
+  if(c.type==='bulk-out'){
+    c.list.forEach(e=>{e.status='PENDING';e.attempts=0;e.lastError=null;});
+    toast('success','Đã đưa lại vào hàng đợi',`${c.list.length} lệnh sẽ được gửi lại.`);
+  }else{
+    const list=c.type==='single'?c.chain:c.list;
+    list.forEach(e=>{e.status='PROCESSED';e.failStage=null;e.failReason=null;e.processedAt='vừa xong';});
+    const subs=[...new Set(list.map(e=>e.subId))].filter(Boolean);
+    subs.forEach(id=>{
+      const raw=licSub(id);
+      if(raw){(raw.timeline=raw.timeline||[]).unshift({icon:'🔁',cls:'tl-dot-gray',source:'SYSTEM',actor:currentUser?.name||'Quản trị vận hành',
+        title:'Đã xử lý lại dữ liệu nhận từ sản phẩm',time:'2026-07-13 09:30',
+        detail:`${list.filter(e=>e.subId===id).length} sự kiện · lý do: ${reason}`});}
+    });
+    toast('success','Đã xử lý lại',`${list.length} sự kiện · ${subs.length} subscription. Không gửi thông báo cho khách hàng.`);
+  }
+  intCloseModal('intModalReplay');_intReplayCtx=null;
+  intRenderCounts();intSwitchTab(intTab);
+}
+
+intSeed();
+
 init();
 </script>
+
+<!-- ════════════ MODAL: XỬ LÝ LẠI / GỬI LẠI (M-07) ════════════ -->
+<div class="modal-overlay" id="intModalReplay">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <div class="modal-title" id="intReplayTitle">Xử lý lại sự kiện</div>
+      <button class="modal-close" onclick="intCloseModal('intModalReplay')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="intReplayBody"></div>
+      <div class="field" style="margin-top:16px;">
+        <label class="field-label">Lý do <span style="color:var(--red)">*</span></label>
+        <input class="field-input" id="intReplayReason" placeholder="Vd: đã sửa quy tắc đọc dữ liệu của CMC Antivirus (thiếu trường ngày hết hạn)">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="intCloseModal('intModalReplay')">Huỷ</button>
+      <button class="btn btn-primary" onclick="intConfirmReplay()">Xác nhận</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

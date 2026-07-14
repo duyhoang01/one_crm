@@ -287,8 +287,8 @@ Trang Chi tiết Subscription gồm 4 khu vực xếp dọc từ trên xuống:
 |---|---|
 | 1 | **Không có** header điều hướng riêng (không có nút "← License & Usage", không có link KH/HĐ) — người dùng đã ở trong trang subscription; các link đó nằm ở tab **Thông tin chung** (§3.4). |
 | 2 | **Có** nút **"🛡️ Xem trong module License & Usage"** ở cuối tab → mở **UC-LIC-02**. |
-| 3 | Hành động ngữ cảnh **không cần điều hướng lại**: "Xem tiến độ triển khai" chuyển thẳng sang tab Timeline (§3.6) trong cùng trang; "Gia hạn" mở modal UC-SUB-07 tại chỗ. |
-| 4 | **Không có** thao tác vòng đời (Tạm dừng / Thu hồi / Gia hạn) **trong thân tab** — chúng nằm ở Hero section (§3.2). Đặt lại ở đây sẽ khiến người dùng tưởng đang thao tác lên license. |
+| 3 | Hành động ngữ cảnh **không cần điều hướng lại**: "Xem tiến độ triển khai" chuyển thẳng sang tab Timeline (§3.6) trong cùng trang, không mở trang khác. |
+| 4 | **Không có** thao tác vòng đời (Tạm dừng / Thu hồi / **Gia hạn**) **trong thân tab** — chúng nằm ở Hero section (§3.2). Component chung nhận cờ "đang chạy trong trang subscription" → **ẩn nút Gia hạn** *(chốt 14/07/2026: một hành động chỉ xuất hiện một chỗ trên cùng một màn)*. Ô **Hết hạn** vẫn tô đỏ kèm "đã quá hạn {n} ngày" để dẫn mắt người dùng lên nút ở Hero. |
 
 **Trạng thái đặc biệt** (giống UC-LIC-02):
 
@@ -343,19 +343,19 @@ Trang Chi tiết Subscription gồm 4 khu vực xếp dọc từ trên xuống:
 | AC-SUB-03-06 | Sub có `status = DRAFT`. User là Sales. | Mở trang chi tiết. | Các nút hiển thị: ✅ Xác nhận, ✏️ Sửa, 🗑️ Xóa. Nút ⊘ Thu hồi không hiển thị. |
 | AC-SUB-03-07 | Sub có `status = DRAFT`. User là Manager. | Mở trang chi tiết. | Nút ⊘ Thu hồi **không hiển thị** (ẩn hoàn toàn — status DRAFT không đủ điều kiện). |
 | AC-SUB-03-08 | Sub có `status = ACTIVE`. User là Manager. | Mở trang chi tiết. | Nút ⊘ Thu hồi hiển thị và active. Nút ⏸ Tạm dừng hiển thị. Nút 🔄 Gia hạn hiển thị. Các nút ✅ Xác nhận, ✏️ Sửa, 🗑️ Xóa không hiển thị. |
-| AC-SUB-03-08b | Sub có `status = ACTIVE`. User là License Admin. | Mở trang chi tiết. | Nút ⊘ Thu hồi hiển thị và active (giống Manager). |
-| AC-SUB-03-09 | Sub có `status = SUSPENDED`. User là Sales. | Mở trang chi tiết. | Nút ▶ Khôi phục và 🔄 Gia hạn hiển thị. Nút ⏸ Tạm dừng không hiển thị. |
-| AC-SUB-03-10 | Sub có `status = EXPIRED`. User là Auditor. | Mở trang chi tiết. | Nút 🔄 Gia hạn hiển thị. Các nút ✅ Xác nhận, ✏️ Sửa, 🗑️ Xóa, ⏸ Tạm dừng, ▶ Khôi phục không hiển thị. |
+| AC-SUB-03-09 | Sub có `status = ACTIVE`. User là License Admin. | Mở trang chi tiết. | Nút ⊘ Thu hồi hiển thị và active (giống Manager). |
+| AC-SUB-03-10 | Sub có `status = SUSPENDED`. User là Sales. | Mở trang chi tiết. | Nút ▶ Khôi phục và 🔄 Gia hạn hiển thị. Nút ⏸ Tạm dừng không hiển thị. |
+| AC-SUB-03-11 | Sub có `status = EXPIRED`. User là Auditor. | Mở trang chi tiết. | Nút 🔄 Gia hạn hiển thị. Các nút ✅ Xác nhận, ✏️ Sửa, 🗑️ Xóa, ⏸ Tạm dừng, ▶ Khôi phục không hiển thị. |
 
 ### Nhóm 3: Tab Thông tin chung
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-SUB-03-11 | Sub RESELLER, có `beneficiaryName = "Mekong Foods"`. | Mở tab Thông tin chung. | Trường "Đơn vị thụ hưởng" hiển thị "Mekong Foods". Trường "Số seats" không hiển thị. |
-| AC-SUB-03-11b | Sub sản phẩm EDR có `scope.tenant_mode = "SINGLE"`. | Mở tab Thông tin chung. | Trường "Kiểu tổ chức" hiển thị "Single organization". Sub không có scope → trường không hiển thị. |
-| AC-SUB-03-12 | Sub có `previousSubId = "SUB-2025-010"`. | Mở tab Thông tin chung. | Section Sub Chain hiển thị link đến "SUB-2025-010" (predecessor). |
-| AC-SUB-03-13 | Sub thuộc HĐ "HĐ-2024-001", KH "FPT Software". | Click link "HĐ-2024-001" trong tab Thông tin chung. | Hệ thống mở UC-CON-03 của hợp đồng đó (AF-04). Kết thúc tại **End 6**. |
-| AC-SUB-03-13b | Sub thuộc KH "FPT Software". | Click link "FPT Software" trong tab Thông tin chung. | Hệ thống mở UC-CUS-03 (Khách hàng 360°) của KH đó (AF-05). Kết thúc tại **End 7**. |
+| AC-SUB-03-12 | Sub RESELLER, có `beneficiaryName = "Mekong Foods"`. | Mở tab Thông tin chung. | Trường "Đơn vị thụ hưởng" hiển thị "Mekong Foods". Trường "Số seats" không hiển thị. |
+| AC-SUB-03-13 | Sub sản phẩm EDR có `scope.tenant_mode = "SINGLE"`. | Mở tab Thông tin chung. | Trường "Kiểu tổ chức" hiển thị "Single organization". Sub không có scope → trường không hiển thị. |
+| AC-SUB-03-14 | Sub có `previousSubId = "SUB-2025-010"`. | Mở tab Thông tin chung. | Section Sub Chain hiển thị link đến "SUB-2025-010" (predecessor). |
+| AC-SUB-03-15 | Sub thuộc HĐ "HĐ-2024-001", KH "FPT Software". | Click link "HĐ-2024-001" trong tab Thông tin chung. | Hệ thống mở UC-CON-03 của hợp đồng đó (AF-04). Kết thúc tại **End 6**. |
+| AC-SUB-03-16 | Sub thuộc KH "FPT Software". | Click link "FPT Software" trong tab Thông tin chung. | Hệ thống mở UC-CUS-03 (Khách hàng 360°) của KH đó (AF-05). Kết thúc tại **End 7**. |
 
 ### Nhóm 4: Tab License & Usage
 
@@ -363,42 +363,42 @@ Trang Chi tiết Subscription gồm 4 khu vực xếp dọc từ trên xuống:
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-SUB-03-14 | Sub có `status = DRAFT`. | Click tab "License & Usage". | Hiển thị "Chưa có license — subscription chưa được xác nhận…". Không có khối trạng thái/mức dùng. |
-| AC-SUB-03-15 | License đang chờ kích hoạt. | Click tab "License & Usage". | Hiển thị "Đang chờ {sản phẩm} kích hoạt" + badge. **Không** vẽ thanh mức dùng 0%. |
-| AC-SUB-03-15b | Sub **vừa gia hạn**, license đang chờ kích hoạt. | Click tab "License & Usage". | Thêm ghi chú "khoảng chờ bình thường, **không** tính là lệch trạng thái" + link tới sub trước. |
-| AC-SUB-03-16 | License đã kích hoạt. | Click tab "License & Usage". | Hiển thị **đúng component của UC-LIC-02**: cặp `SẢN PHẨM = / ≠ CRM`, mã định danh, ngày kích hoạt/hết hạn, mức sử dụng, thời điểm cập nhật. |
-| AC-SUB-03-17 | Bất kỳ sub nào. | Mở tab **Thông tin chung** rồi mở tab **License & Usage**. | **Không có trường nào xuất hiện ở cả hai tab** — trạng thái license và thời điểm đồng bộ chỉ có ở tab License & Usage (§3.4 v1.3). |
-| AC-SUB-03-18 | Bất kỳ sub nào có license. | Click tab "License & Usage" → bấm **"🛡️ Xem trong module License & Usage"**. | Mở **UC-LIC-02** của license đó. |
-| AC-SUB-03-18b | License đang chờ kích hoạt **hoặc** đang lệch trạng thái. | Click tab "License & Usage" → bấm **"📅 Xem tiến độ triển khai"**. | Chuyển sang tab **Timeline** (§3.6) trong cùng trang, **không** rời trang subscription. |
-| AC-SUB-03-18c | Bất kỳ vai trò nào. | Rà thân tab "License & Usage". | **Không có** nút Tạm dừng / Thu hồi / Gia hạn trong thân tab — chúng chỉ nằm ở Hero section (§3.2). |
+| AC-SUB-03-17 | Sub có `status = DRAFT`. | Click tab "License & Usage". | Hiển thị "Chưa có license — subscription chưa được xác nhận…". Không có khối trạng thái/mức dùng. |
+| AC-SUB-03-18 | License đang chờ kích hoạt. | Click tab "License & Usage". | Hiển thị "Đang chờ {sản phẩm} kích hoạt" + badge. **Không** vẽ thanh mức dùng 0%. |
+| AC-SUB-03-19 | Sub **vừa gia hạn**, license đang chờ kích hoạt. | Click tab "License & Usage". | Thêm ghi chú "khoảng chờ bình thường, **không** tính là lệch trạng thái" + link tới sub trước. |
+| AC-SUB-03-20 | License đã kích hoạt. | Click tab "License & Usage". | Hiển thị **đúng component của UC-LIC-02**: cặp `SẢN PHẨM = / ≠ CRM`, mã định danh, ngày kích hoạt/hết hạn, mức sử dụng, thời điểm cập nhật. |
+| AC-SUB-03-21 | Bất kỳ sub nào. | Mở tab **Thông tin chung** rồi mở tab **License & Usage**. | **Không có trường nào xuất hiện ở cả hai tab** — trạng thái license và thời điểm đồng bộ chỉ có ở tab License & Usage (§3.4 v1.3). |
+| AC-SUB-03-22 | Bất kỳ sub nào có license. | Click tab "License & Usage" → bấm **"🛡️ Xem trong module License & Usage"**. | Mở **UC-LIC-02** của license đó. |
+| AC-SUB-03-23 | License đang chờ kích hoạt **hoặc** đang lệch trạng thái. | Click tab "License & Usage" → bấm **"📅 Xem tiến độ triển khai"**. | Chuyển sang tab **Timeline** (§3.6) trong cùng trang, **không** rời trang subscription. |
+| AC-SUB-03-24 | Bất kỳ vai trò nào. | Rà thân tab "License & Usage". | **Không có** nút Tạm dừng / Thu hồi / Gia hạn trong thân tab — chúng chỉ nằm ở Hero section (§3.2). |
 
 ### Nhóm 5: Tab Timeline và Audit
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-SUB-03-19 | Sub có 5 sự kiện: tạo (01/01), xác nhận (02/01), kích hoạt (03/01), tạm dừng (04/01), khôi phục (05/01). | Click tab "Timeline". | Hiển thị 5 sự kiện theo thứ tự giảm dần: khôi phục (05/01) → tạm dừng (04/01) → ... → tạo (01/01). Mỗi sự kiện có icon màu, tên, thời gian, actor. |
-| AC-SUB-03-20 | Sub có 3 audit log: 2 SUCCESS và 1 FAILED. | Click tab "Audit". | Bảng audit hiển thị 3 dòng với đủ 6 cột. Dòng FAILED hiển thị màu/nhãn khác biệt với SUCCESS. |
+| AC-SUB-03-25 | Sub có 5 sự kiện: tạo (01/01), xác nhận (02/01), kích hoạt (03/01), tạm dừng (04/01), khôi phục (05/01). | Click tab "Timeline". | Hiển thị 5 sự kiện theo thứ tự giảm dần: khôi phục (05/01) → tạm dừng (04/01) → ... → tạo (01/01). Mỗi sự kiện có icon màu, tên, thời gian, actor. |
+| AC-SUB-03-26 | Sub có 3 audit log: 2 SUCCESS và 1 FAILED. | Click tab "Audit". | Bảng audit hiển thị 3 dòng với đủ 6 cột. Dòng FAILED hiển thị màu/nhãn khác biệt với SUCCESS. |
 
 ### Nhóm 6: Navigation — gateway "Loại thao tác" (bước 6)
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-SUB-03-21 | Đang ở trang chi tiết sub "SUB-2026-001". | Click "← Quay lại". | Quay về màn hình UC-SUB-01 (danh sách subscription). Kết thúc tại **End 8**. |
-| AC-SUB-03-22 | Đang ở trang chi tiết sub "SUB-2026-001". | Click breadcrumb "Subscription". | Quay về màn hình UC-SUB-01. Kết thúc tại **End 8**. |
-| AC-SUB-03-23 | Sub DIRECT, `status = DRAFT`. Sales click ✅ Xác nhận. | Click nút ✅ Xác nhận. | Điều hướng sang UC-SUB-05 với sub hiện tại. Kết thúc tại **End 2**. |
-| AC-SUB-03-25 | Sub `status = DRAFT`. | Click nút ✏️ Sửa. | Điều hướng sang UC-SUB-04 với sub hiện tại. Kết thúc tại **End 1**. |
-| AC-SUB-03-26 | Sub `status = DRAFT`. | Click nút 🗑️ Xóa. | Điều hướng sang UC-SUB-06 với sub hiện tại. Kết thúc tại **End 3**. |
-| AC-SUB-03-27 | Sub `status = ACTIVE`. | Click nút 🔄 Gia hạn. | Điều hướng sang UC-SUB-07 với sub hiện tại. Kết thúc tại **End 4**. |
-| AC-SUB-03-28 | Sub `status = ACTIVE`. User là Manager. | Click nút ⊘ Thu hồi. | Điều hướng sang UC-SUB-08 (Thu hồi) với sub hiện tại. Kết thúc tại **End 5**. |
-| AC-SUB-03-29 | Sub `status = ACTIVE`. User là Sales/Manager. | Click nút ⏸ Tạm dừng. | Điều hướng sang UC-SUB-09 (Tạm dừng) với sub hiện tại. Kết thúc tại **End 5**. |
-| AC-SUB-03-30 | Sub `status = SUSPENDED`. User là Sales/Manager. | Click nút ▶ Khôi phục. | Điều hướng sang UC-SUB-10 (Khôi phục) với sub hiện tại. Kết thúc tại **End 5**. |
-| AC-SUB-03-31 | Đang ở tab "Thông tin chung". | Click tab "License" (hoặc Timeline / Audit). | Nội dung tab tương ứng được render (AF-Tabs), **ở lại trang chi tiết** — không điều hướng, không tạo End Event. |
+| AC-SUB-03-27 | Đang ở trang chi tiết sub "SUB-2026-001". | Click "← Quay lại". | Quay về màn hình UC-SUB-01 (danh sách subscription). Kết thúc tại **End 8**. |
+| AC-SUB-03-28 | Đang ở trang chi tiết sub "SUB-2026-001". | Click breadcrumb "Subscription". | Quay về màn hình UC-SUB-01. Kết thúc tại **End 8**. |
+| AC-SUB-03-29 | Sub DIRECT, `status = DRAFT`. Sales click ✅ Xác nhận. | Click nút ✅ Xác nhận. | Điều hướng sang UC-SUB-05 với sub hiện tại. Kết thúc tại **End 2**. |
+| AC-SUB-03-30 | Sub `status = DRAFT`. | Click nút ✏️ Sửa. | Điều hướng sang UC-SUB-04 với sub hiện tại. Kết thúc tại **End 1**. |
+| AC-SUB-03-31 | Sub `status = DRAFT`. | Click nút 🗑️ Xóa. | Điều hướng sang UC-SUB-06 với sub hiện tại. Kết thúc tại **End 3**. |
+| AC-SUB-03-32 | Sub `status = ACTIVE`. | Click nút 🔄 Gia hạn. | Điều hướng sang UC-SUB-07 với sub hiện tại. Kết thúc tại **End 4**. |
+| AC-SUB-03-33 | Sub `status = ACTIVE`. User là Manager. | Click nút ⊘ Thu hồi. | Điều hướng sang UC-SUB-08 (Thu hồi) với sub hiện tại. Kết thúc tại **End 5**. |
+| AC-SUB-03-34 | Sub `status = ACTIVE`. User là Sales/Manager. | Click nút ⏸ Tạm dừng. | Điều hướng sang UC-SUB-09 (Tạm dừng) với sub hiện tại. Kết thúc tại **End 5**. |
+| AC-SUB-03-35 | Sub `status = SUSPENDED`. User là Sales/Manager. | Click nút ▶ Khôi phục. | Điều hướng sang UC-SUB-10 (Khôi phục) với sub hiện tại. Kết thúc tại **End 5**. |
+| AC-SUB-03-36 | Đang ở tab "Thông tin chung". | Click tab "License" (hoặc Timeline / Audit). | Nội dung tab tương ứng được render (AF-Tabs), **ở lại trang chi tiết** — không điều hướng, không tạo End Event. |
 
 ### Nhóm 7: Exception
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-SUB-03-24 | Sub "SUB-2026-999" không tồn tại trong hệ thống. | Hệ thống cố điều hướng đến trang chi tiết SUB-2026-999 (gateway bước 2). | Toast error hiển thị "Subscription không tồn tại". Màn hình danh sách UC-SUB-01 được giữ nguyên. Không điều hướng sang trang chi tiết. Kết thúc tại **End 9** (EF-01). |
+| AC-SUB-03-37 | Sub "SUB-2026-999" không tồn tại trong hệ thống. | Hệ thống cố điều hướng đến trang chi tiết SUB-2026-999 (gateway bước 2). | Toast error hiển thị "Subscription không tồn tại". Màn hình danh sách UC-SUB-01 được giữ nguyên. Không điều hướng sang trang chi tiết. Kết thúc tại **End 9** (EF-01). |
 
 ---
 
