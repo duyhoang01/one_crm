@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0"
+  id="Definitions_UC_SUB_02" targetNamespace="http://onecrm/bpmn">
+  <bpmn:collaboration id="Collaboration_1">
+    <bpmn:participant id="Participant_1" name="UC-SUB-02 — Tạo Subscription" processRef="Process_1" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_1" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_User" name="Sales / Manager">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Step2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Step4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Step5</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Step6</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AF01b</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AF03a</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AF02a</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AFCa</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_System" name="Hệ thống (CRM)">
+        <bpmn:flowNodeRef>Step1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Step3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw7</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Step8</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AF01a</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AF01c</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AF03b</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AF02b</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AFCb</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EF</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End2</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="StartEvent_1" name="Vào form (Click + Thêm — UC-SUB-01)" />
+    <bpmn:serviceTask id="Step1" name="1. Mở modal; sinh mã SUB-{YYYY}-{NNN}" />
+    <bpmn:userTask id="Step2" name="2. Tìm &amp; chọn hợp đồng" />
+    <bpmn:serviceTask id="Step3" name="3. Auto-fill KH/loại HĐ; xác định Gói &amp; Thời hạn; tính ngày; hint pool; scope" />
+    <bpmn:userTask id="Step4" name="4. Nhập bắt buộc theo loại HĐ (seats / thụ hưởng + license); chọn scope" />
+    <bpmn:userTask id="Step5" name="5. (Tùy chọn) chỉnh Ngày bắt đầu; Deal Code; Ghi chú" />
+    <bpmn:userTask id="Step6" name="6. Click 💾 Tạo" />
+    <bpmn:exclusiveGateway id="Gw7" name="7. Form hợp lệ?" />
+    <bpmn:serviceTask id="Step8" name="8. Tạo sub DRAFT; đóng modal; toast; điều hướng UC-SUB-03" />
+    <bpmn:endEvent id="End1" name="End 1 · Tạo thành công" />
+
+    <bpmn:userTask id="AF01b" name="AF-01b. Chọn Gói sản phẩm" />
+    <bpmn:serviceTask id="AF01a" name="AF-01a. Dropdown Gói (mỗi pool 1 option)" />
+    <bpmn:serviceTask id="AF01c" name="AF-01c. Điền Thời hạn; cập nhật Ngày hết hạn; hint pool" />
+    <bpmn:userTask id="AF03a" name="AF-03a. Xóa &amp; chọn hợp đồng khác" />
+    <bpmn:serviceTask id="AF03b" name="AF-03b. Reset Sản phẩm/License/Ngày; chạy lại bước 3" />
+    <bpmn:userTask id="AF02a" name="AF-02a. Chọn/nhập Ngày bắt đầu" />
+    <bpmn:serviceTask id="AF02b" name="AF-02b. Tính lại Ngày hết hạn = start + duration − 1" />
+    <bpmn:userTask id="AFCa" name="AF-Ca. Nhấn Hủy / ✕" />
+    <bpmn:serviceTask id="AFCb" name="AF-Cb. Đóng modal; reset form" />
+    <bpmn:endEvent id="End2" name="End 2 · Đã hủy" />
+    <bpmn:serviceTask id="EF" name="EF. Lỗi inline (EF-01..05); giữ modal" />
+
+    <bpmn:sequenceFlow id="S1" sourceRef="StartEvent_1" targetRef="Step1" />
+    <bpmn:sequenceFlow id="S2" sourceRef="Step1" targetRef="Step2" />
+    <bpmn:sequenceFlow id="S3" sourceRef="Step2" targetRef="Step3" />
+    <bpmn:sequenceFlow id="S4" sourceRef="Step3" targetRef="Step4" />
+    <bpmn:sequenceFlow id="S5" sourceRef="Step4" targetRef="Step5" />
+    <bpmn:sequenceFlow id="S6" sourceRef="Step5" targetRef="Step6" />
+    <bpmn:sequenceFlow id="S7" sourceRef="Step6" targetRef="Gw7" />
+    <bpmn:sequenceFlow id="S8" name="Có" sourceRef="Gw7" targetRef="Step8" />
+    <bpmn:sequenceFlow id="S9" sourceRef="Step8" targetRef="End1" />
+
+    <bpmn:sequenceFlow id="A01t" name="RESELLER ≥ 2 pool" sourceRef="Step3" targetRef="AF01a" />
+    <bpmn:sequenceFlow id="A01ab" sourceRef="AF01a" targetRef="AF01b" />
+    <bpmn:sequenceFlow id="A01bc" sourceRef="AF01b" targetRef="AF01c" />
+    <bpmn:sequenceFlow id="A01ret" name="→ bước 4" sourceRef="AF01c" targetRef="Step4" />
+
+    <bpmn:sequenceFlow id="A03t" name="Đổi HĐ" sourceRef="Step2" targetRef="AF03a" />
+    <bpmn:sequenceFlow id="A03ab" sourceRef="AF03a" targetRef="AF03b" />
+    <bpmn:sequenceFlow id="A03ret" name="→ bước 3" sourceRef="AF03b" targetRef="Step3" />
+
+    <bpmn:sequenceFlow id="A02t" name="Chỉnh ngày" sourceRef="Step5" targetRef="AF02a" />
+    <bpmn:sequenceFlow id="A02ab" sourceRef="AF02a" targetRef="AF02b" />
+    <bpmn:sequenceFlow id="A02ret" name="→ bước 5" sourceRef="AF02b" targetRef="Step5" />
+
+    <bpmn:sequenceFlow id="ACt" name="Hủy / ✕ (bất kỳ bước 2–6)" sourceRef="Step6" targetRef="AFCa" />
+    <bpmn:sequenceFlow id="ACab" sourceRef="AFCa" targetRef="AFCb" />
+    <bpmn:sequenceFlow id="ACend" sourceRef="AFCb" targetRef="End2" />
+
+    <bpmn:sequenceFlow id="EFt" name="Không" sourceRef="Gw7" targetRef="EF" />
+    <bpmn:sequenceFlow id="EFret" name="→ Quay bước 6" sourceRef="EF" targetRef="Step6" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+      <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1920" height="680" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_User_di" bpmnElement="Lane_User" isHorizontal="true" color:background-color="#E3EEFF" color:border-color="#2f6bd6">
+        <dc:Bounds x="190" y="80" width="1890" height="320" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true" color:background-color="#EEF1F5" color:border-color="#7a8699">
+        <dc:Bounds x="190" y="400" width="1890" height="360" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1" color:border-color="#2f9e6b">
+        <dc:Bounds x="232" y="162" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Step1_di" bpmnElement="Step1">
+        <dc:Bounds x="345" y="445" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Step2_di" bpmnElement="Step2" color:background-color="#E3EEFF" color:border-color="#2f6bd6">
+        <dc:Bounds x="505" y="145" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Step3_di" bpmnElement="Step3">
+        <dc:Bounds x="660" y="445" width="120" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Step4_di" bpmnElement="Step4" color:background-color="#E3EEFF" color:border-color="#2f6bd6">
+        <dc:Bounds x="985" y="145" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Step5_di" bpmnElement="Step5" color:background-color="#E3EEFF" color:border-color="#2f6bd6">
+        <dc:Bounds x="1305" y="145" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Step6_di" bpmnElement="Step6" color:background-color="#E3EEFF" color:border-color="#2f6bd6">
+        <dc:Bounds x="1465" y="145" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw7_di" bpmnElement="Gw7" color:background-color="#FFF3CF" color:border-color="#e0a800">
+        <dc:Bounds x="1655" y="455" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Step8_di" bpmnElement="Step8">
+        <dc:Bounds x="1780" y="445" width="120" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End1_di" bpmnElement="End1" color:background-color="#111827" color:border-color="#111827">
+        <dc:Bounds x="1962" y="462" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="AF01a_di" bpmnElement="AF01a">
+        <dc:Bounds x="825" y="615" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AF01b_di" bpmnElement="AF01b" color:background-color="#E3EEFF" color:border-color="#2f6bd6">
+        <dc:Bounds x="825" y="285" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AF01c_di" bpmnElement="AF01c">
+        <dc:Bounds x="985" y="615" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AF03a_di" bpmnElement="AF03a" color:background-color="#E3EEFF" color:border-color="#2f6bd6">
+        <dc:Bounds x="505" y="285" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AF03b_di" bpmnElement="AF03b">
+        <dc:Bounds x="505" y="615" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AF02a_di" bpmnElement="AF02a" color:background-color="#E3EEFF" color:border-color="#2f6bd6">
+        <dc:Bounds x="1145" y="285" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AF02b_di" bpmnElement="AF02b">
+        <dc:Bounds x="1145" y="615" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AFCa_di" bpmnElement="AFCa" color:background-color="#E3EEFF" color:border-color="#2f6bd6">
+        <dc:Bounds x="1465" y="285" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AFCb_di" bpmnElement="AFCb">
+        <dc:Bounds x="1465" y="615" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End2_di" bpmnElement="End2" color:background-color="#111827" color:border-color="#111827">
+        <dc:Bounds x="1662" y="632" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EF_di" bpmnElement="EF" color:background-color="#FDE3E3" color:border-color="#e02424">
+        <dc:Bounds x="1780" y="615" width="120" height="70" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="S1_di" bpmnElement="S1">
+        <di:waypoint x="268" y="180" /><di:waypoint x="400" y="180" /><di:waypoint x="400" y="445" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="S2_di" bpmnElement="S2">
+        <di:waypoint x="455" y="480" /><di:waypoint x="560" y="480" /><di:waypoint x="560" y="215" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="S3_di" bpmnElement="S3">
+        <di:waypoint x="615" y="180" /><di:waypoint x="720" y="180" /><di:waypoint x="720" y="445" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="S4_di" bpmnElement="S4">
+        <di:waypoint x="780" y="480" /><di:waypoint x="1040" y="480" /><di:waypoint x="1040" y="215" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="S5_di" bpmnElement="S5">
+        <di:waypoint x="1095" y="180" /><di:waypoint x="1305" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="S6_di" bpmnElement="S6">
+        <di:waypoint x="1415" y="180" /><di:waypoint x="1465" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="S7_di" bpmnElement="S7">
+        <di:waypoint x="1575" y="180" /><di:waypoint x="1680" y="180" /><di:waypoint x="1680" y="455" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="S8_di" bpmnElement="S8">
+        <di:waypoint x="1705" y="480" /><di:waypoint x="1780" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="S9_di" bpmnElement="S9">
+        <di:waypoint x="1900" y="480" /><di:waypoint x="1962" y="480" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="A01t_di" bpmnElement="A01t" color:border-color="#2f6bff">
+        <di:waypoint x="720" y="515" /><di:waypoint x="720" y="650" /><di:waypoint x="825" y="650" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A01ab_di" bpmnElement="A01ab" color:border-color="#2f6bff">
+        <di:waypoint x="880" y="615" /><di:waypoint x="880" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A01bc_di" bpmnElement="A01bc" color:border-color="#2f6bff">
+        <di:waypoint x="935" y="320" /><di:waypoint x="1040" y="320" /><di:waypoint x="1040" y="615" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A01ret_di" bpmnElement="A01ret" color:border-color="#2f6bff">
+        <di:waypoint x="1095" y="650" /><di:waypoint x="1095" y="215" /><di:waypoint x="1040" y="215" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="A03t_di" bpmnElement="A03t" color:border-color="#2f6bff">
+        <di:waypoint x="560" y="215" /><di:waypoint x="560" y="285" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A03ab_di" bpmnElement="A03ab" color:border-color="#2f6bff">
+        <di:waypoint x="560" y="355" /><di:waypoint x="560" y="615" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A03ret_di" bpmnElement="A03ret" color:border-color="#2f6bff">
+        <di:waypoint x="615" y="650" /><di:waypoint x="660" y="650" /><di:waypoint x="660" y="480" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="A02t_di" bpmnElement="A02t" color:border-color="#2f6bff">
+        <di:waypoint x="1360" y="215" /><di:waypoint x="1200" y="215" /><di:waypoint x="1200" y="285" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A02ab_di" bpmnElement="A02ab" color:border-color="#2f6bff">
+        <di:waypoint x="1200" y="355" /><di:waypoint x="1200" y="615" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A02ret_di" bpmnElement="A02ret" color:border-color="#2f6bff">
+        <di:waypoint x="1255" y="650" /><di:waypoint x="1310" y="650" /><di:waypoint x="1310" y="240" /><di:waypoint x="1360" y="240" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="ACt_di" bpmnElement="ACt" color:border-color="#2f6bff">
+        <di:waypoint x="1520" y="215" /><di:waypoint x="1520" y="285" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ACab_di" bpmnElement="ACab" color:border-color="#2f6bff">
+        <di:waypoint x="1520" y="355" /><di:waypoint x="1520" y="615" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ACend_di" bpmnElement="ACend" color:border-color="#2f6bff">
+        <di:waypoint x="1575" y="650" /><di:waypoint x="1662" y="650" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="EFt_di" bpmnElement="EFt" color:border-color="#e02424">
+        <di:waypoint x="1680" y="505" /><di:waypoint x="1680" y="560" /><di:waypoint x="1840" y="560" /><di:waypoint x="1840" y="615" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EFret_di" bpmnElement="EFret" color:border-color="#e02424">
+        <di:waypoint x="1840" y="615" /><di:waypoint x="1840" y="130" /><di:waypoint x="1520" y="130" /><di:waypoint x="1520" y="145" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

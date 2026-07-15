@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OneCRM — State Machine: Subscription &amp; License Mirror</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#161c2b; --panel2:#1b2334; --ink:#e8edf6; --muted:#94a3b8;
+    --line:#2a3550; --accent:#4f8cff; --green:#31c48d; --amber:#f0a02a; --red:#f26d6d;
+    --violet:#a78bfa; --future:#5b6475; --futurebg:#1a1f2b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;line-height:1.5}
+  header{padding:28px 32px 18px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#141b2b,#0f1420)}
+  header h1{margin:0 0 4px;font-size:22px;letter-spacing:.2px}
+  header .sub{color:var(--muted);font-size:13.5px}
+  header .meta{margin-top:10px;color:var(--muted);font-size:12px}
+  main{max-width:1180px;margin:0 auto;padding:24px 20px 64px}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:20px 22px;margin:22px 0}
+  h2{margin:0 0 4px;font-size:17px}
+  h2 .tag{font-size:11px;color:var(--muted);font-weight:500;margin-left:8px}
+  .desc{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .diagram{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+    height:72vh;min-height:420px;overflow:hidden;cursor:grab}
+  .diagram.dragging{cursor:grabbing}
+  .diagram .stage{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform;padding:16px}
+  .diagram .mermaid svg{max-width:none !important;height:auto !important}
+  .zoomctrl{position:absolute;top:10px;right:10px;z-index:5;display:flex;gap:6px;align-items:center;
+    background:rgba(15,20,32,.82);border:1px solid var(--line);border-radius:8px;padding:5px 7px;
+    backdrop-filter:blur(3px)}
+  .zoomctrl button{width:30px;height:28px;border:1px solid var(--line);background:#1b2334;color:var(--ink);
+    border-radius:6px;font-size:15px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
+  .zoomctrl button:hover{background:#26314a;border-color:var(--accent)}
+  .zoomctrl button.reset{width:auto;padding:0 9px;font-size:12px}
+  .zoomctrl .zlvl{color:var(--muted);font-size:11.5px;min-width:40px;text-align:center;font-variant-numeric:tabular-nums}
+  .zoomhint{position:absolute;bottom:9px;left:12px;z-index:5;color:var(--muted);font-size:11px;
+    background:rgba(15,20,32,.7);padding:2px 8px;border-radius:6px;pointer-events:none}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin:14px 0 2px;font-size:12.5px}
+  .legend span{display:inline-flex;align-items:center;gap:7px;color:var(--muted)}
+  .sw{width:16px;height:12px;border-radius:3px;display:inline-block;border:1px solid var(--line)}
+  .sw.act{background:#1f7a4d;border-color:#5fe6a6}
+  .sw.term{background:#8f3030;border-color:#f4a0a0}
+  .sw.wait{background:#9a6a15;border-color:#f4c05a}
+  .sw.norm{background:#2f4d7a;border-color:#7aa6e6}
+  .sw.fut{background:#2a3040;border-color:#6b7488;border-style:dashed}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--muted);font-weight:600;font-size:12px}
+  code{background:#0c1220;border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+    font-family:"Cascadia Code",Consolas,monospace;font-size:12px;color:#cfe0ff}
+  code.fut{color:#8b93a6;border-style:dashed}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:6px}
+  .card{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:9px;padding:13px 15px}
+  .card.grace{border-left-color:var(--amber)}
+  .card.mismatch{border-left-color:var(--red)}
+  .card.norev{border-left-color:var(--green)}
+  .card.future{border-left-color:var(--future)}
+  .card h3{margin:0 0 6px;font-size:13.5px}
+  .card p{margin:0;color:var(--muted);font-size:12.5px}
+  .pill{display:inline-block;font-size:10.5px;padding:1px 7px;border-radius:20px;
+    background:#22160c;color:var(--amber);border:1px solid #5a3d16;margin-left:6px}
+  .pill.fut{background:var(--futurebg);color:#9aa3b5;border-color:var(--future)}
+  .note{font-size:12px;color:var(--muted);margin-top:10px;font-style:italic}
+  .dgnotes{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .tagnote{font-size:12px;padding:4px 10px;border-radius:7px;border:1px solid var(--line)}
+  .tagnote.amber{background:#22160c;color:#f4c05a;border-color:#5a3d16}
+  .tagnote.green{background:#0e2418;color:#5fe6a6;border-color:#1f5a3d}
+  .tagnote.red{background:#241213;color:#f4a0a0;border-color:#5a2626}
+  .diagram .mermaid .edgeLabel,.diagram .mermaid .edgeLabel *{font-size:13px !important;color:#dbe6fb !important;line-height:1.25}
+  .diagram .mermaid .edgeLabel{background:#101728 !important;padding:2px 4px;border-radius:4px}
+  .diagram .mermaid .nodeLabel{color:#ffffff !important}
+  .diagram .mermaid .edgePath path{stroke-width:1.8px !important}
+  a.src{color:var(--accent);text-decoration:none}
+  .fut-row td{color:#8b93a6;background:#141926}
+</style>
+</head>
+<body>
+<header>
+  <h1>OneCRM · State Machine — Subscription &amp; License Mirror</h1>
+  <div class="sub">Sơ đồ trạng thái, cơ chế mapping và trigger chuyển đổi giữa <b>sub.status</b> (CRM sở hữu) và <b>license_mirror.status</b> (bản sao trạng thái từ sản phẩm).</div>
+  <div class="meta">Nguồn: PRD v2.6 §5.5 / §6.9 · UC-SUB-01..10 · UC-LIC-01..04 · _event_catalog.md (M-07, rà 14/07/2026). Tài liệu thiết kế nội bộ cho BA/Dev — tên event kỹ thuật giữ nguyên có chủ đích.</div>
+</header>
+
+<main>
+
+  <div class="legend">
+    <span><i class="sw norm"></i> Trạng thái thường</span>
+    <span><i class="sw act"></i> Đang hoạt động (KH dùng được)</span>
+    <span><i class="sw wait"></i> Chờ / trung gian</span>
+    <span><i class="sw term"></i> Kết thúc (terminal, không hoàn tác Phase 1)</span>
+    <span><i class="sw fut"></i> Đề xuất M-07 / chưa làm Phase 1 (tô mờ, nét đứt)</span>
+  </div>
+
+  <!-- ============ SUBSCRIPTION ============ -->
+  <section>
+    <h2>A. Subscription — <span class="tag">sub.status · CRM là nguồn sự thật · 7 trạng thái đã chốt (PRD §5.5.1)</span></h2>
+    <p class="desc">Subscription là đối tượng thương mại CRM sở hữu. Chuyển trạng thái do <b>hành động người dùng</b> (Sales/Manager/License Admin) hoặc <b>webhook license</b> (auto — FR-SUB-11). <b>Sub KHÔNG có GRACE/OVERDUE</b>: khi license vào ân hạn, sub vẫn ACTIVE.</p>
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart LR
+  START(( )):::startpt -->|tạo<br/>UC-SUB-02| DRAFT["DRAFT"]:::wait
+  DRAFT -->|Xác nhận<br/>subscription.submitted| PP["PENDING<br/>PROVISION"]:::wait
+  DRAFT -.->|Xóa nháp| DEL(( )):::endpt
+  PP -->|license.active<br/>FR-SUB-11| ACT["ACTIVE"]:::active
+  ACT -->|Tạm dừng<br/>·suspended| SUS["SUSPENDED"]:::norm
+  SUS -->|Khôi phục<br/>·reactivated| ACT
+  ACT -->|license.expired| EXP["EXPIRED"]:::norm
+  ACT -->|Thu hồi| REV["REVOKED"]:::terminal
+  SUS -->|Thu hồi| REV
+  PP -->|Thu hồi| REV
+  EXP -->|Thu hồi| REV
+  ACT -->|Gia hạn| REN["RENEWED"]:::terminal
+  SUS -->|Gia hạn| REN
+  EXP -->|Gia hạn| REN
+
+  classDef active fill:#1f7a4d,stroke:#5fe6a6,color:#ffffff,font-size:17px,font-weight:bold;
+  classDef wait fill:#9a6a15,stroke:#f4c05a,color:#ffffff,font-size:16px,font-weight:bold;
+  classDef norm fill:#2f4d7a,stroke:#7aa6e6,color:#ffffff,font-size:16px,font-weight:bold;
+  classDef terminal fill:#8f3030,stroke:#f4a0a0,color:#ffffff,font-size:16px,font-weight:bold;
+  classDef startpt fill:#0c1220,stroke:#5f6f92,color:#0c1220;
+  classDef endpt fill:#0c1220,stroke:#5f6f92,color:#0c1220;
+      </pre>
+    </div>
+    <div class="dgnotes">
+      <span class="tagnote amber">Gia hạn → tạo SUB MỚI đi thẳng ACTIVE (previous_subscription_id, không qua DRAFT).</span>
+      <span class="tagnote green">License vào GRACE / EXPIRING_SOON → sub GIỮ ACTIVE (không transition).</span>
+      <span class="tagnote red">Đổi version gói (Upgrade/Downgrade) chưa làm Phase 1 → 501 NOT_IMPLEMENTED (OQ-06).</span>
+    </div>
+  </section>
+
+  <!-- ============ LICENSE MIRROR ============ -->
+  <section>
+    <h2>B. License Mirror — <span class="tag">license_mirror.status · bản sao raw từ sản phẩm · KHÔNG chuẩn hoá ở core (PRD §5.5.2)</span></h2>
+    <p class="desc">License Mirror phản chiếu trạng thái license bên sản phẩm qua webhook (inbound, HMAC + idempotency). Mỗi Product Module tự khai báo tập status + display name. Sơ đồ dưới lấy theo bộ EDR. Trạng thái/event <b>tô mờ nét đứt</b> là đề xuất M-07 hoặc chưa gửi thật Phase 1.</p>
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart LR
+  S(( )):::startpt -->|license.pending| PEN["PENDING"]:::wait
+  PEN -->|license.provisioning| PRO["PROVISIONING"]:::wait
+  PRO -->|license.active| ACT["ACTIVE"]:::active
+  ACT -->|license.suspended<br/>tenant.suspended| SUS["SUSPENDED"]:::norm
+  SUS -->|tenant.reactivated| ACT
+  ACT -->|license.grace| GRA["GRACE"]:::wait
+  ACT -->|license.expired| EXP["EXPIRED"]:::norm
+  ACT -->|license.renewed| REN["RENEWED"]:::terminal
+  GRA -.->|grace_expired| RES["RESTRICTED"]:::future
+  RES -.->|suspended| SUS
+  ACT -.->|expiring_soon| ESO["EXPIRING<br/>SOON"]:::future
+  ACT -.->|license.revoked| REV["REVOKED"]:::future
+
+  classDef active fill:#1f7a4d,stroke:#5fe6a6,color:#ffffff,font-size:17px,font-weight:bold;
+  classDef wait fill:#9a6a15,stroke:#f4c05a,color:#ffffff,font-size:16px,font-weight:bold;
+  classDef norm fill:#2f4d7a,stroke:#7aa6e6,color:#ffffff,font-size:16px,font-weight:bold;
+  classDef terminal fill:#8f3030,stroke:#f4a0a0,color:#ffffff,font-size:16px,font-weight:bold;
+  classDef future fill:#2a3040,stroke:#6b7488,color:#aeb6c6,font-size:15px,stroke-dasharray:5 4;
+  classDef startpt fill:#0c1220,stroke:#5f6f92,color:#0c1220;
+      </pre>
+    </div>
+    <div class="note">Tô mờ nét đứt: <b>RESTRICTED</b> &amp; <b>EXPIRING_SOON</b> (đề xuất M-07 — <code class="fut">license.grace_expired</code> / <code class="fut">license.expiring_soon</code>, còn treo OQ-INT-08/06); <b>REVOKED</b> (đã khai báo <code class="fut">license.revoked</code> nhưng EDR chưa gửi thật Phase 1 — §3.4 event catalog).</div>
+  </section>
+
+  <!-- ============ MAPPING ============ -->
+  <section>
+    <h2>C. Cơ chế mapping — <span class="tag">1 event → tác động đồng thời lên mirror &amp; sub</span></h2>
+    <p class="desc">Khi webhook về, CRM cập nhật <b>license_mirror.status</b> trước, rồi <b>tự transition sub.status</b> theo bảng mapping (FR-SUB-11). Điều kiện chống sự kiện sai thứ tự: chỉ áp dụng khi <code>occurred_at</code> mới hơn <code>last_event_occurred_at</code> (§5.2).</p>
+    <table>
+      <thead><tr><th>Event inbound (sản phẩm → CRM)</th><th>license_mirror.status →</th><th>sub.status →</th><th>Ghi chú</th></tr></thead>
+      <tbody>
+        <tr><td><code>license.pending</code></td><td>PENDING</td><td>giữ PENDING_PROVISION</td><td>Đã nhận yêu cầu, chưa triển khai</td></tr>
+        <tr><td><code>license.provisioning</code></td><td>PROVISIONING</td><td>giữ PENDING_PROVISION</td><td>Đang triển khai</td></tr>
+        <tr><td><code>license.active</code> / <code>license.activated</code></td><td>ACTIVE</td><td><b>PENDING_PROVISION → ACTIVE</b></td><td>Capture activation_date; <code>sub.end_date ← expiration_date</code></td></tr>
+        <tr><td><code>license.suspended</code> / <code>tenant.suspended</code></td><td>SUSPENDED</td><td>→ SUSPENDED (nếu chưa)</td><td>tenant.* cần correlation_id hợp lệ</td></tr>
+        <tr><td><code>tenant.reactivated</code></td><td>ACTIVE</td><td>→ ACTIVE</td><td>Phản hồi lệnh reactivate (correlation_id)</td></tr>
+        <tr><td><code>license.grace</code> / <code>license.grace_started</code></td><td>GRACE</td><td><b>KHÔNG transition — giữ ACTIVE</b></td><td>KH vẫn dùng được; không alert</td></tr>
+        <tr><td><code>license.expired</code></td><td>EXPIRED</td><td>→ EXPIRED</td><td>Chỉ khi gói không có ân hạn</td></tr>
+        <tr><td><code>license.renewed</code></td><td>RENEWED</td><td>→ RENEWED (nếu có successor ACTIVE)</td><td>Bản cũ đóng, bản mới ACTIVE</td></tr>
+        <tr><td><code>usage.report</code> / <code>usage.usage_synced</code></td><td>(giữ nguyên)</td><td>(giữ nguyên)</td><td>Chỉ cập nhật usage_snapshot</td></tr>
+        <tr class="fut-row"><td><code class="fut">license.grace_expired</code> <span class="pill fut">M-07 đề xuất</span></td><td>RESTRICTED</td><td>→ EXPIRED <i>(đề xuất)</i></td><td>Ân hạn hết → hạn chế tính năng 30 ngày. OQ-INT-08 còn treo</td></tr>
+        <tr class="fut-row"><td><code class="fut">license.expiring_soon</code> <span class="pill fut">M-07 đề xuất</span></td><td>EXPIRING_SOON</td><td>giữ ACTIVE</td><td>Ưu tiên nhận event; fallback tự tính <code>renewal_notice_days</code>. OQ-INT-06</td></tr>
+        <tr class="fut-row"><td><code class="fut">license.revoked</code> <span class="pill fut">khai báo · EDR chưa gửi P1</span></td><td>REVOKED</td><td>(phản hồi lệnh terminate)</td><td>UI/mismatch với REVOKED tạm bỏ qua Phase 1 (§3.4)</td></tr>
+      </tbody>
+    </table>
+    <div class="note">Chiều ngược lại (outbound, CRM → sản phẩm) là <b>intent thương mại</b>, không phải command kỹ thuật: <code>subscription.submitted</code> · <code>subscription.suspended</code> · <code>subscription.reactivated</code> · <code>subscription.terminated</code> · <code>subscription.renewed</code> · <code>usage.force_sync_requested</code>. Tên event outbound hiện chưa nhất quán giữa PRD §6.9.6 và _event_catalog.md — cần hợp nhất.</div>
+  </section>
+
+  <!-- ============ RULES ============ -->
+  <section>
+    <h2>D. 4 quy tắc mapping cốt lõi</h2>
+    <div class="cards">
+      <div class="card grace">
+        <h3>① GRACE ≠ mismatch <span class="pill">đã chốt</span></h3>
+        <p>license_mirror = GRACE nhưng sub = ACTIVE là <b>trạng thái hợp lệ</b>, KH vẫn dùng. CRM không alert, không transition sub (PRD §5.5.1, §6.5). RESELLER hiển thị theo license_mirror; DIRECT hiển thị theo sub.status.</p>
+      </div>
+      <div class="card mismatch">
+        <h3>② Mismatch detection — SLA 15′ <span class="pill">FR-LIC-07</span></h3>
+        <p>Cron quét phát hiện lệch sub ↔ mirror quá <code>mismatch_sla_minutes</code> (mặc định <b>15 phút</b>) → cảnh báo ops. VD: sub SUSPENDED nhưng mirror còn ACTIVE (KH dùng free) = ưu tiên cao. Ngưỡng đọc từ cấu hình, không hardcode.</p>
+      </div>
+      <div class="card norev">
+        <h3>③ CRM không tự revert <span class="pill">đã chốt</span></h3>
+        <p>CRM là <b>passive-observer</b>: chỉ cảnh báo lệch, KHÔNG tự đổi trạng thái, KHÔNG gọi API sản phẩm để sửa (BR-07.3, UC-LIC-04 BR-17). Người vận hành quyết định xử lý.</p>
+      </div>
+      <div class="card future">
+        <h3>④ Cửa sổ chờ webhook — mismatch tạm chấp nhận</h3>
+        <p>Sau gia hạn/kích hoạt, sub ACTIVE nhưng mirror còn PENDING trong khoảng chờ webhook → FR-LIC-07 <b>loại trừ</b> khỏi cảnh báo tới khi <code>license.active</code> về (hoặc quá <code>auto_reconcile_after_hours</code> = 24h).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PHASE 1 EXCLUSIONS ============ -->
+  <section>
+    <h2>E. Ngoài phạm vi Phase 1 <span class="tag">tô mờ trên diagram — để tránh hiểu nhầm đã có</span></h2>
+    <table>
+      <thead><tr><th>Hạng mục</th><th>Trạng thái Phase 1</th><th>Nguồn</th></tr></thead>
+      <tbody>
+        <tr class="fut-row"><td>Upgrade/Downgrade (đổi version gói)</td><td>CHƯA làm — API <code class="fut">501 NOT_IMPLEMENTED</code>; modal gia hạn không cho đổi gói</td><td>OQ-06 · UC-SUB-07 BR-11</td></tr>
+        <tr class="fut-row"><td>State <code class="fut">RESTRICTED</code> + event <code class="fut">license.grace_expired</code></td><td>Đề xuất M-07, PRD/M-05 chưa có; sub→EXPIRED còn treo</td><td>_event_catalog §3.1 · OQ-INT-08/10</td></tr>
+        <tr class="fut-row"><td>State <code class="fut">EXPIRING_SOON</code> qua event riêng</td><td>Đề xuất; Phase 1 fallback tự tính từ <code>renewal_notice_days</code></td><td>_event_catalog §3.2 · OQ-INT-06</td></tr>
+        <tr class="fut-row"><td>license_mirror <code class="fut">REVOKED</code> / <code class="fut">license.revoked</code></td><td>Khai báo chính thức nhưng EDR chưa gửi thật; UI/mismatch tạm bỏ qua</td><td>_event_catalog §3.4 · OQ-INT-09</td></tr>
+        <tr class="fut-row"><td>LICENSE_INSTANCE (license phát hành chi tiết)</td><td>Skeleton — API trả <code class="fut">[]</code>, webhook 200 nhưng chưa apply. Full Phase 3+</td><td>PRD §5.3.9 · UC-LIC-02 §5</td></tr>
+        <tr class="fut-row"><td>On-premise (deployment_mode=ON_PREM)</td><td>Không có license mirror/usage/timeline tự động; loại khỏi mọi mismatch/cảnh báo</td><td>UC-LIC-01 BR-08 · UC-LIC-04 BR-20</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</main>
+
+<script>
+  mermaid.initialize({
+    startOnLoad:false,
+    theme:'dark',
+    themeVariables:{
+      fontFamily:'Segoe UI, system-ui, sans-serif',
+      primaryColor:'#152036', primaryBorderColor:'#4f8cff', primaryTextColor:'#e8edf6',
+      lineColor:'#8aa0c8', fontSize:'16px',
+      edgeLabelBackground:'#101728'
+    },
+    flowchart:{ curve:'step', htmlLabels:true, nodeSpacing:45, rankSpacing:95, padding:10, useMaxWidth:false }
+  });
+
+  const MIN=0.3, MAX=4;
+  function setupZoom(diagram){
+    const pre = diagram.querySelector('.mermaid');
+    const svg = pre.querySelector('svg');
+    if(!svg) return;
+    // đọc kích thước tự nhiên của SVG rồi bỏ ràng buộc để scale tự do
+    const vb = svg.viewBox && svg.viewBox.baseVal;
+    const natW = (vb && vb.width) || svg.getBoundingClientRect().width;
+    const natH = (vb && vb.height) || svg.getBoundingClientRect().height;
+    svg.setAttribute('width', natW); svg.setAttribute('height', natH);
+
+    const stage = document.createElement('div');
+    stage.className = 'stage';
+    stage.appendChild(pre);
+    diagram.appendChild(stage);
+
+    let scale=1, tx=0, ty=0;
+    const st={};
+    // fit-to-width ban đầu
+    const pad=32;
+    const fit = Math.min((diagram.clientWidth-pad)/natW, (diagram.clientHeight-pad)/natH, 1.6);
+    scale = fit>0?fit:1;
+    tx = (diagram.clientWidth - natW*scale)/2;
+    ty = 14;
+    function apply(){
+      stage.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+      st.lvl.textContent = Math.round(scale*100)+'%';
+    }
+    function zoomAt(cx, cy, factor){
+      const ns = Math.min(MAX, Math.max(MIN, scale*factor));
+      // giữ điểm dưới con trỏ cố định
+      tx = cx - (cx - tx) * (ns/scale);
+      ty = cy - (cy - ty) * (ns/scale);
+      scale = ns; apply();
+    }
+
+    // ---- controls ----
+    const ctrl=document.createElement('div'); ctrl.className='zoomctrl';
+    ctrl.innerHTML='<button class="minus" title="Thu nhỏ">&#8722;</button>'+
+      '<span class="zlvl">100%</span>'+
+      '<button class="plus" title="Phóng to">+</button>'+
+      '<button class="reset" title="Vừa khung">Vừa khung</button>';
+    diagram.appendChild(ctrl);
+    st.lvl = ctrl.querySelector('.zlvl');
+    const cw=()=>diagram.clientWidth/2, ch=()=>diagram.clientHeight/2;
+    ctrl.querySelector('.plus').onclick =()=>zoomAt(cw(),ch(),1.25);
+    ctrl.querySelector('.minus').onclick=()=>zoomAt(cw(),ch(),0.8);
+    ctrl.querySelector('.reset').onclick=()=>{scale=fit>0?fit:1;tx=(diagram.clientWidth-natW*scale)/2;ty=14;apply();};
+
+    const hint=document.createElement('div'); hint.className='zoomhint';
+    hint.textContent='Cuộn chuột = zoom · kéo thả = di chuyển';
+    diagram.appendChild(hint);
+
+    // ---- wheel zoom ----
+    diagram.addEventListener('wheel',(e)=>{
+      e.preventDefault();
+      const r=diagram.getBoundingClientRect();
+      zoomAt(e.clientX-r.left, e.clientY-r.top, e.deltaY<0?1.12:0.89);
+    },{passive:false});
+
+    // ---- drag pan ----
+    let dragging=false, sx=0, sy=0;
+    diagram.addEventListener('mousedown',(e)=>{
+      if(e.target.closest('.zoomctrl')) return;
+      dragging=true; sx=e.clientX-tx; sy=e.clientY-ty; diagram.classList.add('dragging');
+    });
+    window.addEventListener('mousemove',(e)=>{ if(!dragging)return; tx=e.clientX-sx; ty=e.clientY-sy; apply(); });
+    window.addEventListener('mouseup',()=>{ dragging=false; diagram.classList.remove('dragging'); });
+
+    apply();
+  }
+
+  (async()=>{
+    await mermaid.run({ querySelector:'.mermaid' });
+    document.querySelectorAll('.diagram').forEach(setupZoom);
+  })();
+</script>
+</body>
+</html>

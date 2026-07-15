@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OneCRM · BPMN Editor</title>
+<link rel="stylesheet" href="vendor/bpmn-js/assets/diagram-js.css">
+<link rel="stylesheet" href="vendor/bpmn-js/assets/bpmn-font/css/bpmn-embedded.css">
+<script src="vendor/bpmn-js/bpmn-modeler.production.min.js"></script>
+<style>
+  :root{--bar:#111827;--bar2:#1b2434;--ink:#e8edf6;--muted:#9aa6bd;--line:#2a3550;
+    --accent:#4f8cff;--green:#2f9e6b;--amber:#f0a02a;--danger:#e05555}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:"Segoe UI",system-ui,sans-serif;color:var(--ink);background:#0f1420}
+  #app{display:flex;flex-direction:column;height:100vh}
+  header{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bar);
+    border-bottom:1px solid var(--line);flex-wrap:wrap}
+  header .brand{font-weight:700;font-size:14px;letter-spacing:.2px;color:#fff;white-space:nowrap}
+  header .brand span{color:var(--accent)}
+  #title{background:var(--bar2);border:1px solid var(--line);color:var(--ink);border-radius:7px;
+    padding:6px 10px;font-size:13px;min-width:230px}
+  .dirty{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--green)}
+  .dirty.on .dot{background:var(--amber)}
+  .spacer{flex:1}
+  .grp{display:flex;gap:6px;align-items:center}
+  .sep{width:1px;height:24px;background:var(--line);margin:0 4px}
+  button.btn{background:var(--bar2);color:var(--ink);border:1px solid var(--line);border-radius:7px;
+    padding:6px 11px;font-size:12.5px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+  button.btn:hover{background:#26314a;border-color:var(--accent)}
+  button.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.btn.primary:hover{filter:brightness(1.08)}
+  button.btn.ghost{width:34px;justify-content:center;padding:6px 0;font-size:16px}
+  #canvas{flex:1;background:#fbfcfe}
+  .bjs-powered-by{display:none}
+  .hint{position:fixed;bottom:10px;left:12px;background:rgba(17,24,39,.85);color:var(--muted);
+    font-size:11.5px;padding:5px 10px;border-radius:7px;border:1px solid var(--line);z-index:20;pointer-events:none}
+  .toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#152036;color:#fff;
+    border:1px solid var(--accent);padding:9px 16px;border-radius:9px;z-index:50;font-size:13px;
+    opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.show{opacity:1}
+  .djs-palette{top:112px}
+  .subbar{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bar2);
+    border-bottom:1px solid var(--line);flex-wrap:wrap;font-size:12px;color:var(--muted)}
+  .subbar b{color:var(--ink);font-weight:600}
+  .swatch{width:24px;height:24px;border-radius:6px;border:2px solid rgba(255,255,255,.25);cursor:pointer;padding:0}
+  .swatch:hover{outline:2px solid var(--accent);outline-offset:1px}
+  .flowbtn{border:1px solid var(--line);background:#0f1622;color:var(--ink);border-radius:7px;
+    padding:5px 10px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+  .flowbtn:hover{border-color:var(--accent)}
+  .flowbtn .ln{width:22px;height:0;border-top-width:2.5px}
+  .flowbtn .ln.main{border-top:2.5px solid #111827}
+  .flowbtn .ln.af{border-top:2.5px dashed #2f6bff}
+  .flowbtn .ln.ef{border-top:2.5px dashed #e02424}
+  label.chk{display:inline-flex;align-items:center;gap:5px;color:var(--muted);cursor:pointer}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">OneCRM · <span>BPMN Editor</span></div>
+    <input id="title" value="UC-XXX-NN_ten_quy_trinh" title="Tên dùng cho file tải xuống / ảnh">
+    <div class="dirty" id="dirty"><span class="dot"></span><span id="dirtyText">đã lưu</span></div>
+    <div class="spacer"></div>
+    <div class="grp">
+      <button class="btn" id="btnOpen">📂 Mở .bpmn</button>
+      <button class="btn" id="btnNew">🆕 Mới</button>
+      <button class="btn" id="btnSample">📄 Mẫu UC-SUB-05</button>
+    </div>
+    <div class="sep"></div>
+    <div class="grp">
+      <button class="btn ghost" id="btnZoomOut" title="Thu nhỏ">−</button>
+      <button class="btn" id="btnFit" title="Vừa khung">Fit</button>
+      <button class="btn ghost" id="btnZoomIn" title="Phóng to">+</button>
+    </div>
+    <div class="sep"></div>
+    <div class="grp">
+      <button class="btn primary" id="btnPng">🖼️ Xuất PNG</button>
+      <button class="btn" id="btnSvg">Xuất SVG</button>
+      <button class="btn" id="btnBpmn">⬇ Tải .bpmn</button>
+    </div>
+  </header>
+  <div class="subbar">
+    <b>Chọn phần tử</b> rồi tô:
+    <button class="swatch" title="Xanh (Sales/User)" style="background:#e3eeff" data-fill="#e3eeff" data-stroke="#2f6bd6"></button>
+    <button class="swatch" title="Xám (System)" style="background:#eef1f5" data-fill="#eef1f5" data-stroke="#7a8699"></button>
+    <button class="swatch" title="Xanh lá" style="background:#e7f5ee" data-fill="#e7f5ee" data-stroke="#2f9e6b"></button>
+    <button class="swatch" title="Vàng" style="background:#fff3cf" data-fill="#fff3cf" data-stroke="#e0a800"></button>
+    <button class="swatch" title="Đỏ" style="background:#fde3e3" data-fill="#fde3e3" data-stroke="#e02424"></button>
+    <button class="swatch" title="Trắng / bỏ màu" style="background:#ffffff" data-fill="#ffffff" data-stroke="#111827"></button>
+    <span class="sep"></span>
+    <b>Kiểu luồng</b> (chọn mũi tên):
+    <button class="flowbtn" data-flow="main"><i class="ln main"></i>Chính</button>
+    <button class="flowbtn" data-flow="af"><i class="ln af"></i>Phụ (AF)</button>
+    <button class="flowbtn" data-flow="ef"><i class="ln ef"></i>Ngoại lệ (EF)</button>
+    <span class="sep"></span>
+    <label class="chk"><input type="checkbox" id="chkTitle" checked> Kèm tiêu đề + chú giải khi xuất PNG</label>
+  </div>
+  <div id="canvas"></div>
+</div>
+<div class="hint">Kéo icon từ bảng công cụ bên trái để thêm node · click node → context pad để nối/sửa · double-click để đổi tên · Ctrl+Z hoàn tác · cuộn = zoom</div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept=".bpmn,.xml" style="display:none">
+
+<script>
+const STARTER = `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_starter" targetNamespace="http://onecrm/bpmn">
+  <bpmn:collaboration id="Collaboration_1">
+    <bpmn:participant id="Participant_1" name="Quy trình mới" processRef="Process_1" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_1" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_1" name="Người dùng"><bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="Lane_2" name="Hệ thống (CRM)" />
+      <bpmn:lane id="Lane_3" name="Sản phẩm" />
+    </bpmn:laneSet>
+    <bpmn:startEvent id="StartEvent_1" name="Bắt đầu" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+      <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true"><dc:Bounds x="160" y="80" width="900" height="450" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_1_di" bpmnElement="Lane_1" isHorizontal="true"><dc:Bounds x="190" y="80" width="870" height="150" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_2_di" bpmnElement="Lane_2" isHorizontal="true"><dc:Bounds x="190" y="230" width="870" height="150" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_3_di" bpmnElement="Lane_3" isHorizontal="true"><dc:Bounds x="190" y="380" width="870" height="150" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1"><dc:Bounds x="242" y="137" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="248" y="180" width="25" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>`;
+
+const SAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_UC_SUB_05" targetNamespace="http://onecrm/bpmn">
+  <bpmn:collaboration id="Collaboration_1">
+    <bpmn:participant id="Participant_1" name="Quy trình Xác nhận Subscription (UC-SUB-05)" processRef="Process_1" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_1" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_Sales" name="Sales"><bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef><bpmn:flowNodeRef>Task_Confirm</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="Lane_CRM" name="Hệ thống (CRM)"><bpmn:flowNodeRef>Task_Publish</bpmn:flowNodeRef><bpmn:flowNodeRef>Task_Webhook</bpmn:flowNodeRef><bpmn:flowNodeRef>Task_SetActive</bpmn:flowNodeRef><bpmn:flowNodeRef>EndEvent_1</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="Lane_Product" name="Sản phẩm (EDR)"><bpmn:flowNodeRef>Task_Provision</bpmn:flowNodeRef><bpmn:flowNodeRef>Task_Activate</bpmn:flowNodeRef></bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="StartEvent_1" name="Sub ở trạng thái DRAFT"><bpmn:outgoing>Flow_1</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="Task_Confirm" name="1. Bấm Xác nhận (HĐ đã ký)"><bpmn:incoming>Flow_1</bpmn:incoming><bpmn:outgoing>Flow_2</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="Task_Publish" name="2. Phát subscription.submitted (Outbox)"><bpmn:incoming>Flow_2</bpmn:incoming><bpmn:outgoing>Flow_3</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Provision" name="3. Cấp phép (provisioning)"><bpmn:incoming>Flow_3</bpmn:incoming><bpmn:outgoing>Flow_4</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Activate" name="4. Kích hoạt → gửi license.active"><bpmn:incoming>Flow_4</bpmn:incoming><bpmn:outgoing>Flow_5</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Webhook" name="5. Nhận webhook license.active"><bpmn:incoming>Flow_5</bpmn:incoming><bpmn:outgoing>Flow_6</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_SetActive" name="6. Chuyển Sub → ACTIVE"><bpmn:incoming>Flow_6</bpmn:incoming><bpmn:outgoing>Flow_7</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_1" name="Sub ACTIVE"><bpmn:incoming>Flow_7</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_Confirm" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_Confirm" targetRef="Task_Publish" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_Publish" targetRef="Task_Provision" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Task_Provision" targetRef="Task_Activate" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Task_Activate" targetRef="Task_Webhook" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_Webhook" targetRef="Task_SetActive" />
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Task_SetActive" targetRef="EndEvent_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+      <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true"><dc:Bounds x="160" y="80" width="1240" height="500" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Sales_di" bpmnElement="Lane_Sales" isHorizontal="true" color:background-color="#E3EEFF" color:border-color="#2F6BD6"><dc:Bounds x="190" y="80" width="1210" height="167" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_CRM_di" bpmnElement="Lane_CRM" isHorizontal="true" color:background-color="#EEF1F5" color:border-color="#7A8699"><dc:Bounds x="190" y="247" width="1210" height="167" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Product_di" bpmnElement="Lane_Product" isHorizontal="true" color:background-color="#E7F5EE" color:border-color="#2F9E6B"><dc:Bounds x="190" y="414" width="1210" height="166" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1" color:border-color="#2F9E6B"><dc:Bounds x="232" y="145" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="210" y="188" width="82" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Confirm_di" bpmnElement="Task_Confirm" color:background-color="#E3EEFF" color:border-color="#2F6BD6"><dc:Bounds x="325" y="128" width="110" height="70" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Publish_di" bpmnElement="Task_Publish"><dc:Bounds x="485" y="295" width="110" height="70" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Provision_di" bpmnElement="Task_Provision"><dc:Bounds x="665" y="462" width="110" height="70" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Activate_di" bpmnElement="Task_Activate"><dc:Bounds x="825" y="462" width="110" height="70" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Webhook_di" bpmnElement="Task_Webhook"><dc:Bounds x="985" y="295" width="110" height="70" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SetActive_di" bpmnElement="Task_SetActive"><dc:Bounds x="1125" y="295" width="110" height="70" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1" color:background-color="#111827" color:border-color="#111827"><dc:Bounds x="1282" y="312" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1276" y="355" width="49" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1"><di:waypoint x="268" y="163" /><di:waypoint x="325" y="163" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2"><di:waypoint x="380" y="198" /><di:waypoint x="380" y="330" /><di:waypoint x="485" y="330" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3"><di:waypoint x="540" y="365" /><di:waypoint x="540" y="497" /><di:waypoint x="665" y="497" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4"><di:waypoint x="775" y="497" /><di:waypoint x="825" y="497" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5"><di:waypoint x="935" y="497" /><di:waypoint x="1040" y="497" /><di:waypoint x="1040" y="365" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6"><di:waypoint x="1095" y="330" /><di:waypoint x="1125" y="330" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7"><di:waypoint x="1235" y="330" /><di:waypoint x="1282" y="330" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>`;
+
+const LS_KEY = 'onecrm_bpmn_last';
+const LS_TITLE = 'onecrm_bpmn_title';
+
+const modeler = new BpmnJS({ container: '#canvas', keyboard: { bindTo: document } });
+const canvas = modeler.get('canvas');
+const modeling = modeler.get('modeling');
+const selection = modeler.get('selection');
+const $ = id => document.getElementById(id);
+let dirty = false;
+
+const AF_COLOR = '#2f6bff', EF_COLOR = '#e02424', MAIN_COLOR = '#111827';
+
+// ---- tô màu / kiểu luồng cho phần tử đang chọn ----
+function selected(){ return selection.get(); }
+document.querySelectorAll('.swatch').forEach(sw=>{
+  sw.onclick = ()=>{
+    const s = selected(); if(!s.length) return toast('Chọn phần tử trước');
+    modeling.setColor(s, { fill: sw.dataset.fill, stroke: sw.dataset.stroke });
+  };
+});
+document.querySelectorAll('.flowbtn').forEach(b=>{
+  b.onclick = ()=>{
+    const s = selected().filter(e=> e.waypoints); // chỉ mũi tên
+    if(!s.length) return toast('Chọn mũi tên (đường nối) trước');
+    const map = { main: MAIN_COLOR, af: AF_COLOR, ef: EF_COLOR };
+    modeling.setColor(s, { stroke: map[b.dataset.flow] });
+    setTimeout(styleFlows, 0);
+  };
+});
+
+// AF/EF = nét đứt: post-process SVG theo màu stroke (bpmn-js không có dashed sequenceFlow gốc)
+function styleFlows(){
+  document.querySelectorAll('#canvas .djs-connection .djs-visual path').forEach(p=>{
+    const c = (p.getAttribute('stroke')||'').toLowerCase();
+    p.style.strokeDasharray = (c===AF_COLOR || c===EF_COLOR) ? '6,5' : '';
+  });
+}
+modeler.on(['import.done','commandStack.changed','canvas.viewbox.changed','selection.changed'],
+  ()=> setTimeout(styleFlows, 0));
+
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
+function setDirty(v){ dirty=v; const d=$('dirty'); d.classList.toggle('on',v); $('dirtyText').textContent = v?'có thay đổi chưa lưu':'đã lưu'; }
+function safeName(){ return ($('title').value.trim()||'bpmn').replace(/[^\w.\- ]+/g,'_').replace(/\s+/g,'_'); }
+
+async function loadXML(xml, name){
+  try{
+    await modeler.importXML(xml);
+    canvas.zoom('fit-viewport', 'auto');
+    if(name) $('title').value = name;
+    setDirty(false);
+    localStorage.setItem(LS_KEY, xml);
+  }catch(err){ console.error(err); toast('Lỗi mở BPMN: '+(err.message||err)); }
+}
+
+// ---- init: khôi phục bản gần nhất hoặc starter ----
+(async()=>{
+  const last = localStorage.getItem(LS_KEY);
+  const t = localStorage.getItem(LS_TITLE); if(t) $('title').value=t;
+  await loadXML(last || STARTER);
+})();
+
+modeler.on('commandStack.changed', ()=>{
+  setDirty(true);
+  // autosave tạm vào localStorage
+  modeler.saveXML({ format:false }).then(r=> localStorage.setItem(LS_KEY, r.xml)).catch(()=>{});
+});
+$('title').addEventListener('input', ()=> localStorage.setItem(LS_TITLE, $('title').value));
+
+// ---- toolbar ----
+$('btnFit').onclick = ()=> canvas.zoom('fit-viewport','auto');
+$('btnZoomIn').onclick = ()=> canvas.zoom(canvas.zoom()*1.2);
+$('btnZoomOut').onclick = ()=> canvas.zoom(canvas.zoom()/1.2);
+
+$('btnNew').onclick = ()=>{ if(dirty && !confirm('Bỏ thay đổi chưa lưu và tạo mới?')) return; loadXML(STARTER); toast('Đã tạo sơ đồ mới'); };
+$('btnSample').onclick = ()=>{ if(dirty && !confirm('Bỏ thay đổi chưa lưu và mở diagram mẫu?')) return; loadXML(SAMPLE,'UC-SUB-05_approve_subscription'); toast('Đã mở diagram mẫu'); };
+
+$('btnOpen').onclick = ()=> $('fileInput').click();
+$('fileInput').onchange = (e)=>{
+  const f = e.target.files[0]; if(!f) return;
+  const rd = new FileReader();
+  rd.onload = ()=> loadXML(rd.result, f.name.replace(/\.(bpmn|xml)$/i,''));
+  rd.readAsText(f); e.target.value='';
+};
+
+$('btnBpmn').onclick = async ()=>{
+  const { xml } = await modeler.saveXML({ format:true });
+  download(new Blob([xml],{type:'application/xml'}), safeName()+'.bpmn');
+  setDirty(false); toast('Đã tải .bpmn');
+};
+$('btnSvg').onclick = async ()=>{
+  const { svg } = await modeler.saveSVG();
+  download(new Blob([svg],{type:'image/svg+xml'}), safeName()+'.svg');
+  toast('Đã xuất SVG');
+};
+$('btnPng').onclick = async ()=>{
+  try{ const blob = await toPng(2); download(blob, safeName()+'.png'); toast('Đã xuất PNG (2×)'); }
+  catch(err){ console.error(err); toast('Lỗi xuất PNG: '+(err.message||err)); }
+};
+
+async function toPng(scale){
+  const { svg } = await modeler.saveSVG();
+  const el = new DOMParser().parseFromString(svg,'image/svg+xml').documentElement;
+  let w = parseFloat(el.getAttribute('width')), h = parseFloat(el.getAttribute('height'));
+  if(!w || !h){ const vb=(el.getAttribute('viewBox')||'').split(/\s+/); w=parseFloat(vb[2]); h=parseFloat(vb[3]); }
+  // đồng bộ nét đứt AF/EF vào SVG xuất ra (post-process không đi theo saveSVG)
+  el.querySelectorAll('.djs-connection .djs-visual path, path').forEach(p=>{
+    const c=(p.getAttribute('stroke')||'').toLowerCase();
+    if(c===AF_COLOR||c===EF_COLOR) p.setAttribute('stroke-dasharray','6,5');
+  });
+  const str = new XMLSerializer().serializeToString(el);
+  const url = URL.createObjectURL(new Blob([str],{type:'image/svg+xml;charset=utf-8'}));
+
+  const withFrame = $('chkTitle').checked;
+  const HEAD = withFrame ? 52 : 0;         // thanh tiêu đề
+  const LEG  = withFrame ? 46 : 0;         // dải chú giải dưới
+  const PAD  = withFrame ? 16 : 0;
+  const title = ($('title').value.trim() || 'BPMN');
+
+  return await new Promise((res,rej)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const cw = w + PAD*2, ch = h + HEAD + LEG + (withFrame?PAD:0);
+      const c = document.createElement('canvas');
+      c.width = Math.ceil(cw*scale); c.height = Math.ceil(ch*scale);
+      const ctx = c.getContext('2d');
+      ctx.setTransform(scale,0,0,scale,0,0);
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,cw,ch);
+      if(withFrame){
+        // thanh tiêu đề
+        ctx.fillStyle = '#1f3a5f'; ctx.fillRect(0,0,cw,HEAD);
+        ctx.fillStyle = '#ffffff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.font = '700 20px Segoe UI, Arial'; ctx.fillText(title, cw/2, HEAD/2);
+      }
+      ctx.drawImage(img, PAD, HEAD + (withFrame?PAD:0));
+      if(withFrame){
+        // dải chú giải
+        const y = ch - LEG;
+        ctx.fillStyle = '#f4f6fa'; ctx.fillRect(0,y,cw,LEG);
+        ctx.strokeStyle = '#d7deea'; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(cw,y); ctx.stroke();
+        ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.font='13px Segoe UI, Arial';
+        let x = 18; const cy = y + LEG/2;
+        const items = [
+          ['#111827', false, 'Luồng chính'],
+          [AF_COLOR, true, 'Luồng phụ (AF)'],
+          [EF_COLOR, true, 'Luồng ngoại lệ (EF)']
+        ];
+        items.forEach(([col,dash,txt])=>{
+          ctx.strokeStyle=col; ctx.lineWidth=2.5; ctx.setLineDash(dash?[6,5]:[]);
+          ctx.beginPath(); ctx.moveTo(x,cy); ctx.lineTo(x+34,cy); ctx.stroke(); ctx.setLineDash([]);
+          ctx.fillStyle='#333'; ctx.fillText(txt, x+42, cy);
+          x += 42 + ctx.measureText(txt).width + 28;
+        });
+        ctx.fillStyle='#8894a8'; ctx.textAlign='right'; ctx.fillText('OneCRM · '+title, cw-16, cy);
+      }
+      URL.revokeObjectURL(url);
+      c.toBlob(b=> b?res(b):rej(new Error('toBlob null')), 'image/png');
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); rej(new Error('không render được SVG')); };
+    img.src = url;
+  });
+}
+
+function download(blob, filename){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+// kéo-thả file .bpmn vào canvas để mở
+const cv = $('canvas');
+cv.addEventListener('dragover', e=>{ e.preventDefault(); });
+cv.addEventListener('drop', e=>{
+  e.preventDefault(); const f=e.dataTransfer.files[0]; if(!f) return;
+  const rd=new FileReader(); rd.onload=()=>loadXML(rd.result, f.name.replace(/\.(bpmn|xml)$/i,'')); rd.readAsText(f);
+});
+window.addEventListener('beforeunload', e=>{ if(dirty){ e.preventDefault(); e.returnValue=''; } });
+</script>
+</body>
+</html>

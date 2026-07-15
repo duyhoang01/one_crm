@@ -160,7 +160,7 @@
 - ✅ Nghiệp vụ **không phụ thuộc** tình trạng hạ tầng tích hợp (hàng đợi chết vẫn tạm dừng được subscription)
 - ✅ Thứ tự **theo từng subscription**, không chặn toàn cục
 - ✅ **Không có** đường tạo/sửa sự kiện thủ công (YT-3)
-- ⚠️ **OQ-INT-04** *(chặn dev)*: envelope chuẩn ([Phụ lục A §2](_event_catalog.md)) — chờ duyệt.
+- ✅ **OQ-INT-04 — đã chốt (rà lại 14/07):** envelope chuẩn ([Phụ lục A §2](_event_catalog.md)) — đã dùng làm BR-05.
 
 ---
 

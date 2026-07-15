@@ -103,7 +103,7 @@ OneCRM áp dụng mô hình **Event-Driven Passive Observer** (YT-3):
 
 | Event Key | Lịch | CRM xử lý |
 |---|---|---|
-| `license.usage_synced` | Mỗi 1 giờ | Update `license_mirror.used_seats` |
+| `license.usage_synced` | Mỗi 3 giờ *(sửa 14/07/2026 — chốt lại từ 1 giờ, xem [Phụ lục A §3.2](../frs/integration/_event_catalog.md))* | Update `license_mirror.used_seats` |
 
 ### 3.2 C-Shield Inbound
 
@@ -112,7 +112,7 @@ OneCRM áp dụng mô hình **Event-Driven Passive Observer** (YT-3):
 | `subscription.provisioning.pending` | Đang chờ provisioning |
 | `subscription.provisioning.done` | Provisioning hoàn thành |
 | `subscription.provisioning.failed` | Provisioning thất bại |
-| `license.usage_synced` | Đồng bộ usage mỗi 1 giờ |
+| `license.usage_synced` | Đồng bộ usage mỗi 3 giờ *(sửa 14/07/2026 — chốt lại từ 1 giờ)* |
 
 ### 3.3 AV Inbound
 
@@ -120,7 +120,7 @@ Tương tự C-Shield — cùng event pattern:
 - `subscription.provisioning.pending`
 - `subscription.provisioning.done`
 - `subscription.provisioning.failed`
-- `license.usage_synced` (1h interval)
+- `license.usage_synced` (3h interval — sửa 14/07/2026, chốt lại từ 1h)
 
 ---
 

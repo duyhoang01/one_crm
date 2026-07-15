@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0"
+  id="Definitions_UC_INT_06" targetNamespace="http://onecrm/bpmn">
+  <bpmn:collaboration id="Collaboration_1">
+    <bpmn:participant id="Participant_1" name="UC-INT-06 — Tra cứu theo subscription" processRef="Process_1" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_1" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_User" name="Người dùng (License Admin / Auditor)">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Open</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PickSuggest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Action</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Int</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Lic</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Sub</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_System" name="Hệ thống (CRM)">
+        <bpmn:flowNodeRef>Gw_HasCode</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_BuildList</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ShowSuggest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Exists</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotFound</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_LoadEvents</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Conclude</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Stay</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="StartEvent_1" name="Vào màn Tra cứu">
+      <bpmn:outgoing>F1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_Open" name="1. Mở tab Tra cứu (có/không kèm mã sub)">
+      <bpmn:incoming>F1</bpmn:incoming>
+      <bpmn:outgoing>F2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gw_HasCode" name="Đã có mã subscription?">
+      <bpmn:incoming>F2</bpmn:incoming>
+      <bpmn:outgoing>F3</bpmn:outgoing>
+      <bpmn:outgoing>F4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_BuildList" name="AF-01a. Dựng DS sub đang có sự cố (nặng trước)">
+      <bpmn:incoming>F4</bpmn:incoming>
+      <bpmn:outgoing>F5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_ShowSuggest" name="AF-01b. Hiện ô tìm kiếm + danh sách gợi ý">
+      <bpmn:incoming>F5</bpmn:incoming>
+      <bpmn:outgoing>F6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Task_PickSuggest" name="AF-01c. Bấm 1 dòng gợi ý → tra mã đó">
+      <bpmn:incoming>F6</bpmn:incoming>
+      <bpmn:outgoing>F7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gw_Exists" name="Subscription tồn tại?">
+      <bpmn:incoming>F3</bpmn:incoming>
+      <bpmn:incoming>F7</bpmn:incoming>
+      <bpmn:incoming>F16</bpmn:incoming>
+      <bpmn:outgoing>F8</bpmn:outgoing>
+      <bpmn:outgoing>F10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_NotFound" name="EF-01a. Báo &#34;Không tìm thấy {mã}&#34;, giữ danh sách gợi ý">
+      <bpmn:incoming>F8</bpmn:incoming>
+      <bpmn:outgoing>F9</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_LoadEvents" name="4. Lấy &amp; sắp sự kiện 2 chiều; gộp sự kiện lặp (BR-01/02)">
+      <bpmn:incoming>F10</bpmn:incoming>
+      <bpmn:outgoing>F11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Conclude" name="5. Chấm kết luận + render hộp kết luận + timeline gộp (BR-03)">
+      <bpmn:incoming>F11</bpmn:incoming>
+      <bpmn:outgoing>F12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_Action" name="6. Làm gì?">
+      <bpmn:incoming>F12</bpmn:incoming>
+      <bpmn:outgoing>F13</bpmn:outgoing>
+      <bpmn:outgoing>F14</bpmn:outgoing>
+      <bpmn:outgoing>F15</bpmn:outgoing>
+      <bpmn:outgoing>F16</bpmn:outgoing>
+      <bpmn:outgoing>F17</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:endEvent id="End_Stay" name="End 1 · Ở lại màn">
+      <bpmn:incoming>F9</bpmn:incoming>
+      <bpmn:incoming>F17</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_Int" name="End 2 · UC-INT-04/05">
+      <bpmn:incoming>F13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_Lic" name="End 3 · UC-LIC-02">
+      <bpmn:incoming>F14</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_Sub" name="End 4 · UC-SUB-03 Timeline">
+      <bpmn:incoming>F15</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="F1" sourceRef="StartEvent_1" targetRef="Task_Open" />
+    <bpmn:sequenceFlow id="F2" sourceRef="Task_Open" targetRef="Gw_HasCode" />
+    <bpmn:sequenceFlow id="F3" name="Có mã" sourceRef="Gw_HasCode" targetRef="Gw_Exists" />
+    <bpmn:sequenceFlow id="F4" name="Chưa có" sourceRef="Gw_HasCode" targetRef="Task_BuildList" />
+    <bpmn:sequenceFlow id="F5" sourceRef="Task_BuildList" targetRef="Task_ShowSuggest" />
+    <bpmn:sequenceFlow id="F6" sourceRef="Task_ShowSuggest" targetRef="Task_PickSuggest" />
+    <bpmn:sequenceFlow id="F7" sourceRef="Task_PickSuggest" targetRef="Gw_Exists" />
+    <bpmn:sequenceFlow id="F8" name="Không tồn tại" sourceRef="Gw_Exists" targetRef="Task_NotFound" />
+    <bpmn:sequenceFlow id="F9" sourceRef="Task_NotFound" targetRef="End_Stay" />
+    <bpmn:sequenceFlow id="F10" name="Tồn tại" sourceRef="Gw_Exists" targetRef="Task_LoadEvents" />
+    <bpmn:sequenceFlow id="F11" sourceRef="Task_LoadEvents" targetRef="Task_Conclude" />
+    <bpmn:sequenceFlow id="F12" sourceRef="Task_Conclude" targetRef="Gw_Action" />
+    <bpmn:sequenceFlow id="F13" name="Hành động ở hộp kết luận" sourceRef="Gw_Action" targetRef="End_Int" />
+    <bpmn:sequenceFlow id="F14" name="Xem license" sourceRef="Gw_Action" targetRef="End_Lic" />
+    <bpmn:sequenceFlow id="F15" name="Tiến độ KH thấy" sourceRef="Gw_Action" targetRef="End_Sub" />
+    <bpmn:sequenceFlow id="F16" name="Tra mã khác" sourceRef="Gw_Action" targetRef="Gw_Exists" />
+    <bpmn:sequenceFlow id="F17" name="Không thao tác" sourceRef="Gw_Action" targetRef="End_Stay" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+      <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1620" height="620" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_User_di" bpmnElement="Lane_User" isHorizontal="true" color:background-color="#E3EEFF" color:border-color="#2f6bd6">
+        <dc:Bounds x="190" y="80" width="1590" height="280" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true" color:background-color="#EEF1F5" color:border-color="#7a8699">
+        <dc:Bounds x="190" y="360" width="1590" height="340" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1" color:border-color="#2f9e6b">
+        <dc:Bounds x="232" y="202" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Open_di" bpmnElement="Task_Open" color:background-color="#E3EEFF" color:border-color="#2f6bd6">
+        <dc:Bounds x="345" y="185" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_HasCode_di" bpmnElement="Gw_HasCode" color:background-color="#FFF3CF" color:border-color="#e0a800">
+        <dc:Bounds x="535" y="425" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_BuildList_di" bpmnElement="Task_BuildList">
+        <dc:Bounds x="655" y="575" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ShowSuggest_di" bpmnElement="Task_ShowSuggest">
+        <dc:Bounds x="815" y="575" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PickSuggest_di" bpmnElement="Task_PickSuggest" color:background-color="#E3EEFF" color:border-color="#2f6bd6">
+        <dc:Bounds x="815" y="185" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Exists_di" bpmnElement="Gw_Exists" color:background-color="#FFF3CF" color:border-color="#e0a800">
+        <dc:Bounds x="1005" y="425" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotFound_di" bpmnElement="Task_NotFound" color:background-color="#FDE3E3" color:border-color="#e02424">
+        <dc:Bounds x="975" y="575" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LoadEvents_di" bpmnElement="Task_LoadEvents">
+        <dc:Bounds x="1135" y="415" width="120" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Conclude_di" bpmnElement="Task_Conclude">
+        <dc:Bounds x="1300" y="415" width="120" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Action_di" bpmnElement="Gw_Action" color:background-color="#FFF3CF" color:border-color="#e0a800">
+        <dc:Bounds x="1500" y="195" width="50" height="50" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="End_Stay_di" bpmnElement="End_Stay" color:background-color="#111827" color:border-color="#111827">
+        <dc:Bounds x="1172" y="592" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Int_di" bpmnElement="End_Int" color:background-color="#111827" color:border-color="#111827">
+        <dc:Bounds x="1642" y="110" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Lic_di" bpmnElement="End_Lic" color:background-color="#111827" color:border-color="#111827">
+        <dc:Bounds x="1642" y="202" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Sub_di" bpmnElement="End_Sub" color:background-color="#111827" color:border-color="#111827">
+        <dc:Bounds x="1642" y="294" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="F1_di" bpmnElement="F1">
+        <di:waypoint x="268" y="220" /><di:waypoint x="345" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F2_di" bpmnElement="F2">
+        <di:waypoint x="455" y="220" /><di:waypoint x="560" y="220" /><di:waypoint x="560" y="425" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F3_di" bpmnElement="F3">
+        <di:waypoint x="585" y="450" /><di:waypoint x="1005" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F4_di" bpmnElement="F4" color:border-color="#2f6bff">
+        <di:waypoint x="560" y="475" /><di:waypoint x="560" y="610" /><di:waypoint x="655" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F5_di" bpmnElement="F5" color:border-color="#2f6bff">
+        <di:waypoint x="765" y="610" /><di:waypoint x="815" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F6_di" bpmnElement="F6" color:border-color="#2f6bff">
+        <di:waypoint x="870" y="575" /><di:waypoint x="870" y="255" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F7_di" bpmnElement="F7" color:border-color="#2f6bff">
+        <di:waypoint x="925" y="220" /><di:waypoint x="1030" y="220" /><di:waypoint x="1030" y="425" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F8_di" bpmnElement="F8" color:border-color="#e02424">
+        <di:waypoint x="1030" y="475" /><di:waypoint x="1030" y="575" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F9_di" bpmnElement="F9" color:border-color="#e02424">
+        <di:waypoint x="1085" y="610" /><di:waypoint x="1172" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F10_di" bpmnElement="F10">
+        <di:waypoint x="1055" y="450" /><di:waypoint x="1135" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F11_di" bpmnElement="F11">
+        <di:waypoint x="1255" y="450" /><di:waypoint x="1300" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F12_di" bpmnElement="F12">
+        <di:waypoint x="1360" y="415" /><di:waypoint x="1360" y="220" /><di:waypoint x="1500" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F13_di" bpmnElement="F13">
+        <di:waypoint x="1550" y="220" /><di:waypoint x="1596" y="220" /><di:waypoint x="1596" y="128" /><di:waypoint x="1642" y="128" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F14_di" bpmnElement="F14">
+        <di:waypoint x="1550" y="220" /><di:waypoint x="1642" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F15_di" bpmnElement="F15">
+        <di:waypoint x="1550" y="220" /><di:waypoint x="1596" y="220" /><di:waypoint x="1596" y="312" /><di:waypoint x="1642" y="312" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F16_di" bpmnElement="F16">
+        <di:waypoint x="1525" y="245" /><di:waypoint x="1525" y="330" /><di:waypoint x="1030" y="330" /><di:waypoint x="1030" y="425" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F17_di" bpmnElement="F17">
+        <di:waypoint x="1500" y="220" /><di:waypoint x="1190" y="220" /><di:waypoint x="1190" y="592" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

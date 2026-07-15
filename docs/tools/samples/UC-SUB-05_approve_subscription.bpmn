@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0"
+  id="Definitions_UC_SUB_05" targetNamespace="http://onecrm/bpmn">
+  <bpmn:collaboration id="Collaboration_1">
+    <bpmn:participant id="Participant_1" name="Quy trình Xác nhận Subscription (UC-SUB-05)" processRef="Process_1" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_1" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_Sales" name="Sales / Manager">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Confirm</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_CRM" name="Hệ thống (CRM)">
+        <bpmn:flowNodeRef>Task_Publish</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Webhook</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SetActive</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_1</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Product" name="Sản phẩm (EDR)">
+        <bpmn:flowNodeRef>Task_Provision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Activate</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="StartEvent_1" name="Sub ở trạng thái DRAFT">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_Confirm" name="1. Bấm Xác nhận (HĐ đã ký)">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_Publish" name="2. Phát subscription.submitted (Outbox)">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Provision" name="3. Cấp phép (provisioning)">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Activate" name="4. Kích hoạt → gửi license.active">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Webhook" name="5. Nhận webhook license.active">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_SetActive" name="6. Chuyển Sub → ACTIVE">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_1" name="Sub ACTIVE">
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_Confirm" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_Confirm" targetRef="Task_Publish" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_Publish" targetRef="Task_Provision" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Task_Provision" targetRef="Task_Activate" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Task_Activate" targetRef="Task_Webhook" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_Webhook" targetRef="Task_SetActive" />
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Task_SetActive" targetRef="EndEvent_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+      <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1240" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Sales_di" bpmnElement="Lane_Sales" isHorizontal="true" color:background-color="#E3EEFF" color:border-color="#2F6BD6">
+        <dc:Bounds x="190" y="80" width="1210" height="167" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_CRM_di" bpmnElement="Lane_CRM" isHorizontal="true" color:background-color="#EEF1F5" color:border-color="#7A8699">
+        <dc:Bounds x="190" y="247" width="1210" height="167" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Product_di" bpmnElement="Lane_Product" isHorizontal="true" color:background-color="#E7F5EE" color:border-color="#2F9E6B">
+        <dc:Bounds x="190" y="414" width="1210" height="166" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1" color:border-color="#2F9E6B">
+        <dc:Bounds x="232" y="145" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="210" y="188" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Confirm_di" bpmnElement="Task_Confirm" color:background-color="#E3EEFF" color:border-color="#2F6BD6">
+        <dc:Bounds x="325" y="128" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Publish_di" bpmnElement="Task_Publish">
+        <dc:Bounds x="485" y="295" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Provision_di" bpmnElement="Task_Provision">
+        <dc:Bounds x="665" y="462" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Activate_di" bpmnElement="Task_Activate">
+        <dc:Bounds x="825" y="462" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Webhook_di" bpmnElement="Task_Webhook">
+        <dc:Bounds x="985" y="295" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SetActive_di" bpmnElement="Task_SetActive">
+        <dc:Bounds x="1125" y="295" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1" color:background-color="#111827" color:border-color="#111827">
+        <dc:Bounds x="1282" y="312" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1276" y="355" width="49" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="268" y="163" />
+        <di:waypoint x="325" y="163" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="380" y="198" />
+        <di:waypoint x="380" y="330" />
+        <di:waypoint x="485" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="540" y="365" />
+        <di:waypoint x="540" y="497" />
+        <di:waypoint x="665" y="497" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="775" y="497" />
+        <di:waypoint x="825" y="497" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="935" y="497" />
+        <di:waypoint x="1040" y="497" />
+        <di:waypoint x="1040" y="365" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="1095" y="330" />
+        <di:waypoint x="1125" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="1235" y="330" />
+        <di:waypoint x="1282" y="330" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

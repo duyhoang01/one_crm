@@ -15,7 +15,7 @@
 | **Tác nhân** | License Admin *(xem + gửi lại)* · Auditor *(chỉ xem)* |
 | **Tiền điều kiện** | Quyền `integration:view`; để gửi lại cần thêm `integration:retry`. |
 | **Hậu điều kiện** | (Gửi lại) Lệnh quay về **Chờ gửi**, tiến trình nền đẩy lại. **Không sinh lệnh mới.** |
-| **Trigger** | Tab **Sự kiện gửi đi**; hoặc bấm *"Xem sự kiện gửi đi"* từ kết luận ở UC-INT-03. |
+| **Trigger** | Tab **Sự kiện gửi đi**; hoặc bấm nút *"Xem {n} lệnh chưa tới nơi →"* khi có thất bại vĩnh viễn ở UC-INT-03. |
 | **Liên kết** | UC-INT-01 (nguồn sinh lệnh), UC-INT-03, UC-INT-06, UC-LIC-04 |
 
 ### Business Rules
@@ -30,7 +30,7 @@
 | **BR-06** | **Gửi lại hàng loạt**: gửi lại **tất cả** lệnh thất bại vĩnh viễn của một sản phẩm trong một lần. Tối đa **500 lệnh/lượt**; vượt → chia lượt và **báo rõ số bị bỏ lại**. | Sự cố hạ tầng làm chết hàng loạt lệnh cùng lúc; bắt bấm từng cái là bất khả thi. **Nhưng không được im lặng cắt bớt** — người dùng phải biết còn bao nhiêu chưa xử lý. |
 | **BR-07** | Gửi lại vẫn **giữ đúng thứ tự theo từng subscription** (UC-INT-01 BR-04). | Không thì "tạm dừng" có thể tới trước "khởi tạo". |
 | **BR-08** | **Không có** chức năng tạo lệnh thủ công (UC-INT-01 BR-08). | YT-3. |
-| **BR-09** | Bộ lọc: trạng thái · sản phẩm · loại lệnh · mã subscription · khoảng thời gian. Phân trang **15 dòng/trang**. | Bảng này sẽ có hàng nghìn dòng. |
+| **BR-09** | Bộ lọc: trạng thái · sản phẩm · loại lệnh · mã subscription · khoảng thời gian *(mặc định **3 ngày gần nhất**, đồng bộ với UC-INT-05 BR-09 — rà lại 14/07 theo BK-2)*. Phân trang **15 dòng/trang**. | Bảng này sẽ có hàng nghìn dòng. |
 
 ---
 
@@ -69,8 +69,8 @@
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **AF-03a** | License Admin | Bấm **"Gửi lại {n} lệnh thất bại"**. |
-| **AF-03b** | System | Hộp xác nhận: **liệt kê** số lệnh, các sản phẩm/khách hàng bị ảnh hưởng; **bắt buộc nhập lý do**. Nếu **> 500** → báo rõ *"lượt này xử lý 500, còn lại {m} lệnh — chạy lại lượt sau"* (BR-06). |
+| **AF-03a** | License Admin | Bấm **"Gửi lại {n} events thất bại"**. |
+| **AF-03b** | System | Hộp xác nhận: **liệt kê** số lệnh, các sản phẩm/khách hàng bị ảnh hưởng; **bắt buộc nhập lý do**. Nếu **> 500** → báo rõ *"lượt này xử lý 500, còn lại {m} events — chạy lại lượt sau"* (BR-06). |
 | **AF-03c** | System | Đưa tất cả về **Chờ gửi**, **giữ đúng thứ tự theo từng subscription** (BR-07); ghi nhật ký một dòng cho cả lượt + lý do. |
 | → | — | **End 2**. |
 
@@ -79,7 +79,7 @@
 | Mã | Điều kiện | Xử lý |
 |---|---|---|
 | **EF-01** | Không có quyền `integration:retry` *(vd Auditor)* | Giao diện **không render nút** Gửi lại. Gọi thẳng API → **403**. |
-| **EF-02** | Gọi API gửi lại trên lệnh **đang thử lại** | **Từ chối** + thông báo *"Hệ thống đang tự thử lại lệnh này (lần {n}/10). Chờ hết số lần thử rồi mới gửi lại tay."* (BR-02) |
+| **EF-02** | Gọi API gửi lại trên lệnh **đang thử lại** | **Từ chối** + thông báo *"Hệ thống đang tự thử lại event này (lần {n}/10). Chờ hết số lần thử rồi mới gửi lại tay."* (BR-02) |
 | **EF-03** | Gọi API gửi lại trên lệnh **đã gửi thành công** | **Từ chối** — không có gì để gửi lại. |
 
 → Cả 3 kết thúc tại **End 4** *(không phát sinh gì)*.
@@ -113,8 +113,8 @@
 | AC-INT-04-05 | Đang gửi lại. | Bỏ trống ô lý do → Xác nhận. | **Chặn** — bắt buộc nhập lý do (BR-05). |
 | AC-INT-04-06 | Gửi lại thành công. | Kiểm tra dữ liệu. | Lệnh về **Chờ gửi**; **`event_id` và nội dung KHÔNG đổi** (BR-04); nhật ký ghi ai · lệnh nào · lý do. |
 | AC-INT-04-07 | Rà toàn bộ màn hình. | — | **Không tồn tại** chức năng sửa nội dung lệnh, hay tạo lệnh mới (BR-04, BR-08). |
-| AC-INT-04-08 | EDR có **3 lệnh thất bại**. | Bấm "Gửi lại 3 lệnh thất bại". | Hộp xác nhận liệt kê 3 lệnh + khách hàng; nhập lý do → cả 3 về Chờ gửi, **đúng thứ tự theo từng subscription** (BR-06, BR-07). |
-| AC-INT-04-09 | Có **620 lệnh** thất bại. | Bấm gửi lại hàng loạt. | Xử lý **500**, và **báo rõ**: *"còn 120 lệnh — chạy lại lượt sau"* — **không im lặng cắt bớt** (BR-06). |
+| AC-INT-04-08 | EDR có **3 lệnh thất bại**. | Bấm "Gửi lại 3 events thất bại". | Hộp xác nhận liệt kê 3 lệnh + khách hàng; nhập lý do → cả 3 về Chờ gửi, **đúng thứ tự theo từng subscription** (BR-06, BR-07). |
+| AC-INT-04-09 | Có **620 lệnh** thất bại. | Bấm gửi lại hàng loạt. | Xử lý **500**, và **báo rõ**: *"còn 120 events — chạy lại lượt sau"* — **không im lặng cắt bớt** (BR-06). |
 | AC-INT-04-10 | **Auditor** đăng nhập. | Mở màn. | Xem được danh sách; **không có nút Gửi lại nào**; gọi API → **403** (BR-01, EF-01). |
 
 ---
@@ -126,6 +126,8 @@
 | Phiên bản | Ngày | Tác giả | Mô tả |
 |---|---|---|---|
 | 1.0 | 14/07/2026 | Claude (AI) | Khởi tạo. Trace: PRD v2.6 §6.7.6 (FR-INT-05), §6.7.7 (FR-INT-06).<br>**Bổ sung so với PRD:** BR-02 *(chỉ gửi lại lệnh **thất bại vĩnh viễn** — PRD chưa nói rõ, và demo lần đầu **đã sai** ở đúng chỗ này: cho gửi lại cả lệnh đang tự thử lại)* · BR-03 *(cảnh báo với lệnh bị sản phẩm từ chối)* · BR-05 *(bắt buộc lý do)* · BR-06 *(gửi lại hàng loạt + trần 500 + **không im lặng cắt bớt**)* · BR-07 *(giữ thứ tự khi gửi lại)*. |
+| 1.1 | 14/07/2026 | Claude (AI) | **Rà lại theo BK-2:** BR-09 — bộ lọc thời gian mặc định **3 ngày**, thay cho không có mặc định trước đó (đồng bộ UC-INT-05). |
+| 1.2 | 15/07/2026 | Claude (AI) | Cập nhật các **chuỗi hiển thị chính xác** (nút, thông báo) sang đơn vị đếm **"events"** tiếng Anh, theo yêu cầu BA — xem UC-INT-03 BR-08. Văn phong chung của tài liệu ("lệnh") giữ nguyên, chỉ đổi phần chữ hiển thị trực tiếp trên UI để khớp demo. |
 
 ### Nghiệp vụ
 - ✅ Không bao giờ gửi trùng lệnh — **hệ thống đang tự thử lại thì người không được chen ngang**

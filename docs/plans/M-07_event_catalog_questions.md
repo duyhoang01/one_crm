@@ -27,6 +27,8 @@ Mà UC-LIC-04 BR-09 định nghĩa **lệch kiểu A** = *subscription đã Thu 
 
 **Gốc rễ:** `tenant.*` là **sự kiện cấp hạ tầng** (tenant), còn CRM quan sát **license**. Sự kiện tenant không đổi được trạng thái license.
 
+Trả lời: Điều chỉnh lại phạm vi và giải pháp hiện tại. chưa thiết kế các tính năng liên quan đến thu hồi, hay gửi event thu hồi. Tất cả cảnh báo, giao diện liên quan tạm ẩn/ bỏ qua chưa thực hiện 
+
 ### 🔴 LH-2. Không có sự kiện nào đặt license vào **Ân hạn (GRACE)**
 
 **Hiện trạng:** PRD §5.5.2 khai báo EDR có status `GRACE`. §4.3 của concept doc còn nói rõ *"`sub.status = ACTIVE` + `license_mirror.status = GRACE` là **hợp lệ**"*. UC-LIC-02 có hẳn một trong 7 trường hợp hiển thị cho ân hạn, UC-LIC-04 BR-04 cố ý **loại ân hạn khỏi hàng đợi**.
@@ -39,6 +41,8 @@ Mà UC-LIC-04 BR-09 định nghĩa **lệch kiểu A** = *subscription đã Thu 
 
 **Ngoài ra:** `EXPIRING_SOON` và `GRACE_EXPIRED` là **hai trạng thái CRM đang không dùng ở đâu cả** — M-05 tự tính "sắp hết hạn" từ `expiration_date` + `renewal_notice_days`. Cần chốt: giữ hay bỏ?
 
+Trả lời: Loại bỏ logic cảnh báo trên. Grace_expired mapping với license.grace_expired mà. Hoàn toàn có thể giữ lại 'EXPIRING_SOON' sẽ chuyển trạng thái này khi nhận event `license.expiring_soon` từ EDR mà. 
+
 ### 🟠 LH-3. Sản phẩm **không có đường báo "tôi không làm được lệnh của anh"**
 
 **Hiện trạng:** CRM gửi `subscription.suspended`. Nếu EDR nhận nhưng **thực thi thất bại** (API nội bộ lỗi, tenant không tồn tại…) thì **không có event nào để báo lại**.
@@ -46,6 +50,10 @@ Mà UC-LIC-04 BR-09 định nghĩa **lệch kiểu A** = *subscription đã Thu 
 **Hệ quả:** Outbox của CRM ghi **"Đã gửi"** (vì broker đã nhận) → màn *Sự kiện gửi đi* xanh, mọi thứ "bình thường". Nhưng license vẫn chạy. CRM chỉ phát hiện **sau khi SLA lệch trạng thái hết hạn** — và khi đó nó báo *"nghi ngờ sản phẩm không thực thi lệnh"*, tức **đoán mò**, trong khi sản phẩm **đã biết chính xác nó fail và fail vì gì**.
 
 → Cần một event kiểu **`subscription.command_failed`** (hoặc `license.command_rejected`) mang `event_key gốc + lý do`. Có nó thì M-07 nói được *"CMC EDR **từ chối** lệnh Tạm dừng: tenant không tồn tại"* — thay vì *"nghi ngờ"*.
+
+Trả lời: Check lại xem OQ này có bị outdate không?
+
+> ✅ **Rà lại 14/07:** Outdated — đã giải quyết. `subscription.command_failed` được đặc tả đầy đủ ở [Phụ lục A §4.4](../frs/integration/_event_catalog.md), AF-03 (UC-INT-01) và AF-02 (UC-INT-02). Không còn là câu hỏi mở, chưa từng được gắn mã OQ-INT nên không có mục nào cần xoá — chỉ cần biết là đã xong.
 
 ---
 
@@ -57,23 +65,35 @@ PRD FR-LIC-04 BR-04.2 ghi rõ: Force Sync → **OUTBOX `usage.force_sync_request
 
 → Danh sách outbound thật phải là **6**.
 
+Trả lời: OK, đồng ý, bổ sung thêm event này.
+
 ### 🔴 TS-2. Không có **envelope chung** cho event
 
 §4.2 nói *"CRM xử lý idempotency theo `event_id`"* — nhưng **payload schema ở §2.2 không có `event_id`**. Cũng không có: `occurred_at`, `correlation_id`, `product_id`, `schema_version`.
 
 Không có envelope thì: không idempotent được, không truy vết được lệnh nào sinh ra phản hồi nào (màn Tra cứu của M-07 dựa vào đúng thứ này), và không nâng cấp schema được về sau.
 
+Trả lời: đánh giá và bổ xung ở những model cần thiết. nếu cần cập nhật các tính năng khác, trao đổi, làm rõ lại với tôi. 
+
 ### 🟠 TS-3. Thiếu payload cho 3 event outbound
 
 §2.2 chỉ định nghĩa schema cho `subscription.submitted` và `subscription.renewed`. Còn `suspended` / `reactivated` / `terminated` thì **không có**. Ít nhất cần: `subscription_id` + `reason` *(SUBSCRIPTION đã có cột `suspend_reason` từ v2.4)* + `effective_at`.
+
+Trả lời: bạn tự đề xuất luôn payload. 
 
 ### 🟠 TS-4. **CMC CA không có mục nào** trong danh mục
 
 Demo có CMC CA (chữ ký số, `supports_force_sync = false`). Concept doc có EDR, C-Shield, AV — **không có CA**.
 
+Trả lời: demo chỉ là tạm thời, bám theo scope ban đầu của PRD. Phase 1 chỉ mới làm cho EDR. 
+
 ### 🟠 TS-5. C-Shield / AV: **không có event cho tạm dừng / thu hồi / gia hạn**
 
 Hai sản phẩm này chỉ khai `provisioning.pending/done/failed` + `usage_synced`. Vậy khi CRM gửi `subscription.suspended` cho C-Shield thì nó phản hồi bằng gì? **Không định nghĩa** → lặp lại đúng lỗ hổng LH-1/LH-3, nhưng cho 2 sản phẩm.
+
+Trả lời: Bạn tạo 1 bản đề xuất đầy đủ. 
+
+> ✅ Đã soạn ở [Phụ lục A §6.1](../frs/integration/_event_catalog.md) — mức hiện tại là **event key + trạng thái mapping** (đủ để dev bắt đầu code phần EDR-tương-tự, tái dùng convention). Nếu bạn muốn "đầy đủ" ở mức **payload chi tiết từng trường** như EDR (§4.2-4.4), nói tôi làm tiếp — hiện tôi dừng ở mức khung vì PRD §6.10.7/§6.11.7 tự ghi "tentative", đi sâu hơn nữa sẽ vượt quá phần dữ liệu PRD có, thành suy đoán.
 
 ---
 
@@ -93,16 +113,30 @@ Webhook qua mạng, có retry. Kịch bản thật:
 
 **→ Điều này bắt buộc `occurred_at` phải nằm trong envelope (TS-2), và mirror phải lưu thêm `last_event_occurred_at`.**
 
+Trả lời: Thực hiện bổ sung vào model và các tính năng liên quan. 
+
 ### 🟠 BK-2. Khối lượng `license.usage_synced` và vòng đời dữ liệu
 
 Chu kỳ **3 giờ** (chốt 14/07) × N subscription = **8 tin/sub/ngày**. 500 sub → **4.000 tin/ngày**, **~1,5 triệu/năm** — chỉ riêng usage.
 
 `WEBHOOK_INBOX` giữ bao lâu? Không định nghĩa. Nếu giữ mãi thì màn *Sự kiện nhận về* sẽ ngập rác usage và không ai tìm thấy sự kiện quan trọng *(đúng lỗi mà tôi vừa phải sửa trong demo: 42 dòng usage chôn mất 2 sự kiện thật)*.
 
+Trả lời: theo cơ chế tôi hiểu trong PRD thì có 2 thành phần: DB mà Message Queue. 
+Thì dữ liệu trong queue chỉ tồn tại khi message được xử lý thành công. 
+Còn dữ liệu trong DB thì vẫn cứ lưu. sau này cần cơ chế backup, sao lưu thì xử lý sau. chưa phân tích trong giai đoạn này. 
+
+Với tab Tích hợp (event inbound/ outbound) thì có thể thêm bộ lọc mặc định theo thời gian, ví dụ 3 ngày. 
+
+> ✅ **Rà lại 14/07 — đã cập nhật FRS theo đúng bản trả lời này** ([Phụ lục A §5.5](../frs/integration/_event_catalog.md), UC-INT-05 BR-09, UC-INT-04 BR-09): không purge tự động, filter mặc định 3 ngày ở cả 2 tab. *(Lưu ý: tôi từng đóng OQ-INT-07 dựa theo đề xuất cũ ở Q7 trước khi đọc BK-2 — đã sửa lại cho khớp bản này.)* ⚠️ Tôi có đề xuất thêm: tin lỗi/chưa xử lý nên **luôn hiện bất kể tuổi**, không bị filter 3 ngày che mất — chưa có trong câu trả lời gốc của bạn, cần bạn xác nhận riêng.
+
 ### 🟠 BK-3. Đổi khoá bảo mật (HMAC secret rotation)
 
 PRD §5.3.7 có `secret_rotation_state` (old_secret + grace 7 ngày). Concept doc **không nhắc**. Demo M-07 có ca *"chữ ký không hợp lệ"*. Cần chốt: trong 7 ngày ân hạn, CRM chấp nhận **cả khoá cũ và mới**?
 
+Trả lời: tôi chưa hiểu cơ chế này là gì? nó dùng để làm gì? best practice là gì?
+Có thể để phía Dev định nghĩa không? 
+
+> ✅ **Đã giải thích trong chat 14/07 + cập nhật FRS:** đổi khoá "cứng" (chỉ nhận khoá mới ngay) sẽ làm mất dữ liệu webhook hợp lệ gửi trong lúc EDR chưa kịp cập nhật khoá (tin bị đánh dấu "chữ ký không hợp lệ", không xử lý lại được — BR-01). Best practice: dual-secret rotation — chấp nhận song song khoá cũ/mới trong một khoảng ân hạn. Theo đúng ý bạn, **để Dev quyết cơ chế**; [Phụ lục A §5.3](../frs/integration/_event_catalog.md) đã sửa lại chỉ nêu ràng buộc nghiệp vụ *("không được mất dữ liệu khi đổi khoá")*, không còn áp con số 7 ngày như một quyết định của BA.
 ---
 
 ## PHẦN IV — CÂU HỎI (trả lời lần lượt theo số)
@@ -114,7 +148,9 @@ PRD §5.3.7 có `secret_rotation_state` (old_secret + grace 7 ngày). Concept do
 - **(c)** Không có REVOKED trong status set của EDR *(PRD §5.5.2 hiện đúng là không có!)* → M-05 phải bỏ khái niệm "license bị thu hồi". ⚠️ Nhưng M-05 FRS + demo **đang dùng** REVOKED.
 
 **Trả lời:**
+- phương án a. định nghĩa 1 event inbound có key là 'license.revoked'
 
+> ✅ **Rà lại 14/07 — đã cập nhật FRS:** khai báo `license.revoked` → `REVOKED` chính thức trong [Phụ lục A §3.4](../frs/integration/_event_catalog.md), thay cho thiết kế cũ (Thu hồi đi qua `tenant.terminated`). Đối chiếu với LH-1 (bạn nói "chưa thiết kế tính năng thu hồi, cảnh báo tạm ẩn"): tôi hiểu 2 câu trả lời **không mâu thuẫn** — event được khai báo trước (forward-compatible), nhưng EDR **chưa thực sự gửi** nó, và mọi UI/cảnh báo phản ứng với REVOKED **tạm ẩn** ở Phase 1. Nếu tôi hiểu sai ý bạn, nói lại.
 ---
 
 ### 🔴 Q2. Sự kiện đặt license vào **Ân hạn** — thêm `license.grace_started`?
@@ -125,6 +161,12 @@ PRD §5.3.7 có `secret_rotation_state` (old_secret + grace 7 ngày). Concept do
 Kèm theo: hai trạng thái **`EXPIRING_SOON`** và **`GRACE_EXPIRED`** — **giữ hay bỏ?** M-05 hiện **không dùng cái nào** (tự tính "sắp hết hạn" từ `expiration_date` + `renewal_notice_days`).
 
 **Trả lời:**
+Chọn A. 
+Việc giữ hay bỏ, hãy cùng phân tích ưu nhược điểm, và đề xuất phương án tốt nhất cho tôi. 
+
+> ✅ **Rà lại 14/07 — đã cập nhật FRS:** thêm `license.grace_started` là event riêng ([Phụ lục A §3.1/§3.2](../frs/integration/_event_catalog.md)), `license.expired` trả về nghĩa đen (chỉ dùng khi gói không có ân hạn) — thay cho thiết kế cũ tái diễn giải `license.expired` = bắt đầu ân hạn. ⚠️ Giả định cần EDR xác nhận: có case "không ân hạn" thật không.
+>
+> **Phân tích EXPIRING_SOON/GRACE_EXPIRED (theo yêu cầu):** GRACE_EXPIRED đã có mục đích rõ (đánh dấu hết ân hạn → RESTRICTED, đẩy cơ hội "Gia hạn khẩn") — **giữ**, không còn là câu hỏi. EXPIRING_SOON là tín hiệu nhắc gia hạn — về bản chất là **nhịp thương mại** (Sales cần biết trước bao lâu), không phải sự thật kỹ thuật; giữ thuần theo event có nguy cơ **mất tính năng đang chạy** nếu EDR chưa gửi. **Khuyến nghị đã áp dụng:** giữ EXPIRING_SOON, ưu tiên nhận qua event, **fallback** tự tính `renewal_notice_days` khi chưa có event (§3.2 #11).
 
 ---
 
@@ -136,7 +178,7 @@ Không có nó thì M-07 chỉ **đoán** (*"nghi ngờ sản phẩm không th�
 - **(b)** Không thêm — chấp nhận CRM chỉ phát hiện gián tiếp qua SLA lệch trạng thái.
 
 **Trả lời:**
-
+Ok, đồng ý phương án a
 ---
 
 ### 🔴 Q4. **Envelope chung** cho mọi event (cả 2 chiều)
@@ -157,6 +199,8 @@ Không có nó thì M-07 chỉ **đoán** (*"nghi ngờ sản phẩm không th�
 
 **Trả lời:**
 
+> ✅ **Rà lại 14/07 — đóng chính thức:** ô này để trống nhưng đề xuất đã được dùng làm chuẩn xuyên suốt FRS từ đầu (UC-INT-01 BR-05, UC-INT-02 toàn bộ). Đã đánh dấu OQ-INT-04 **đã chốt** trong [Phụ lục A §9](../frs/integration/_event_catalog.md). Không thêm/bớt trường.
+
 ---
 
 ### 🔴 Q5. Chặn **sự kiện đến sai thứ tự** (BK-1)
@@ -165,6 +209,8 @@ Không có nó thì M-07 chỉ **đoán** (*"nghi ngờ sản phẩm không th�
 - **(b)** Cứ áp dụng theo thứ tự **nhận được** (như hiện tại) → chấp nhận rủi ro sai trạng thái.
 
 **Trả lời:**
+
+> ✅ **Rà lại 14/07 — đóng chính thức:** chọn (a), đã dùng làm BR-05 (UC-INT-02) và nền của xử lý lại theo chuỗi (UC-INT-05). OQ-INT-05 **đã chốt**.
 
 ---
 
@@ -178,7 +224,9 @@ Bạn nói: *chi tiết với EDR, high-level với C-Shield / AV / CA*. Xác nh
 → Như vậy FRS **không bịa** event cho 3 sản phẩm chưa làm việc với ta, nhưng vẫn **ràng buộc** họ phải khai đủ 4 nhóm. **Đồng ý?**
 
 **Trả lời:**
+ Định nghĩa trước khung sườn các event, với mỗi event định nghĩa có payload thông tin ntn. kỳ vọng xử lý gì bên Product.
 
+> ✅ **Rà lại 14/07:** Đã soạn khung đề xuất ở [Phụ lục A §6.1](../frs/integration/_event_catalog.md) cho **C-Shield và AV**, dựa 100% trên nội dung "tentative" đã có sẵn trong PRD §6.10.7/§6.11.7 (không bịa thêm event mới, chỉ sắp xếp lại theo 4 nhóm N1–N4 và bổ sung N4 còn thiếu). **Riêng CMC CA — không làm được:** sản phẩm này **không có declaration nào trong PRD**, kể cả skeleton (khác C-Shield/AV), nên không có gì để "sắp xếp lại". Đây là gap **demo đi trước PRD** (roadmap Phase 5+) — xem §6.2, cần bạn/PO quyết định giữ hay gỡ CMC CA khỏi demo, không phải việc rà OQ có thể tự đóng.
 ---
 
 ### 🟠 Q7. Vòng đời dữ liệu sự kiện (BK-2)
@@ -190,6 +238,8 @@ Bạn nói: *chi tiết với EDR, high-level với C-Shield / AV / CA*. Xác nh
 
 **Trả lời:**
 
+> ✅ **Rà lại 14/07 — đóng chính thức:** cả hai đề xuất đã dùng làm BR-09 (UC-INT-05) và §5.5 Phụ lục A. OQ-INT-07 **đã chốt**.
+
 ---
 
 ### 🟠 Q8. Đổi khoá bảo mật (BK-3)
@@ -197,7 +247,7 @@ Bạn nói: *chi tiết với EDR, high-level với C-Shield / AV / CA*. Xác nh
 Trong 7 ngày ân hạn đổi khoá, CRM chấp nhận **cả khoá cũ lẫn khoá mới**? *(đề xuất: **có** — nếu không, mọi tin gửi bằng khoá cũ sẽ bị đánh dấu "chữ ký không hợp lệ" và **không xử lý lại được**, tức mất dữ liệu thật.)*
 
 **Trả lời:**
-
+Để quyết định này cho Dev
 ---
 
 ### 🟡 Q9. Chu kỳ `license.usage_synced` trong concept doc
@@ -205,7 +255,7 @@ Trong 7 ngày ân hạn đổi khoá, CRM chấp nhận **cả khoá cũ lẫn k
 Tài liệu ghi **1 giờ**; đã chốt **3 giờ** (14/07). Tôi sẽ sửa `inbound_outbound_concept.md` §3.1.3 cho khớp — **xác nhận?**
 
 **Trả lời:**
-
+OK, xác nhận
 ---
 
 ## PHẦN V — CẤU TRÚC FRS ĐỀ XUẤT (sau khi chốt các câu trên)
@@ -227,3 +277,4 @@ Module này **kỹ thuật nhiều hơn giao diện** — nên chia UC theo **n�
 **Đồng ý cấu trúc này không?**
 
 **Trả lời:**
+ok
