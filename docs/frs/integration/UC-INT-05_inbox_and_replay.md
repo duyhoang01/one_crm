@@ -15,7 +15,7 @@
 | **Tác nhân** | License Admin *(xem + xử lý lại)* · Auditor *(chỉ xem)* |
 | **Tiền điều kiện** | Quyền `integration:view`; để xử lý lại cần `integration:retry`. |
 | **Hậu điều kiện** | (Thành công) Các tin được xử lý lại **theo đúng thứ tự thời gian**; trạng thái license về đúng. **Không gửi thông báo cho khách hàng, không phát sinh lệnh mới sang sản phẩm.** |
-| **Trigger** | Tab **Sự kiện nhận về**; hoặc bấm nút *"Xem sự kiện nhận về →"* khi có lỗi tồn đọng/chữ ký không hợp lệ ở UC-INT-03; hoặc từ UC-INT-06. |
+| **Trigger** | Tab **Sự kiện nhận về**; hoặc bấm nút *"Xem sự kiện nhận về →"* khi có lỗi tồn đọng ở UC-INT-03; hoặc từ UC-INT-06. |
 | **Liên kết** | UC-INT-02 (nguồn), UC-INT-03, UC-INT-06, UC-LIC-02, UC-SUB-03 |
 
 ### Business Rules
@@ -23,7 +23,7 @@
 | Mã | Nội dung | Vì sao |
 |---|---|---|
 | **BR-01** | Xử lý lại cần quyền `integration:retry` — **chỉ License Admin**. Auditor **không**. | — |
-| **BR-02** | 🔴 **Tin có chữ ký không hợp lệ: KHÔNG BAO GIỜ xử lý lại được.** Giao diện **không render nút**. | Nguồn gửi **chưa xác thực được**. Xử lý lại = cho người lạ đổi trạng thái license của khách hàng. |
+| **BR-02** ✏️ *(SG-4, chốt 16/07)* | **Tin sai chữ ký KHÔNG xuất hiện ở màn này.** Receiver trả **4xx và không ghi `WEBHOOK_INBOX`** (UC-INT-02 BR-01) — chỉ log hạ tầng. Do đó **mọi tin trong danh sách đều đã xác thực nguồn**; không có nhánh xử lý "chữ ký sai" trên màn Sự kiện nhận về. | Không lưu tin chưa xác thực để tránh DoS + giữ inbox chỉ chứa dữ liệu đáng tin. |
 | **BR-03** | 🔴 **XỬ LÝ LẠI = XỬ LÝ LẠI CẢ CHUỖI**, không xử lý lẻ một tin. Khi chọn một tin lỗi, hệ thống xử lý lại **tất cả sự kiện của cùng subscription đó, tính từ tin được chọn trở về sau**, **tuần tự theo `occurred_at`**. | Xem §Vì sao — đây là quy tắc quan trọng nhất của UC này. |
 | **BR-04** | Trước khi chạy, giao diện **phải cho xem trước**: chuỗi gồm bao nhiêu sự kiện, gồm những gì, và **trạng thái license sẽ ra sao sau khi xong**. | Người bấm phải biết mình sắp làm gì với dữ liệu của khách hàng. |
 | **BR-05** | 🔴 **Xử lý lại KHÔNG gửi thông báo cho khách hàng và KHÔNG phát sinh sự kiện mới sang sản phẩm.** | *(Chốt 13/07/2026 — BA)*: **"đây là nghiệp vụ kỹ thuật của CRM, khách hàng không cần biết"**. Nếu không chặn: xử lý lại 42 tin cũ → khách nhận 42 email *"license của bạn vừa được kích hoạt"* cho những việc xảy ra 3 ngày trước. |
@@ -50,19 +50,21 @@ Ops sửa bảng ánh xạ, rồi **xử lý lại riêng tin `license.activated
 
 **Xử lý lại theo chuỗi** chạy lại **cả 42 sự kiện** theo đúng thứ tự thời gian → trạng thái cuối = **"Đã ngừng"** ✅ — đúng thực tế.
 
-> ⚠️ **Đây là lý do BR-03 tồn tại, và là lý do `occurred_at` phải nằm trong envelope** ([Phụ lục A §2](_event_catalog.md)).
+> ⚠️ **Đây là lý do BR-03 tồn tại, và là lý do `occurred_at` phải nằm trong metadata** ([Phụ lục A §2](_event_catalog.md)).
 
 ---
 
 ## 2. Luồng nghiệp vụ
+
+![UC-INT-05 — Sơ đồ luồng BPMN](../../assets/M-07_integration/UC-INT-05_bpmn.png)
 
 ### 2.1 Luồng chính
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
 | **1** | Người dùng | Mở tab **Sự kiện nhận về**. |
-| **2** | System | Render danh sách: trạng thái · **nội dung sản phẩm báo về** *(tên nghiệp vụ tiếng Việt)* · khách hàng + mã subscription *(hoặc nhãn "không xác định được subscription")* · sản phẩm · **xác thực chữ ký** · **lỗi ở bước nào** · nhận lúc. Lọc mặc định **3 ngày gần nhất** (BR-09). |
-| **3** | System | Với mỗi dòng: **Xử lý lỗi** + chữ ký **hợp lệ** → nút **Xử lý lại**. Chữ ký **không hợp lệ** → **không có nút** (BR-02). |
+| **2** | System | Render danh sách: trạng thái · **nội dung sản phẩm báo về** *(tên nghiệp vụ tiếng Việt)* · khách hàng + mã subscription *(hoặc nhãn "không xác định được subscription")* · sản phẩm · **số lần thử** · **lý do lỗi** *(bước nào + chi tiết)* · nhận lúc. Lọc mặc định **3 ngày gần nhất** (BR-09). |
+| **3** | System | Với mỗi dòng ở trạng thái **Xử lý lỗi** → nút **Xử lý lại** *(mọi tin đều đã xác thực — không còn nhánh chữ ký, BR-02)*. |
 | **4** | Người dùng | **[Gateway — Làm gì?]**<br>→ Lọc/tìm → **AF-01** · Xử lý lại một chuỗi → **AF-02** · Xử lý lại hàng loạt → **AF-03** · Bấm mã subscription → **UC-INT-06** (**End 3**) · Không thao tác → **End 1**. |
 
 ### 2.2 Luồng phụ
@@ -96,7 +98,7 @@ Ops sửa bảng ánh xạ, rồi **xử lý lại riêng tin `license.activated
 | Mã | Điều kiện | Xử lý |
 |---|---|---|
 | **EF-01** | Không có quyền `integration:retry` | Không render nút; gọi API → **403**. |
-| **EF-02** | Tin **chữ ký không hợp lệ** | **Không render nút**; gọi API → **từ chối vĩnh viễn** kèm lý do *"nguồn gửi chưa xác thực được"* (BR-02). |
+| ~~**EF-02**~~ *(bỏ — SG-4)* | *(Không còn phát sinh: tin sai chữ ký bị Receiver trả 4xx, KHÔNG ghi inbox — UC-INT-02 BR-01. Không có tin sai chữ ký nào ở màn này.)* | — |
 | **EF-03** | Tin **đã xử lý thành công** | Từ chối — không có gì để xử lý lại. |
 | **EF-04** | Chuỗi chạy **lỗi giữa chừng** *(nguyên nhân chưa được sửa triệt để)* | **Dừng ngay tại tin lỗi**, **không chạy tiếp** các tin sau. Giữ nguyên trạng thái license tại thời điểm dừng; báo rõ **dừng ở tin nào, vì sao**. *Chạy tiếp trên nền một tin lỗi = dựng lại lịch sử sai.* |
 
@@ -115,8 +117,15 @@ Ops sửa bảng ánh xạ, rồi **xử lý lại riêng tin `license.activated
 
 ## 3. Mô tả giao diện
 
-> ⏳ **Chờ dựng demo.**
-> Ràng buộc bắt buộc: tin chữ ký sai **tuyệt đối không có nút Xử lý lại** (BR-02) · hộp xác nhận **phải cho xem trước cả chuỗi + trạng thái license sau khi xong** (BR-04) · phải ghi rõ *"không gửi thông báo cho khách hàng"* (BR-05).
+Demo: `v2.7.0_integration.html`, tab **"Sự kiện nhận về"** *(`intRenderInbox`)*.
+
+![UC-INT-05 — Màn Sự kiện nhận về](../../assets/M-07_integration/UC-INT-05_screen_inbox.png)
+
+Danh sách tin sản phẩm báo về, mỗi dòng: **Trạng thái** · **Nội dung báo về** *(tên nghiệp vụ)* · **Khách hàng** + mã subscription *(hoặc "không xác định được subscription")* · **Sản phẩm** · **Số lần thử** *(n/5)* · **Lý do lỗi** *(bước nào + chi tiết)* · **Nhận lúc**. Bộ cột và độ rộng **song song** với màn Sự kiện gửi đi (UC-INT-04) — hai màn là gương của nhau. Sự kiện lạ (chưa khai báo) hiện title "Sự kiện không xác định" + ⚠️ (guidance trong tooltip) + mã event thật.
+
+Bộ lọc: Trạng thái · Sản phẩm · Thời gian *(mặc định 3 ngày gần nhất — lọc thuần thời gian)* · Xoá lọc. Dòng ở trạng thái **Xử lý lỗi** có nút **Xử lý lại**; khi có nhiều tin lỗi hiện nút **"Xử lý lại N events lỗi"** (hàng loạt).
+
+Ràng buộc bắt buộc: mọi tin trong danh sách **đều đã xác thực nguồn** *(tin sai chữ ký không vào inbox — BR-02, SG-4)* · hộp xác nhận Xử lý lại **phải cho xem trước cả chuỗi + trạng thái license sau khi xong** (BR-04) · phải ghi rõ *"không gửi thông báo cho khách hàng"* (BR-05).
 
 ---
 
@@ -133,11 +142,11 @@ Ops sửa bảng ánh xạ, rồi **xử lý lại riêng tin `license.activated
 | AC-INT-05-05 | Xử lý lại xong. | Mở tiến độ của subscription. | Có **một dòng nội bộ** ghi việc xử lý lại (ai · bao nhiêu tin · lý do) — để người sau hiểu vì sao trạng thái "nhảy" (BR-06). |
 | AC-INT-05-06 | Chuỗi 42 tin, nhưng nguyên nhân **chưa sửa triệt để** — tin thứ 5 vẫn lỗi. | Chạy chuỗi. | **Dừng tại tin thứ 5**; **không chạy 37 tin còn lại**; báo rõ dừng ở đâu, vì sao (EF-04). |
 
-### Nhóm 2: Chữ ký & phân quyền
+### Nhóm 2: Xác thực & phân quyền
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-INT-05-07 | Tin có **chữ ký không hợp lệ**. | Mở màn. | **Không có nút Xử lý lại**. Gọi thẳng API → **từ chối** *(nguồn gửi chưa xác thực được)* (BR-02, EF-02). |
+| AC-INT-05-07 ✏️ *(SG-4)* | Sản phẩm gửi tin **sai chữ ký**. | Mở màn Sự kiện nhận về. | Tin đó **KHÔNG xuất hiện** trong danh sách (Receiver đã trả 4xx, không ghi inbox — UC-INT-02 BR-01). Mọi tin hiển thị đều đã xác thực nguồn; không có nhánh/nút liên quan chữ ký (BR-02). |
 | AC-INT-05-08 | **Auditor** đăng nhập. | Mở màn. | Xem được; **không có nút Xử lý lại nào**; gọi API → **403** (BR-01). |
 
 ### Nhóm 3: Hàng loạt
@@ -164,13 +173,15 @@ Ops sửa bảng ánh xạ, rồi **xử lý lại riêng tin `license.activated
 | 1.0 | 14/07/2026 | Claude (AI) | Khởi tạo. Trace: PRD v2.6 §6.7.6 (FR-INT-05), §6.7.7 (FR-INT-06).<br>**Bổ sung lớn so với PRD** *(PRD chỉ nói "reset về RECEIVED, retry_count=0")*: 🔴 **BR-03 xử lý lại theo CHUỖI** *(chốt 13/07 — xử lý lẻ tin cũ sẽ ghi đè ngược trạng thái license)* · 🔴 **BR-05 không gửi thông báo cho khách hàng, không phát sinh lệnh mới** *(chốt 13/07: "đây là nghiệp vụ kỹ thuật của CRM, khách hàng không cần biết")* · **BR-04** xem trước chuỗi + trạng thái kết quả · **BR-06** bắt buộc lý do · **BR-07** hàng loạt + trần 500 · **EF-04** dừng giữa chừng khi vẫn lỗi. |
 | 1.1 | 14/07/2026 | Claude (AI) | **Rà lại theo BK-2:** BR-09 đổi từ "ẩn mặc định `usage_synced` thành công" sang **bộ lọc mặc định 3 ngày** (không purge, không ẩn theo loại event); AC-INT-05-11 viết lại theo hành vi mới. ⚠️ Thêm đề xuất: tin lỗi/chưa xử lý luôn hiện bất kể tuổi — **chưa xác nhận với BA**. |
 | 1.2 | 15/07/2026 | Claude (AI) | Cập nhật các **chuỗi hiển thị chính xác** (nút, thông báo) sang đơn vị đếm **"events"** tiếng Anh, theo yêu cầu BA — xem UC-INT-03 BR-08. Văn phong chung của tài liệu ("tin") giữ nguyên, chỉ đổi phần chữ hiển thị trực tiếp trên UI để khớp demo. |
+| 1.3 | 16/07/2026 | Claude (AI) | **Đồng bộ với demo đã chốt.** (1) **SG-4:** tin sai chữ ký → 4xx, KHÔNG ghi inbox (chỉ log hạ tầng) → gỡ toàn bộ nhánh "chữ ký sai" (BR-02 viết lại, EF-02 bỏ, cột "Xác thực" bỏ, AC-07 lật thành kiểm SG-4). (2) **§3 viết thật + nhúng wireframe** (trước là "chờ dựng demo"): danh sách 8 cột song song với UC-INT-04, thêm **Số lần thử** (n/5) + **Lý do lỗi**; sự kiện lạ hiện ⚠️ + tooltip. (3) Đổi nhãn `DEAD_LETTER` → "Đã ngừng tự gửi lại". (4) Xác nhận **PA2 lọc thuần thời gian** (AC-11): tin lỗi cũ ngoài cửa sổ **có** ẩn khỏi list, được tab Kênh bắt. |
+| 1.4 | 17/07/2026 | Claude (AI) | Nhúng **sơ đồ luồng BPMN** vào §2 (`UC-INT-05_bpmn.png`) — đã review đối chiếu §2: đúng và đủ. AF-02 chuỗi 8 mắt (AF-02a → guard → dựng chuỗi → xem trước → nhập lý do → chạy tuần tự → **cổng RUN** → cập nhật) với RUN "lỗi giữa chừng" → **EF-04**; guard → EF-01/EF-03; **AF-03 đủ 4 mắt** gồm AF-03d (chạy tuần tự trong chuỗi, song song giữa các sub); 4 End khớp badge (End 2 gộp AF-02f+AF-03d); **SG-4** không nhánh chữ ký. |
 
 ### Nghiệp vụ
 - ✅ **Không bao giờ dựng lại lịch sử sai** — chuỗi tuần tự theo `occurred_at`, dừng ngay khi gặp lỗi
 - ✅ **Khách hàng không bị làm phiền** bởi việc kỹ thuật nội bộ
-- ✅ Tin **chữ ký sai không bao giờ xử lý lại được** — kể cả Admin
+- ✅ Tin **sai chữ ký không vào inbox** (SG-4, BR-02): Receiver trả 4xx + không ghi → không có tin sai chữ ký nào ở màn này để xử lý lại
 - ✅ Bảng không bị rác usage che mất sự kiện quan trọng — lọc mặc định 3 ngày, tin lỗi cũ vẫn hiện *(đề xuất, chờ xác nhận)*
-- ✅ **OQ-INT-05 — đã chốt:** BR-03/BR-08 phụ thuộc `occurred_at` trong envelope + cột `last_event_occurred_at`.
+- ✅ **OQ-INT-05 — đã chốt:** BR-03/BR-08 phụ thuộc `occurred_at` trong metadata + cột `last_event_occurred_at`.
 - ✅ **OQ-INT-07 — đã chốt (sửa lại theo BK-2):** BR-09 — bộ lọc mặc định 3 ngày, không purge tự động, không ẩn `usage_synced` theo loại.
 
 ---
@@ -179,6 +190,6 @@ Ops sửa bảng ánh xạ, rồi **xử lý lại riêng tin `license.activated
 
 | Mục | Nội dung |
 |---|---|
-| **Giao diện** | ⏳ Chờ dựng demo |
+| **Giao diện** | ✅ Có demo — `v2.7.0_integration.html`, tab "Sự kiện nhận về" |
 | **UC liên quan** | UC-INT-02, UC-INT-03, UC-INT-06, UC-LIC-02, UC-SUB-03 |
-| **Trace PRD** | §6.7.6 (FR-INT-05), §6.7.7 (FR-INT-06) |
+| **Trace PRD** | OneCRM_PRD_v2.7.md §6.7.6 (FR-INT-05), §6.7.7 (FR-INT-06) |

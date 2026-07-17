@@ -34,6 +34,8 @@
 
 ## 2. Luồng nghiệp vụ
 
+![UC-INT-06 — Sơ đồ luồng BPMN](../../assets/M-07_integration/UC-INT-06_bpmn.png)
+
 ### 2.1 Luồng chính
 
 | Bước | Actor | Hành động / Phản hồi |
@@ -80,7 +82,9 @@
 
 Demo: `v2.7.0_integration.html`, tab **"Tra cứu theo subscription"** *(`intRenderTrace`)*.
 
-Bố cục 3 phần: **(1) ô tìm mã sub** · **(2) header** (khách/gói/sản phẩm + nút Xem license, Tiến độ khách hàng thấy) · **(3) dòng thời gian gộp hai chiều**. **Không** có hộp tóm tắt/kết luận nào ở giữa (BR-03 đã gỡ).
+![UC-INT-06 — Màn Tra cứu theo subscription (trạng thái trống + gợi ý sub đang có sự cố)](../../assets/M-07_integration/UC-INT-06_screen_trace.png)
+
+Bố cục 3 phần: **(1) ô tìm mã sub** · **(2) header** (khách/gói/sản phẩm + nút Xem license, Tiến độ khách hàng thấy) · **(3) dòng thời gian gộp hai chiều**. **Không** có hộp tóm tắt/kết luận nào ở giữa (BR-03 đã gỡ). Màn trống gợi ý sẵn các subscription **đang có sự cố** (BR-04) — như ảnh.
 
 Ràng buộc bắt buộc: **gộp sự kiện lặp** thành dòng "× N" (BR-02) · mỗi dòng lỗi **hiện lý do inline** (BR-07) · **màn trống phải gợi ý** subscription đang có sự cố (BR-04).
 
@@ -92,7 +96,7 @@ Ràng buộc bắt buộc: **gộp sự kiện lặp** thành dòng "× N" (BR-0
 |---|---|---|---|
 | AC-INT-06-01 | `SUB-2026-021` có **42 sự kiện**, trong đó 40 events usage **cùng một lỗi** liên tiếp. | Tra cứu. | Dòng thời gian gộp còn **3 dòng**; dòng gộp ghi **"× 40 events giống nhau"** + khoảng thời gian (BR-02). Hai sự kiện quan trọng *(kích hoạt, tạm dừng)* **nhìn thấy ngay**, không bị chôn. |
 | AC-INT-06-02 | `SUB-2026-021` có event nhận về **Xử lý lỗi** *(thiếu trường "ngày hết hạn")*. | Tra cứu. | Dòng thời gian tương ứng có badge **Xử lý lỗi** + **lý do inline** *"Thiếu trường bắt buộc 'ngày hết hạn'..."* ngay dưới tên event (BR-07). **KHÔNG** có hộp tóm tắt/kết luận nào ở đầu màn (BR-03 đã gỡ). |
-| AC-INT-06-03 | Subscription có **event gửi đi thất bại vĩnh viễn**. | Tra cứu. | Dòng thời gian tương ứng có badge **Thất bại vĩnh viễn** + lý do lỗi inline *(vd "Không kết nối được tới hàng đợi...")*. **Không** có câu suy luận "khách có thể vẫn đang dùng dịch vụ" ở đầu màn. |
+| AC-INT-06-03 | Subscription có **event gửi đi thất bại vĩnh viễn**. | Tra cứu. | Dòng thời gian tương ứng có badge **Đã ngừng tự gửi lại** + lý do lỗi inline *(vd "Không kết nối được tới hàng đợi...")*. **Không** có câu suy luận "khách có thể vẫn đang dùng dịch vụ" ở đầu màn. |
 | AC-INT-06-04 | Subscription **không có events nào đang lỗi**. | Tra cứu. | Dòng thời gian hiện các sự kiện bình thường (badge Đã gửi / Đã xử lý), **không** có hộp "Không có sự cố" hay thông báo tổng nào — người xem tự thấy không có dòng đỏ. |
 | AC-INT-06-05 | Mở tab **lần đầu**, chưa nhập mã. | Mở màn. | Hiện **danh sách subscription đang có sự cố**, xếp nặng trước — bấm một phát là vào (BR-04). **Không** phải ô trống bắt thuộc lòng mã. |
 | AC-INT-06-06 | Hệ thống **không có sự cố tích hợp nào**. | Mở tab. | *"Hiện không có subscription nào gặp sự cố tích hợp."* |
@@ -112,6 +116,7 @@ Ràng buộc bắt buộc: **gộp sự kiện lặp** thành dòng "× N" (BR-0
 | 1.1 | 15/07/2026 | Claude (AI) | Đổi đơn vị đếm "lệnh"/"tin" → **"events"** (tiếng Anh, thống nhất 2 chiều) theo yêu cầu BA — xem UC-INT-03 BR-08. |
 | 1.2 | 15/07/2026 | Claude (AI) | *(bước trung gian trong ngày)* Từng thử hạ "kết luận lỗi tại ai" xuống "tóm tắt thuần thống kê". Nhưng khi rà tiếp phát hiện **ngay cả tóm tắt thống kê vẫn buộc phải suy luận**: câu *"khách có thể vẫn đang dùng dịch vụ"* chỉ đúng với lệnh Tạm dừng/Thu hồi — **sai ngược** với Khôi phục (khách vẫn bị khoá) và **vô nghĩa** với lệnh Yêu cầu cập nhật mức dùng *(bằng chứng: SUB-2026-005 có event chết là force_sync)*. |
 | **2.0** | 15/07/2026 | Claude (AI) | **🔴 GỠ HOÀN TOÀN hộp tóm tắt/kết luận (BR-03) — theo quyết định BA.** Kết luận sau 2 vòng rà: **mọi** dạng tóm tắt trên màn này đều phải suy luận (lỗi tại ai / hậu quả với khách) mà CRM — passive-observer — không đủ dữ kiện phán đúng cho mọi loại event ⇒ không viết được thành BR chắc chắn cho dev. Màn giờ chỉ còn **header + dòng thời gian gộp hai chiều**; mỗi dòng lỗi tự mang **lý do inline** (BR-07 mới) để người vận hành tự đọc. Bỏ luôn nút hành động trên màn này (đúng Hậu điều kiện "chỉ đọc" — hành động thuộc UC-INT-04/05). Gỡ End 2. Demo `intTraceFacts` đã xoá. |
+| 2.1 | 17/07/2026 | Claude (AI) | Nhúng **sơ đồ luồng BPMN** vào §2 (`UC-INT-06_bpmn.png`) — đã review đối chiếu §2: đúng và đủ. 2 cổng nối tiếp (bước 2 "đã có mã?" → bước 3 "tồn tại?"); **bước 3 nhận 3 mũi tên vào** (bước 2 "Rồi" · AF-01c · bước 6 "Tra mã khác"); AF-01 gợi ý sub đang có sự cố; EF-01 → End 1; **cố ý không có End 2** (chỉ End 1/3/4); màn chỉ đọc, không nút hành động. Nit nhỏ trên ảnh: nhánh loop "Tra mã khác" nên là nét đứt xanh về bước 3 — dọn khi regen nếu cần. |
 
 ### Nghiệp vụ
 - ✅ Xem được **toàn bộ trao đổi hai chiều** của một sub trên một dòng thời gian — thứ mà 2 tab kia (một chiều, toàn hệ thống) không cho
@@ -128,4 +133,4 @@ Ràng buộc bắt buộc: **gộp sự kiện lặp** thành dòng "× N" (BR-0
 |---|---|
 | **Giao diện** | ✅ Có demo — `v2.7.0_integration.html`, tab "Tra cứu theo subscription" |
 | **UC liên quan** | UC-INT-04, UC-INT-05, UC-LIC-02, UC-SUB-03 |
-| **Trace PRD** | §6.7.6 (FR-INT-05) |
+| **Trace PRD** | OneCRM_PRD_v2.7.md §6.7.6 (FR-INT-05) |

@@ -23,7 +23,7 @@
 | Mã | Nội dung | Vì sao |
 |---|---|---|
 | **BR-01** | **Gửi lại** cần quyền `integration:retry` — mặc định **chỉ License Admin**. **Auditor KHÔNG có.** | Auditor không được để lại dấu vết trong hệ thống mình đang kiểm toán. |
-| **BR-02** | 🔴 **Chỉ gửi lại được lệnh ở trạng thái "Thất bại vĩnh viễn".** | Lệnh **"Đang thử lại"** đang được **hệ thống tự xử lý** — bấm tay lúc đó là **gửi cùng một lệnh hai lần**. Lệnh **"Đã gửi"** thì không có gì để gửi lại. |
+| **BR-02** | 🔴 **Chỉ gửi lại được lệnh ở trạng thái "Đã ngừng tự gửi lại".** | Lệnh **"Đang thử lại"** đang được **hệ thống tự xử lý** — bấm tay lúc đó là **gửi cùng một lệnh hai lần**. Lệnh **"Đã gửi"** thì không có gì để gửi lại. |
 | **BR-03** | Lệnh **"Sản phẩm từ chối"** *(`subscription.command_failed`)* → **gửi lại được**, nhưng giao diện phải cảnh báo: *"Sản phẩm đã từ chối vì {lý do}. Gửi lại chỉ có ích **sau khi** nguyên nhân đó được xử lý."* | Gửi lại mà chưa sửa nguyên nhân = bị từ chối lần nữa. |
 | **BR-04** | Gửi lại → **đưa lại vào hàng chờ**, **giữ nguyên `event_id` và nội dung gốc**. **Không sinh sự kiện mới, không cho sửa nội dung.** | Sửa nội dung rồi gửi = **CRM bịa dữ liệu của sản phẩm** — vi phạm YT-3. Giữ `event_id` để sản phẩm vẫn chống trùng được. |
 | **BR-05** | **Bắt buộc nhập lý do** khi gửi lại; ghi nhật ký (ai · lệnh nào · lý do · lúc nào). | Người sau nhìn thấy trạng thái "nhảy" phải biết vì việc gì. |
@@ -36,13 +36,15 @@
 
 ## 2. Luồng nghiệp vụ
 
+![UC-INT-04 — Sơ đồ luồng BPMN](../../assets/M-07_integration/UC-INT-04_bpmn.png)
+
 ### 2.1 Luồng chính
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
 | **1** | Người dùng | Mở tab **Sự kiện gửi đi**. |
 | **2** | System | Render danh sách: trạng thái · **tên lệnh bằng tiếng Việt nghiệp vụ** *(không phải mã kỹ thuật)* · khách hàng + mã subscription · sản phẩm · số lần đã thử · lý do lỗi cuối · thời điểm. |
-| **3** | System | Với mỗi dòng, quyết định hành động theo BR-02/BR-03: **Thất bại vĩnh viễn** hoặc **Sản phẩm từ chối** → nút **Gửi lại**; **Đang thử lại** → chỉ báo *"Hệ thống đang tự thử lại"*, **không có nút**; còn lại → không hành động. |
+| **3** | System | Với mỗi dòng, quyết định hành động theo BR-02/BR-03: **Đã ngừng tự gửi lại** hoặc **Sản phẩm từ chối** → nút **Gửi lại**; **Đang thử lại** → chỉ báo *"Hệ thống đang tự thử lại"*, **không có nút**; còn lại → không hành động. |
 | **4** | Người dùng | **[Gateway — Làm gì?]**<br>→ Lọc/tìm → **AF-01** · Gửi lại một lệnh → **AF-02** · Gửi lại hàng loạt → **AF-03** · Bấm mã subscription → **UC-INT-06** (**End 3**) · Không thao tác → **End 1**. |
 
 ### 2.2 Luồng phụ
@@ -59,7 +61,7 @@
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **AF-02a** | License Admin | Bấm **Gửi lại** trên một lệnh **Thất bại vĩnh viễn**. |
+| **AF-02a** | License Admin | Bấm **Gửi lại** trên một lệnh **Đã ngừng tự gửi lại**. |
 | **AF-02b** | System | Mở hộp xác nhận: nêu rõ lệnh gì · của khách nào · lỗi cuối là gì. Nếu là **Sản phẩm từ chối** → thêm cảnh báo BR-03. **Bắt buộc nhập lý do** (BR-05). |
 | **AF-02c** | License Admin | Nhập lý do → **Xác nhận**. |
 | **AF-02d** | System | Đưa lệnh về **Chờ gửi**, reset số lần thử, **giữ nguyên `event_id` + nội dung** (BR-04); ghi nhật ký (BR-05). Tiến trình nền đẩy lại (UC-INT-01). |
@@ -97,8 +99,15 @@
 
 ## 3. Mô tả giao diện
 
-> ⏳ **Chờ dựng demo.**
-> Ràng buộc bắt buộc: tên lệnh hiển thị bằng **tiếng Việt nghiệp vụ** *("Tạm dừng dịch vụ", không phải `subscription.suspended`)* · dòng **Đang thử lại** **không được có nút Gửi lại** (BR-02) · phân trang 15 dòng/trang.
+Demo: `v2.7.0_integration.html`, tab **"Sự kiện gửi đi"** *(`intRenderOutbox`)*.
+
+![UC-INT-04 — Màn Sự kiện gửi đi](../../assets/M-07_integration/UC-INT-04_screen_outbox.png)
+
+Danh sách lệnh CRM gửi sang sản phẩm, mỗi dòng: **Trạng thái** · **Nội dung gửi đi** *(tên nghiệp vụ)* · **Khách hàng** + mã subscription · **Sản phẩm** · **Số lần thử** *(n/10)* · **Lý do lỗi** · **Gửi lúc**. Bộ cột và độ rộng **song song** với màn Sự kiện nhận về (UC-INT-05) — hai màn là gương của nhau.
+
+Bộ lọc: Trạng thái · Sản phẩm · Thời gian *(mặc định 3 ngày gần nhất — lọc thuần thời gian)* · Xoá lọc. Dòng ở trạng thái **Đã ngừng tự gửi lại** (đã thử đủ 10 lần) có nút **Gửi lại**; khi có nhiều lệnh hiện nút **"Gửi lại N events thất bại"** (hàng loạt, trần 500/lượt — BR-06).
+
+Ràng buộc bắt buộc: tên lệnh hiển thị bằng **tiếng Việt nghiệp vụ** *("Tạm dừng dịch vụ", không phải `subscription.suspended`)* · dòng **Đang thử lại** **không được có nút Gửi lại** (BR-02) · phân trang 15 dòng/trang.
 
 ---
 
@@ -106,7 +115,7 @@
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-INT-04-01 | Lệnh **Thất bại vĩnh viễn** (10/10 lần thử). | Mở màn. | Có nút **Gửi lại** (BR-02). |
+| AC-INT-04-01 | Lệnh **Đã ngừng tự gửi lại** (10/10 lần thử). | Mở màn. | Có nút **Gửi lại** (BR-02). |
 | AC-INT-04-02 | Lệnh **Đang thử lại** (3/10). | Mở màn. | **KHÔNG có nút Gửi lại**; hiện chỉ báo *"Hệ thống đang tự thử lại"*. Gọi thẳng API → **từ chối** kèm lý do (BR-02, EF-02). |
 | AC-INT-04-03 | Lệnh **Đã gửi**. | Mở màn. | Không có hành động nào. Gọi API gửi lại → **từ chối** (EF-03). |
 | AC-INT-04-04 | Lệnh bị **sản phẩm từ chối** *("tenant không tồn tại")*. | Bấm Gửi lại. | Hộp xác nhận **cảnh báo**: gửi lại chỉ có ích **sau khi** nguyên nhân được xử lý (BR-03). |
@@ -128,6 +137,8 @@
 | 1.0 | 14/07/2026 | Claude (AI) | Khởi tạo. Trace: PRD v2.6 §6.7.6 (FR-INT-05), §6.7.7 (FR-INT-06).<br>**Bổ sung so với PRD:** BR-02 *(chỉ gửi lại lệnh **thất bại vĩnh viễn** — PRD chưa nói rõ, và demo lần đầu **đã sai** ở đúng chỗ này: cho gửi lại cả lệnh đang tự thử lại)* · BR-03 *(cảnh báo với lệnh bị sản phẩm từ chối)* · BR-05 *(bắt buộc lý do)* · BR-06 *(gửi lại hàng loạt + trần 500 + **không im lặng cắt bớt**)* · BR-07 *(giữ thứ tự khi gửi lại)*. |
 | 1.1 | 14/07/2026 | Claude (AI) | **Rà lại theo BK-2:** BR-09 — bộ lọc thời gian mặc định **3 ngày**, thay cho không có mặc định trước đó (đồng bộ UC-INT-05). |
 | 1.2 | 15/07/2026 | Claude (AI) | Cập nhật các **chuỗi hiển thị chính xác** (nút, thông báo) sang đơn vị đếm **"events"** tiếng Anh, theo yêu cầu BA — xem UC-INT-03 BR-08. Văn phong chung của tài liệu ("lệnh") giữ nguyên, chỉ đổi phần chữ hiển thị trực tiếp trên UI để khớp demo. |
+| 1.3 | 16/07/2026 | Claude (AI) | **Đồng bộ với demo đã chốt.** (1) **§3 viết thật + nhúng wireframe** (trước là "chờ dựng demo"): danh sách 8 cột song song UC-INT-05, cột **Số lần thử** (n/10) + **Lý do lỗi** (đổi từ "Lỗi cuối"). (2) Đổi nhãn `DEAD_LETTER` **"Thất bại vĩnh viễn" → "Đã ngừng tự gửi lại"** (khớp việc có nút Gửi lại — hết mâu thuẫn "vĩnh viễn"). (3) **PA2 lọc thuần thời gian** + drill-down từ tab Kênh mở "Toàn bộ" để đủ lệnh kẹt cũ. |
+| 1.4 | 17/07/2026 | Claude (AI) | Nhúng **sơ đồ luồng BPMN** vào §2 (`UC-INT-04_bpmn.png`) — đã review đối chiếu §2: đúng luồng, đủ node (Start · bước 1–4 · AF-01/02/03 · cổng guard 4 nhánh → EF-01/02/03 · End 1–4 khớp badge; End 2 gộp AF-02d+AF-03c; End 4 gộp 3 EF). Còn **2 lỗi chính tả cosmetic trên ảnh** (mẩu "Ac-1▸" cạnh tiêu đề AF-01; "mộg"→"một" ở tiêu đề AF-02) — không ảnh hưởng luồng, dọn khi regen ảnh. |
 
 ### Nghiệp vụ
 - ✅ Không bao giờ gửi trùng lệnh — **hệ thống đang tự thử lại thì người không được chen ngang**
@@ -141,6 +152,6 @@
 
 | Mục | Nội dung |
 |---|---|
-| **Giao diện** | ⏳ Chờ dựng demo |
+| **Giao diện** | ✅ Có demo — `v2.7.0_integration.html`, tab "Sự kiện gửi đi" |
 | **UC liên quan** | UC-INT-01, UC-INT-03, UC-INT-06 |
-| **Trace PRD** | §6.7.6 (FR-INT-05), §6.7.7 (FR-INT-06) |
+| **Trace PRD** | OneCRM_PRD_v2.7.md §6.7.6 (FR-INT-05), §6.7.7 (FR-INT-06) |

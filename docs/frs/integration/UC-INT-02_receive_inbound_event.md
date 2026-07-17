@@ -23,8 +23,8 @@
 
 | Mã | Nội dung | Vì sao |
 |---|---|---|
-| **BR-01** | **Xác thực nguồn gửi** bằng chữ ký (HMAC-SHA256) theo khoá của sản phẩm. Chữ ký sai → **từ chối**, ghi nhận là *"chữ ký không hợp lệ"*, **KHÔNG bao giờ xử lý lại được**. | Xử lý lại một tin chưa xác thực được nguồn = cho phép người lạ đổi trạng thái license của khách hàng. |
-| **BR-02** | **Đổi khoá bảo mật**: trong thời gian ân hạn **7 ngày**, CRM chấp nhận **cả khoá cũ lẫn khoá mới**. | Không làm vậy thì mọi tin gửi bằng khoá cũ bị đánh dấu "chữ ký không hợp lệ" — mà theo BR-01 thì **không xử lý lại được** → **mất dữ liệu thật**. |
+| **BR-01** *(SG-4, chốt 16/07)* | **Xác thực nguồn gửi** bằng chữ ký (HMAC-SHA256) theo khoá của sản phẩm. **Chữ ký sai → trả 4xx và TỪ CHỐI NGAY, KHÔNG ghi vào `WEBHOOK_INBOX`** — chỉ log ở hạ tầng (rate-limited, kèm source IP) cho đội bảo mật. | Không lưu tin chưa xác thực được nguồn để: (a) tránh người lạ đổ dữ liệu rác vào inbox → **DoS/phình bảng**; (b) **mọi dòng trong inbox đều đã xác thực, đáng tin**. Sự cố khoá sai được **cảnh báo im lặng** bắt (sản phẩm sai khoá → không tin nào hợp lệ → kênh im lặng). Điều tra tấn công giả mạo là việc của **an ninh hạ tầng**, không phải dashboard CRM. |
+| **BR-02** | **Đổi khoá bảo mật**: trong thời gian ân hạn **7 ngày**, CRM chấp nhận **cả khoá cũ lẫn khoá mới**. | Không làm vậy thì mọi tin gửi bằng khoá cũ bị coi là chữ ký sai → theo BR-01 sẽ **bị từ chối và KHÔNG lưu** → **mất dữ liệu license/usage thật**. Vì vậy dual-key trong 7 ngày là bắt buộc. |
 | **BR-03** | **Trả lời ngay, xử lý sau.** Nhận được → ghi nhận và trả **200 OK** lập tức; việc áp dụng vào dữ liệu do tiến trình nền làm. | Nếu xử lý đồng bộ: CRM chậm → sản phẩm timeout → sản phẩm gửi lại → CRM xử lý trùng. Và sự cố phía CRM sẽ **kéo sập** cả kênh gửi của sản phẩm. |
 | **BR-04** | **Chống xử lý trùng** theo `event_id`. Đã xử lý → bỏ qua, **không áp dụng lần hai**. | Gửi ít nhất một lần ⇒ sản phẩm **sẽ** gửi lặp. |
 | **BR-05** | 🔴 **Chặn sự kiện đến muộn.** Chỉ áp dụng khi `occurred_at` **mới hơn** `license_mirror.last_event_occurred_at`. Cũ hơn → **ghi nhận, KHÔNG áp dụng**, gắn nhãn *"đến muộn"*. | Webhook có retry ⇒ sự kiện **sẽ** đến sai thứ tự. Xem §Bẫy bên dưới — không có quy tắc này thì **license sai trạng thái vĩnh viễn**. |
@@ -34,9 +34,9 @@
 | **BR-09** | Xử lý lỗi → thử lại tự động, tối đa **5 lần**. Hết → trạng thái **Xử lý lỗi**, **giữ nguyên tin**, chờ người xử lý lại (UC-INT-05). | Lỗi thường là **lỗi phía CRM** (bảng ánh xạ sai, thiếu trường bắt buộc). Sửa xong thì tin cũ **phải xử lý lại được** — nên tuyệt đối **không được vứt**. |
 | **BR-10** | `license.usage_synced` **KHÔNG** sinh dòng tiến độ trong subscription. | Chu kỳ 3 giờ → 8 tin/sub/ngày. Ghi hết thì tiến độ của khách hàng chỉ toàn "đã báo mức dùng", chôn mất các mốc thật. |
 | **BR-11** | Mức dùng **> số đã bán** → **vẫn lưu**, ghi nhận **bất thường dữ liệu**, cảnh báo vận hành. **Không** coi là tình huống thương mại. | Sản phẩm đã chặn cài vượt số lượng ⇒ điều này *không thể xảy ra* ⇒ nếu xảy ra là **lỗi dữ liệu**, không phải khách dùng lố (UC-LIC-04 BR-13). |
-| **BR-12** | Sự kiện cấp **tenant** (`tenant.suspended` / `tenant.reactivated`) đổi trạng thái mirror **khi và chỉ khi** nó là **phản hồi có `correlation_id`** cho một lệnh CRM đã gửi *(xác nhận lệnh đã có hiệu lực)*. Sự kiện tenant **không có** `correlation_id` khớp lệnh nào → **KHÔNG đổi mirror**; ghi nhận + cảnh báo *(sản phẩm tự ngắt dịch vụ mà CRM không ra lệnh — bất thường)*. | ✅ **Chốt.** CRM đổi mirror vì nhận **xác nhận lệnh của chính mình đã ăn** — không phải vì "đọc" sự kiện hạ tầng (giữ ranh giới YT-1). Lưu `last_change_source = "command_ack"` + `source_command_event_id` vào metadata. **Chỉ áp dụng cho Tạm dừng/Khôi phục** — Thu hồi dùng `license.revoked` (BR-13), không qua cơ chế này. Xem [Phụ lục A §3.3](_event_catalog.md). |
-| **BR-13** 🆕 | `license.revoked` → `license_mirror.status = REVOKED`, `sub.status = REVOKED`. **Rà lại 14/07 (thay cho BR-12 cũ áp dụng cho Thu hồi):** khai báo chính thức trong danh mục, xử lý như mọi event `license.*` khác qua bảng ánh xạ (bước 9) — **không** cần cơ chế `correlation_id` đặc biệt như tenant.*. | ⚠️ **EDR chưa thực sự gửi event này ở Phase 1** — khai báo để sẵn sàng khi EDR triển khai. Mọi cảnh báo/mismatch phản ứng với REVOKED **tạm ẩn**, xem [Phụ lục A §3.4](_event_catalog.md). |
-| **BR-14** 🆕 | `license.grace_started` → `license_mirror.status = GRACE`. `license.expired` → `license_mirror.status = RESTRICTED` *(chỉ áp dụng khi gói không có ân hạn — trường hợp biên)*. | ✅ **Rà lại 14/07** — tách event riêng cho ân hạn, không còn tái diễn giải `license.expired`. Xem [Phụ lục A §3.1/§3.2](_event_catalog.md). |
+| **BR-12** | Tạm dừng/Khôi phục xác nhận qua **`license.suspended` / `license.reactivated` mang `correlation_id`** (EDR thực thi ở cấp tenant nhưng gửi xác nhận là `license.*`). `license.suspended` có **2 nguồn** phân biệt bằng `correlation_id`: *có* → do CRM ra lệnh Tạm dừng (command-ack) → mirror SUSPENDED, `last_change_source = command_ack`; *không* → tự nhiên (khách hết ân hạn) → mirror SUSPENDED, `last_change_source = product_event` — **hợp lệ, không phải bất thường**. `license.reactivated` **luôn** phải có `correlation_id`; nếu không khớp lệnh nào → cảnh báo. | ✅ **EDR xác nhận 16/07 — bỏ hoàn toàn `tenant.*`.** CRM đọc chính event trạng thái license (đúng NT-2/YT-1); `correlation_id` chỉ ghi **nguyên nhân** (do lệnh hay tự nhiên). Xem [Phụ lục A §3.3](_event_catalog.md). |
+| **BR-13** 🆕 | `license.revoked` → `license_mirror.status = REVOKED`, `sub.status = REVOKED`. Khai báo chính thức trong danh mục, xử lý như mọi event `license.*` khác qua bảng ánh xạ (bước 9). | ⚠️ **EDR chưa thực sự gửi event này ở Phase 1** — khai báo để sẵn sàng khi EDR triển khai. Mọi cảnh báo/mismatch phản ứng với REVOKED **tạm ẩn**, xem [Phụ lục A §3.4](_event_catalog.md). |
+| **BR-14** 🆕 | **`license.expired` → `license_mirror.status = GRACE`** (EDR gửi event này để báo **vào ân hạn** — khách vẫn dùng đủ; `sub` giữ ACTIVE). `license.grace_expired` → `license_mirror.status = RESTRICTED` (hạn chế tính năng 30 ngày; `sub` giữ ACTIVE). `license.suspended` → SUSPENDED (`sub` → SUSPENDED). | ✅ **EDR xác nhận 16/07** — mọi gói đều qua ân hạn; **không dùng `license.grace_started`**, vai trò "vào ân hạn" do `license.expired` đảm nhận. Ví dụ chuẩn của NT-5 (tên event ≠ chữ hiển thị). Xem [Phụ lục A §3.1/§3.2](_event_catalog.md). |
 
 ### 🔴 Bẫy: sự kiện đến sai thứ tự — sẽ xảy ra, không phải "nếu"
 
@@ -54,11 +54,13 @@
 
 ## 2. Luồng nghiệp vụ
 
+![UC-INT-02 — Sơ đồ luồng BPMN](../../assets/M-07_integration/UC-INT-02_bpmn.png)
+
 ### 2.1 Luồng chính
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **1** | Sản phẩm | Gửi sự kiện về CRM *(kèm envelope: `event_id` · `event_key` · `occurred_at` · `subscription_id` · `product_id` · `correlation_id`)*. |
+| **1** | Sản phẩm | Gửi sự kiện về CRM *(kèm metadata: `event_id` · `event_key` · `occurred_at` · `subscription_id` · `product_id` · `correlation_id` · `schema_version`)*. |
 | **2** | System | **[Gateway — Chữ ký hợp lệ?]** Không → **EF-01**. Có → tiếp bước 3. |
 | **3** | System | **Ghi nhận ngay** ở trạng thái **Đã nhận**; **trả 200 OK cho sản phẩm** (BR-03). *Sản phẩm coi như xong việc.* |
 | **4** | System *(tiến trình nền)* | **[Gateway — Đã xử lý `event_id` này chưa?]** Rồi → bỏ qua (BR-04), **End 2**. Chưa → tiếp bước 5. |
@@ -66,13 +68,13 @@
 | **6** | System | **[Gateway — Loại sự kiện có trong bảng ánh xạ của sản phẩm?]** Không → **EF-03**. Có → tiếp bước 7. |
 | **7** | System | **[Gateway — `occurred_at` mới hơn sự kiện đã áp dụng gần nhất?]** Không → **EF-04** (đến muộn). Có → tiếp bước 8. |
 | **8** | System | **[Gateway — Dữ liệu đủ trường bắt buộc?]** Không → **EF-05**. Có → tiếp bước 9. |
-| **9** | System | **Áp dụng** theo bảng ánh xạ của sản phẩm ([Phụ lục A §3](_event_catalog.md)): cập nhật `license_mirror.status` · `last_synced_at` · `last_event_occurred_at`; với `license.activated` thì cập nhật thêm `sub.activation_date`, `sub.end_date`, `sub.status`. |
+| **9** | System | **Phân loại theo `event_key`** rồi xử lý theo bảng ánh xạ của sản phẩm ([Phụ lục A §3](_event_catalog.md)):<br>• **`license.*` (đổi trạng thái)** → **áp dụng**: cập nhật `license_mirror.status` · `last_synced_at` · `last_event_occurred_at`; với `license.activated` cập nhật thêm `sub.activation_date`, `sub.end_date`, `sub.status`. → tiếp bước 10.<br>• **`license.usage_synced`** → **AF-01** (báo mức sử dụng).<br>• **`subscription.command_failed`** → **AF-02** (sản phẩm từ chối lệnh). |
 | **10** | System | Ghi **một dòng tiến độ** vào subscription *(trừ `usage_synced` — BR-10)*; ghi nhật ký hoạt động; trạng thái tin → **Đã xử lý**. |
 | → | — | Kết thúc **End 1**. |
 
 ### 2.2 Luồng phụ
 
-**[AF-01: Báo mức sử dụng]** — tại bước 9, `event_key = license.usage_synced`.
+**[AF-01: Báo mức sử dụng]** — kích hoạt tại **bước 9** (nhánh `event_key = license.usage_synced`).
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
@@ -80,7 +82,7 @@
 | **AF-01b** | System | Số đã dùng **> số đã bán** → vẫn lưu, ghi nhận **bất thường dữ liệu**, cảnh báo vận hành (BR-11). |
 | → | — | Kết thúc **End 1**. |
 
-**[AF-02: Sản phẩm báo không thực thi được lệnh]** — `event_key = subscription.command_failed`.
+**[AF-02: Sản phẩm báo không thực thi được lệnh]** — kích hoạt tại **bước 9** (nhánh `event_key = subscription.command_failed`).
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
@@ -92,7 +94,7 @@
 
 | Mã | Điều kiện | Xử lý | Xử lý lại được? |
 |---|---|---|---|
-| **EF-01** | **Chữ ký không hợp lệ** (bước 2) | Từ chối; ghi nhận với nhãn *"chữ ký không hợp lệ"*; cảnh báo bảo mật *(có thể sản phẩm vừa đổi khoá, hoặc bên thứ ba giả mạo)*. | ❌ **Không bao giờ** (BR-01) |
+| **EF-01** | **Chữ ký không hợp lệ** (bước 2) | **Trả 4xx, từ chối ngay; KHÔNG ghi `WEBHOOK_INBOX`**; chỉ log hạ tầng (rate-limited + source IP) *(có thể sản phẩm đổi khoá ngoài 7 ngày ân hạn, hoặc bên thứ ba giả mạo — để an ninh hạ tầng điều tra)*. | ❌ Không lưu (BR-01) |
 | **EF-02** | **Không map được subscription** (bước 5) | Ghi nhận, nhãn *"không xác định được subscription"*, cảnh báo (BR-08). | ✅ Sau khi tìm ra nguyên nhân |
 | **EF-03** | **Loại sự kiện lạ** (bước 6) | Ghi nhận, nhãn *"loại sự kiện lạ — không áp dụng"*, cảnh báo (BR-07). | ✅ Sau khi khai báo ánh xạ |
 | **EF-04** | **Sự kiện đến muộn** (bước 7) | Ghi nhận, nhãn *"đến muộn — không áp dụng"* (BR-05). **Không phải lỗi** — hệ thống đang bảo vệ dữ liệu. | ⚠️ Chỉ trong **xử lý lại theo chuỗi** (UC-INT-05) |
@@ -108,7 +110,7 @@
 | **End 2** | Tin trùng — bỏ qua, không áp dụng lần hai. |
 | **End 3** | Đã ghi nhận việc sản phẩm từ chối lệnh. |
 | **End 4** | Ghi nhận nhưng **chưa áp dụng** — chờ xử lý lại (UC-INT-05). |
-| **End 5** | Từ chối vĩnh viễn — chữ ký không hợp lệ. |
+| **End 5** | Từ chối (4xx) — chữ ký không hợp lệ; **không lưu vào inbox** (chỉ log hạ tầng). |
 
 ---
 
@@ -125,7 +127,7 @@
 | Mã | Given | When | Then |
 |---|---|---|---|
 | AC-INT-02-01 | Sản phẩm gửi tin chữ ký hợp lệ. | CRM nhận. | **200 OK trả về ngay**; tin ở trạng thái **Đã nhận**; việc áp dụng làm sau (BR-03). |
-| AC-INT-02-02 | Tin có **chữ ký sai**. | CRM nhận. | **Từ chối**; ghi nhận nhãn *"chữ ký không hợp lệ"*; cảnh báo bảo mật; **nút Xử lý lại KHÔNG hiển thị** (BR-01). |
+| AC-INT-02-02 | Tin có **chữ ký sai**. | CRM nhận. | **Trả 4xx, từ chối ngay**; **KHÔNG ghi vào inbox** (chỉ log hạ tầng); **không xuất hiện trong danh sách Sự kiện nhận về** (BR-01). |
 | AC-INT-02-03 | Sản phẩm đang trong **7 ngày đổi khoá**, gửi tin ký bằng **khoá cũ**. | CRM nhận. | **Chấp nhận** — xử lý bình thường (BR-02). |
 | AC-INT-02-04 | Việc xử lý phía CRM đang lỗi hàng loạt. | Sản phẩm gửi tin. | Vẫn nhận **200 OK** — kênh gửi của sản phẩm **không bị kéo sập** theo (BR-03). |
 
@@ -142,13 +144,12 @@
 | Mã | Given | When | Then |
 |---|---|---|---|
 | AC-INT-02-08 | Sub đang chờ kích hoạt. | Nhận `license.activated`. | `license_mirror.status = Đang hoạt động`; `sub.end_date` ← `expiration_date` **của license** *(không tự tính từ ngày bắt đầu + thời hạn)*; `sub.status = ACTIVE`. |
-| AC-INT-02-09 | License đang hoạt động, gói **có ân hạn**. | Nhận **`license.grace_started`**. | `license_mirror.status = **GRACE (Trong ân hạn)**`. Khách **vẫn dùng đủ tính năng**; `sub` **giữ ACTIVE**. → xuất hiện ở view **Cơ hội doanh thu** (UC-LIC-01) (BR-14). |
-| AC-INT-02-09b | License đang hoạt động, gói **không có ân hạn**. | Nhận **`license.expired`**. | `license_mirror.status = **RESTRICTED (Hạn chế tính năng)**` — xử lý như hết ân hạn, **không** dừng ngay (BR-14). |
-| AC-INT-02-10 | License đang trong ân hạn. | Nhận **`license.grace_expired`**. | `license_mirror.status = **RESTRICTED (Hạn chế tính năng)**` — khách dùng hạn chế trong **30 ngày**. → cơ hội **Gia hạn khẩn**, xếp **trên** "Gia hạn gấp". |
-| AC-INT-02-11 | License đang hạn chế tính năng, hết 30 ngày. | Nhận **`license.suspended`** *(đường tự nhiên, **không** `correlation_id`)*. | `license_mirror.status = Đã ngừng`, nguyên nhân = **hết hạn không gia hạn**. |
-| AC-INT-02-12 | CRM vừa gửi lệnh Tạm dừng *(`subscription.suspended`, `event_id = X`)*. | Nhận **`tenant.suspended`** với `correlation_id = X`. | `license_mirror.status = Đã ngừng`, nguyên nhân = **do CRM ra lệnh**; lưu `last_change_source = command_ack`, `source_command_event_id = X` (BR-12). **Không** phải sự cố. |
-| AC-INT-02-12b | Không có lệnh nào của CRM đang chờ. | Nhận **`tenant.suspended`** với `correlation_id` **không khớp lệnh nào** *(hoặc rỗng)*. | **KHÔNG đổi mirror** (mirror giữ Đang hoạt động); ghi nhận + **cảnh báo** *"sản phẩm tự ngắt dịch vụ mà CRM không ra lệnh"* (BR-12). |
-| AC-INT-02-12c | CRM vừa gửi lệnh Khôi phục. | Nhận **`tenant.reactivated`** có `correlation_id` khớp. | `license_mirror.status = Đang hoạt động` (BR-12). |
+| AC-INT-02-09 | License đang hoạt động, đến hạn (mọi gói EDR đều có ân hạn). | Nhận **`license.expired`** *(EDR gửi để báo VÀO ân hạn)*. | `license_mirror.status = **GRACE (Trong ân hạn)**`. Khách **vẫn dùng đủ tính năng**; `sub` **giữ ACTIVE**. → xuất hiện ở view **Cơ hội doanh thu** (UC-LIC-01) (BR-14). |
+| AC-INT-02-10 | License đang trong ân hạn. | Nhận **`license.grace_expired`**. | `license_mirror.status = **RESTRICTED (Hạn chế tính năng)**` — khách dùng hạn chế trong **30 ngày**; `sub` **giữ ACTIVE** (OQ-INT-08). → cơ hội **Gia hạn khẩn**, xếp **trên** "Gia hạn gấp". |
+| AC-INT-02-11 | License đang hạn chế tính năng, hết 30 ngày (khách không gia hạn). | Nhận **`license.suspended`** *(đường tự nhiên, **không** `correlation_id`)*. | `license_mirror.status = Đã ngừng`; `sub.status = **SUSPENDED**`; nguyên nhân = **hết hạn không gia hạn**, `last_change_source = product_event`. **Hợp lệ, không phải sự cố** (BR-12). |
+| AC-INT-02-12 | CRM vừa gửi lệnh Tạm dừng *(`subscription.suspended`, `event_id = X`)*. | Nhận **`license.suspended`** với `correlation_id = X`. | `license_mirror.status = Đã ngừng`; `sub.status = SUSPENDED`; nguyên nhân = **do CRM ra lệnh**; lưu `last_change_source = command_ack`, `source_command_event_id = X` (BR-12). |
+| AC-INT-02-12b | Không có lệnh Khôi phục nào của CRM đang chờ. | Nhận **`license.reactivated`** với `correlation_id` **không khớp lệnh nào** *(hoặc rỗng)*. | Ghi nhận + **cảnh báo** *"sản phẩm khôi phục dịch vụ mà CRM không ra lệnh"* (BR-12) — Khôi phục chỉ hợp lệ khi do lệnh CRM. |
+| AC-INT-02-12c | CRM vừa gửi lệnh Khôi phục. | Nhận **`license.reactivated`** có `correlation_id` khớp. | `license_mirror.status = Đang hoạt động`; `sub.status = ACTIVE` (BR-12). |
 | AC-INT-02-12d 🆕 | CRM vừa gửi lệnh Thu hồi *(`subscription.terminated`, `event_id = Y`)*. | Nhận **`license.revoked`** với `correlation_id = Y`. | `license_mirror.status = Đã thu hồi (REVOKED)`; `sub.status = REVOKED` (BR-13). *(Phase 1: EDR chưa gửi event này thật — AC mang tính khai báo hợp đồng, chờ EDR triển khai.)* |
 | AC-INT-02-13 | Nhận `license.usage_synced`. | Xử lý. | Cập nhật số đã dùng + thời điểm cập nhật. **KHÔNG** sinh dòng tiến độ trong subscription (BR-10). |
 | AC-INT-02-14 | Sản phẩm báo dùng **63/60**. | Xử lý. | **Vẫn lưu** 63; ghi nhận **bất thường dữ liệu**; cảnh báo vận hành; **không** coi là khách dùng lố (BR-11). |
@@ -179,18 +180,21 @@
 |---|---|---|---|
 | 1.0 | 14/07/2026 | Claude (AI) | Khởi tạo. Trace: PRD v2.6 §6.7.4 (FR-INT-03), §6.7.5 (FR-INT-04), §6.5.3 (FR-LIC-02), §6.5.4 (FR-LIC-03).<br>**Bổ sung / sửa so với tài liệu cũ:** (1) 🔴 **BR-05 chặn sự kiện đến muộn** — chưa từng có, không có nó thì license sai trạng thái vĩnh viễn; (2) ✅ **vòng đời 3 giai đoạn sau hết hạn** qua event riêng `license.grace_started` (không tái dùng `license.expired`); (3) 🆕 `subscription.command_failed` (AF-02); (4) **BR-02** đổi khoá — ràng buộc nghiệp vụ, cơ chế để Dev quyết; (5) **BR-10** usage không sinh dòng tiến độ; (6) ✅ **BR-12** sự kiện cấp tenant đổi mirror **khi là phản hồi có `correlation_id`** — nay **chỉ áp dụng Tạm dừng/Khôi phục**; (7) 🆕 **BR-13** `license.revoked` — Thu hồi tách khỏi cơ chế tenant.*, khai báo chính thức nhưng EDR chưa gửi thật ở Phase 1. |
 | 1.1 | 14/07/2026 | Claude (AI) | **Rà lại lần 2 sau khi BA trả lời Q1/Q2 đầy đủ** — đảo ngược 2 quyết định tưởng đã chốt ở bản 1.0: REVOKED nay có event riêng `license.revoked` (BR-13) thay vì đi qua `tenant.terminated`; GRACE nay có event riêng `license.grace_started` (BR-14) thay vì tái diễn giải `license.expired`. |
+| 1.2 | 16/07/2026 | Claude (AI) | **Đội EDR xác nhận mô hình thật** — sửa BR-12/BR-14 + AC: (1) **`license.expired` = VÀO ân hạn** → mirror GRACE (bỏ `license.grace_started`; mọi gói đều có ân hạn); (2) **bỏ hoàn toàn `tenant.*`** — Tạm dừng/Khôi phục xác nhận qua `license.suspended`/`license.reactivated` mang `correlation_id`; `license.suspended` không có corr_id = tự nhiên (hợp lệ, không phải bất thường); (3) **OQ-INT-08 chốt:** mirror RESTRICTED → `sub` giữ ACTIVE (không sang EXPIRED). |
+| 1.3 | 17/07/2026 | Claude (AI) | Chuẩn hoá §2 sau khi dựng BPMN: **bước 9 nêu rõ việc phân loại theo `event_key`** (nhánh `license.*` → áp dụng → bước 10; `license.usage_synced` → AF-01; `subscription.command_failed` → AF-02); **AF-01 và AF-02 ghi rõ kích hoạt tại bước 9**. Không đổi Business Rule, AC, hay điểm kết thúc. |
+| 1.4 | 17/07/2026 | Claude (AI) | Nhúng **sơ đồ luồng BPMN** vào §2 (`UC-INT-02_bpmn.png`) — đã review đối chiếu §2: đúng và đủ (chuỗi 6 cổng kiểm tra ②→⑧ mỗi cổng rớt EF tương ứng · ⑨ phân loại `event_key` · ⑩⑪ áp dụng · AF-01 usage · AF-02 command_failed · 5 End). Nit nhỏ trên ảnh: nhánh ⑨→⑩ (`license.*`, luồng chính) nên đổi sang **nét liền đen** — dọn khi regen ảnh. |
 
 ### Nghiệp vụ
 - ✅ CRM **quan sát**, không suy diễn — trạng thái license chỉ đổi khi sản phẩm gửi sự kiện
-- ✅ **Không mất tin**: mọi tin lỗi đều giữ lại và xử lý lại được (trừ chữ ký sai — cố ý)
+- ✅ **Không mất tin**: mọi tin **đã xác thực** mà lỗi xử lý đều giữ lại và xử lý lại được *(chữ ký sai thì cố ý KHÔNG lưu — SG-4, chỉ log hạ tầng)*
 - ✅ **Không hỏng dữ liệu**: tin trùng bỏ qua, tin đến muộn không ghi đè ngược
 - ✅ Lỗi phía CRM **không kéo sập** kênh gửi của sản phẩm
-- ✅ **OQ-INT-01 — đã chốt:** `tenant.*` đổi mirror **khi và chỉ khi** là phản hồi có `correlation_id` cho lệnh CRM (BR-12) — nay chỉ áp dụng **Tạm dừng/Khôi phục**. CRM xử lý **xác nhận lệnh của mình**, không "đọc" sự kiện hạ tầng, nên giữ được ranh giới YT-1.
-- ✅ **REVOKED (rà lại):** `license.revoked` → REVOKED khai báo chính thức (BR-13), tách khỏi cơ chế tenant.*; EDR chưa gửi thật ở Phase 1.
-- ✅ **GRACE (rà lại):** `license.grace_started` → GRACE là event riêng (BR-14), không còn tái diễn giải `license.expired`.
-- ✅ **OQ-INT-04 — đã chốt (rà lại 14/07):** envelope ([Phụ lục A §2](_event_catalog.md)) — đã dùng xuyên suốt.
+- ✅ **OQ-INT-01 — đã chốt (EDR xác nhận 16/07):** Tạm dừng/Khôi phục xác nhận qua `license.suspended`/`license.reactivated` mang `correlation_id` (BR-12) — **bỏ hoàn toàn `tenant.*`**. CRM đọc chính event trạng thái license, giữ được ranh giới YT-1; `correlation_id` chỉ ghi nguyên nhân (do lệnh hay tự nhiên).
+- ✅ **REVOKED:** `license.revoked` → REVOKED khai báo chính thức (BR-13); EDR chưa gửi thật ở Phase 1.
+- ✅ **GRACE (EDR xác nhận 16/07):** EDR gửi `license.expired` để báo **vào ân hạn** → GRACE (BR-14); **không dùng `license.grace_started`**. Ví dụ chuẩn NT-5.
+- ✅ **OQ-INT-04 — đã chốt (rà lại 14/07):** metadata ([Phụ lục A §2](_event_catalog.md)) — đã dùng xuyên suốt.
 - ✅ **OQ-INT-05 — đã chốt (rà lại 14/07):** BR-05 + cột `license_mirror.last_event_occurred_at`.
-- ⚠️ **OQ-INT-08** *(🟠)*: `sub.status` có chuyển **EXPIRED** khi license vào *Hạn chế tính năng* không?
+- ✅ **OQ-INT-08 — đã chốt (16/07):** khi mirror = RESTRICTED (*Hạn chế tính năng*), `sub.status` **giữ ACTIVE** (không sang EXPIRED) — sub chưa chết, mức hạn chế phản ánh qua mirror.
 
 ---
 
@@ -219,4 +223,4 @@
 | **Giao diện** | Không có — tính năng ngầm |
 | **Thiết kế kỹ thuật** | Cơ chế nằm ở **TDD M-07** *(chưa viết — việc của dev)*; các điểm bắt buộc giải: §6 |
 | **UC liên quan** | UC-INT-01, UC-INT-05, UC-INT-06, UC-LIC-02, UC-LIC-04, UC-SUB-03 |
-| **Trace PRD** | OneCRM_PRD_v2.6.md §6.7.4, §6.7.5, §6.5.3, §6.5.4 |
+| **Trace PRD** | OneCRM_PRD_v2.7.md §6.7.4, §6.7.5, §6.5.3, §6.5.4 |

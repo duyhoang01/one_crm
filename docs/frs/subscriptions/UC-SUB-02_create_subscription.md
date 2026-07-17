@@ -32,7 +32,7 @@
 | **BR-07** | RESELLER: bắt buộc chọn Đơn vị thụ hưởng và nhập Số license (> 0). Không có Số thiết bị. |
 | **BR-08** | Số license không được vượt quá số license còn lại trong pool tương ứng. **Pool tương ứng được tra theo `packageId`** (pool ghim theo gói, không theo sản phẩm). Hệ thống hiển thị hint "Còn X / Y license khả dụng" ngay sau khi xác định được gói sản phẩm. |
 | **BR-09** | Các field Khách hàng, Loại hợp đồng, Gói sản phẩm, Thời hạn, Ngày hết hạn đều là readonly — tự động điền từ dữ liệu hợp đồng, người dùng không chỉnh sửa. |
-| **BR-10** | Ngày bắt đầu và Ngày hết hạn là **dự kiến** — không phải nguồn sự thật. Sau khi Product Module kích hoạt license, ngày hết hạn thực sẽ được đồng bộ lại qua webhook `license.active`. |
+| **BR-10** | Ngày bắt đầu và Ngày hết hạn là **dự kiến** — không phải nguồn sự thật. Sau khi Product Module kích hoạt license, ngày hết hạn thực sẽ được đồng bộ lại qua webhook `license.activated`. |
 | **BR-11** | **Cấu hình sản phẩm (scope):** sau khi xác định gói, nếu Product Module của sản phẩm khai báo `scope_schema` (PRD §5.3.7), form hiển thị mục "Cấu hình sản phẩm" với các trường do sản phẩm định nghĩa. Với **CMC EDR**: trường **Kiểu tổ chức** (`tenant_mode`) — `MULTI` (Multi organization) hoặc `SINGLE` (Single organization), bắt buộc, mặc định `MULTI`. Scope là cấu hình riêng của từng sub (per-customer), lưu vào `subscription.scope` (jsonb). Sản phẩm không khai báo `scope_schema` → không hiển thị mục này, `scope = null`. |
 
 ---

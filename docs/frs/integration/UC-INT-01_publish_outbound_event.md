@@ -15,7 +15,7 @@
 | **Mô tả** | Khi một thao tác thương mại được chốt trên CRM (xác nhận / tạm dừng / khôi phục / thu hồi / gia hạn subscription, hoặc yêu cầu cập nhật mức dùng), CRM **ghi ý định đó thành sự kiện** và **đẩy sang sản phẩm qua hàng đợi**. CRM **không gọi API sản phẩm**, không chờ sản phẩm trả lời. |
 | **Tác nhân** | System *(không có người dùng trực tiếp)* |
 | **Tiền điều kiện** | Thao tác thương mại đã ghi thành công vào CRM. |
-| **Hậu điều kiện** | (Thành công) Sự kiện đã được đẩy lên hàng đợi, trạng thái **Đã gửi**. (Thất bại) Sau khi hết số lần thử → **Thất bại vĩnh viễn**, hiện ở UC-INT-04 để người vận hành gửi lại. |
+| **Hậu điều kiện** | (Thành công) Sự kiện đã được đẩy lên hàng đợi, trạng thái **Đã gửi**. (Thất bại) Sau khi hết số lần thử → **Đã ngừng tự gửi lại**, hiện ở UC-INT-04 để người vận hành gửi lại. |
 | **Trigger** | UC-SUB-05 / 07 / 08 / 09 / 10 · UC-LIC-03 |
 | **Liên kết** | UC-INT-02 (nhận phản hồi), UC-INT-04 (xem & gửi lại), UC-LIC-04 (cảnh báo khi lệnh không tới nơi), [Phụ lục A §4](_event_catalog.md) |
 
@@ -27,8 +27,8 @@
 | **BR-02** | Việc **đẩy lên hàng đợi** do một tiến trình nền làm **sau đó**, **không** làm trong giao dịch nghiệp vụ. | Nếu đẩy ngay trong giao dịch: hàng đợi chậm → người dùng ngồi chờ; hàng đợi chết → không tạm dừng được subscription. Nghiệp vụ **không được phụ thuộc** vào tình trạng hạ tầng tích hợp. |
 | **BR-03** | **Gửi ít nhất một lần** (at-least-once). Sản phẩm **phải** tự chống trùng theo `event_id`. | Mất lệnh nguy hiểm hơn lặp lệnh: mất lệnh "tạm dừng" = thất thoát doanh thu; lặp lệnh "tạm dừng" = vô hại (sản phẩm bỏ qua lần hai). |
 | **BR-04** | **Giữ đúng thứ tự theo từng subscription.** Các sự kiện của **cùng một** subscription phải được đẩy **tuần tự theo `occurred_at`**. Sự kiện của **các subscription khác nhau** thì đẩy song song thoải mái. | Trạng thái license là **máy trạng thái**: chưa kích hoạt thì không tạm dừng được. Đẩy song song trong cùng một sub → sản phẩm nhận "tạm dừng" trước "khởi tạo" → từ chối lệnh. *(Chốt 13/07/2026.)* |
-| **BR-05** | Mỗi sự kiện mang **envelope chuẩn** ([Phụ lục A §2](_event_catalog.md)): `event_id` · `event_key` · `occurred_at` · `subscription_id` · `product_id` · `correlation_id` · `schema_version`. | `correlation_id` là thứ duy nhất nối **lệnh CRM gửi** với **phản hồi sản phẩm** — không có nó thì không phân biệt được *"license tạm dừng vì ta ra lệnh"* với *"license tạm dừng vì hết hạn"*. |
-| **BR-06** | Thử lại theo **giãn cách tăng dần**, tối đa **10 lần**. Hết số lần → **Thất bại vĩnh viễn** + cảnh báo vận hành. | — |
+| **BR-05** | Mỗi sự kiện mang **metadata chuẩn** ([Phụ lục A §2](_event_catalog.md)): `event_id` · `event_key` · `occurred_at` · `subscription_id` · `product_id` · `correlation_id` · `schema_version`. | `correlation_id` là thứ duy nhất nối **lệnh CRM gửi** với **phản hồi sản phẩm** — không có nó thì không phân biệt được *"license tạm dừng vì ta ra lệnh"* với *"license tạm dừng vì hết hạn"*. |
+| **BR-06** | Thử lại theo **giãn cách tăng dần**, tối đa **10 lần**. Hết số lần → **Đã ngừng tự gửi lại** + cảnh báo vận hành. | — |
 | **BR-07** | **Không tự động gửi lại vô hạn.** Hết số lần thử là **dừng**, chờ người quyết định. | Lệnh không tới nơi có thể do sản phẩm từ chối một cách chính đáng. Gửi lại vô hạn = đấm vào tường. |
 | **BR-08** | **KHÔNG được có giao diện tạo sự kiện thủ công.** | Vi phạm YT-3: đó là **ra lệnh kỹ thuật** cho sản phẩm. CRM chỉ phát hành **ý định thương mại**, sinh ra từ một thao tác nghiệp vụ có thật. |
 | **BR-09** | Sản phẩm khai báo **không hỗ trợ** một loại sự kiện *(vd `usage.force_sync_requested` khi `supports_force_sync = false`)* → **không sinh sự kiện**, không đẩy. | Đẩy lệnh mà sản phẩm không hiểu = rác trong hàng đợi + cảnh báo giả. |
@@ -37,17 +37,19 @@
 
 ## 2. Luồng nghiệp vụ
 
+![UC-INT-01 — Sơ đồ luồng BPMN](../../assets/M-07_integration/UC-INT-01_bpmn.png)
+
 ### 2.1 Luồng chính
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
 | **1** | System | Một thao tác thương mại được chốt *(xác nhận / tạm dừng / khôi phục / thu hồi / gia hạn subscription; hoặc yêu cầu cập nhật mức dùng)*. |
 | **2** | System | **[Gateway — Sản phẩm có hỗ trợ loại sự kiện này?]** Không → **EF-01** (không sinh sự kiện). Có → tiếp bước 3. |
-| **3** | System | **Trong cùng giao dịch với thay đổi nghiệp vụ** (BR-01): ghi sự kiện vào hàng chờ gửi, trạng thái **Chờ gửi**, kèm envelope đầy đủ (BR-05). |
+| **3** | System | **Trong cùng giao dịch với thay đổi nghiệp vụ** (BR-01): ghi sự kiện vào hàng chờ gửi, trạng thái **Chờ gửi**, kèm metadata đầy đủ (BR-05). |
 | **4** | System | Giao dịch nghiệp vụ kết thúc. **Người dùng nhận phản hồi ngay** — không chờ sản phẩm (BR-02). |
 | **5** | System *(tiến trình nền)* | Lấy các sự kiện **Chờ gửi**, giữ đúng thứ tự theo từng subscription (BR-04), đẩy lên hàng đợi. |
 | **6** | System | **[Gateway — Đẩy thành công?]** Có → trạng thái **Đã gửi**, ghi thời điểm. Kết thúc **End 1**.<br>Không → **AF-01** (thử lại). |
-| **7** | Sản phẩm | Nhận sự kiện, tự chống trùng theo `event_id` (BR-03), xử lý bất đồng bộ → phản hồi bằng sự kiện inbound (**UC-INT-02**). |
+| **7** | Sản phẩm | *(Bất đồng bộ — diễn ra **sau End 1**, thuộc phía sản phẩm.)* Nhận sự kiện, tự chống trùng theo `event_id` (BR-03), xử lý → phản hồi bằng sự kiện inbound (**UC-INT-02**). Nếu **đã nhận nhưng không thực thi được** → **AF-03**. |
 
 ### 2.2 Luồng phụ
 
@@ -58,15 +60,15 @@
 | **AF-01a** | System | Chuyển trạng thái **Đang thử lại**, tăng số lần thử, chờ theo giãn cách tăng dần (BR-06). |
 | **AF-01b** | System | Thử đẩy lại. Thành công → **Đã gửi** (**End 1**). Chưa hết 10 lần → lặp lại AF-01a. Hết 10 lần → **AF-02**. |
 
-**[AF-02: Thất bại vĩnh viễn]** — kích hoạt khi hết số lần thử.
+**[AF-02: Đã ngừng tự gửi lại]** — kích hoạt khi hết số lần thử.
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
-| **AF-02a** | System | Trạng thái **Thất bại vĩnh viễn**; ghi lý do lỗi lần cuối. **Dừng, không thử thêm** (BR-07). |
+| **AF-02a** | System | Trạng thái **Đã ngừng tự gửi lại**; ghi lý do lỗi lần cuối. **Dừng, không thử thêm** (BR-07). |
 | **AF-02b** | System | Cảnh báo vận hành; sự kiện hiện ở **UC-INT-04** để người vận hành xem và gửi lại tay. |
 | → | — | Kết thúc **End 2**. ⚠️ **Lệnh chưa tới nơi → sản phẩm vẫn đang làm theo trạng thái cũ** → nguy cơ khách vẫn dùng dịch vụ dù CRM đã ghi nhận dừng. |
 
-**[AF-03: Sản phẩm từ chối lệnh]** — sản phẩm **đã nhận** nhưng **không thực thi được**.
+**[AF-03: Sản phẩm từ chối lệnh]** — kích hoạt tại **bước 7**: sản phẩm **đã nhận** nhưng **không thực thi được**.
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
@@ -83,7 +85,7 @@
 | **EF-01a** | System | **Không sinh sự kiện**, không đẩy (BR-09). Giao diện đã ẩn nút tương ứng từ trước (UC-LIC-03). |
 | → | — | Kết thúc **End 4**. |
 
-**[EF-02: Ghi sự kiện thất bại]** — tại bước 3.
+**[EF-02: Ghi sự kiện thất bại]** — tại **bước 3–4** (khi ghi sự kiện vào hàng chờ, hoặc khi chốt giao dịch).
 
 | Bước | Actor | Hành động / Phản hồi |
 |---|---|---|
@@ -95,7 +97,7 @@
 | End | Mô tả |
 |---|---|
 | **End 1** | Sự kiện đã tới hàng đợi — sản phẩm sẽ xử lý bất đồng bộ. |
-| **End 2** | Thất bại vĩnh viễn — chờ người vận hành gửi lại (UC-INT-04). |
+| **End 2** | Đã ngừng tự gửi lại — chờ người vận hành gửi lại (UC-INT-04). |
 | **End 3** | Sản phẩm từ chối lệnh — có lý do cụ thể. |
 | **End 4** | Sản phẩm không hỗ trợ — không sinh sự kiện. |
 | **End 5** | Huỷ giao dịch — nghiệp vụ không được ghi. |
@@ -135,7 +137,7 @@
 | Mã | Given | When | Then |
 |---|---|---|---|
 | AC-INT-01-08 | Đẩy thất bại 3 lần liên tiếp. | Tiến trình nền chạy. | Trạng thái **Đang thử lại**, số lần thử = 3, chờ theo giãn cách tăng dần (BR-06). |
-| AC-INT-01-09 | Đẩy thất bại **10 lần**. | Tiến trình nền chạy. | Trạng thái **Thất bại vĩnh viễn**; **không thử thêm** (BR-07); hiện ở UC-INT-04 với nút Gửi lại; cảnh báo vận hành. |
+| AC-INT-01-09 | Đẩy thất bại **10 lần**. | Tiến trình nền chạy. | Trạng thái **Đã ngừng tự gửi lại**; **không thử thêm** (BR-07); hiện ở UC-INT-04 với nút Gửi lại; cảnh báo vận hành. |
 | AC-INT-01-10 | Sản phẩm nhận lệnh Tạm dừng nhưng **tenant không tồn tại**. | Sản phẩm gửi `subscription.command_failed`. | Lệnh gốc *(tìm qua `correlation_id`)* đổi thành **"Sản phẩm từ chối"**, hiển thị lý do **"Tenant không tồn tại"** — **không** hiển thị là "chưa tới nơi" (AF-03). |
 
 ### Nhóm 4: Ranh giới
@@ -153,14 +155,16 @@
 
 | Phiên bản | Ngày | Tác giả | Mô tả |
 |---|---|---|---|
-| 1.0 | 14/07/2026 | Claude (AI) | Khởi tạo. Trace: PRD v2.6 §6.7 FR-INT-01, FR-INT-02. Bổ sung so với PRD: **BR-04** (giữ thứ tự theo từng sub — chốt 13/07), **BR-09** (không sinh sự kiện khi sản phẩm không hỗ trợ), **AF-03** (`subscription.command_failed` — sản phẩm từ chối lệnh, [Phụ lục A §4.4](_event_catalog.md)), envelope chuẩn (BR-05). |
+| 1.0 | 14/07/2026 | Claude (AI) | Khởi tạo. Trace: PRD v2.6 §6.7 FR-INT-01, FR-INT-02. Bổ sung so với PRD: **BR-04** (giữ thứ tự theo từng sub — chốt 13/07), **BR-09** (không sinh sự kiện khi sản phẩm không hỗ trợ), **AF-03** (`subscription.command_failed` — sản phẩm từ chối lệnh, [Phụ lục A §4.4](_event_catalog.md)), metadata chuẩn (BR-05). |
+| 1.1 | 17/07/2026 | Claude (AI) | Chuẩn hoá §2 sau khi dựng BPMN: bước 7 nêu rõ **bất đồng bộ, sau End 1**, thuộc phía sản phẩm, và là nơi rẽ **AF-03**; AF-03 ghi rõ **kích hoạt tại bước 7**; EF-02 mở rộng phạm vi kích hoạt thành **bước 3–4** (ghi sự kiện hoặc chốt giao dịch). Không đổi Business Rule, AC, hay điểm kết thúc. |
+| 1.2 | 17/07/2026 | Claude (AI) | Nhúng **sơ đồ luồng BPMN** vào §2 (`UC-INT-01_bpmn.png`) — đã review đối chiếu §2: đúng và đủ (Start · bước 1–6 · AF-01 thử lại có đủ nhánh "Có, đẩy được"→End 1 / "chưa <10 lần" lặp / "đủ 10 lần"→AF-02 · AF-03 sản phẩm từ chối · EF-01/EF-02 · 5 End khớp badge). Bước 6 phía Sản phẩm ghi rõ "(bất đồng bộ)". |
 
 ### Nghiệp vụ
 - ✅ Ghi sự kiện **cùng giao dịch** — không bao giờ "ghi nghiệp vụ nhưng mất lệnh"
 - ✅ Nghiệp vụ **không phụ thuộc** tình trạng hạ tầng tích hợp (hàng đợi chết vẫn tạm dừng được subscription)
 - ✅ Thứ tự **theo từng subscription**, không chặn toàn cục
 - ✅ **Không có** đường tạo/sửa sự kiện thủ công (YT-3)
-- ✅ **OQ-INT-04 — đã chốt (rà lại 14/07):** envelope chuẩn ([Phụ lục A §2](_event_catalog.md)) — đã dùng làm BR-05.
+- ✅ **OQ-INT-04 — đã chốt (rà lại 14/07):** metadata chuẩn ([Phụ lục A §2](_event_catalog.md)) — đã dùng làm BR-05.
 
 ---
 
@@ -176,10 +180,10 @@
 | 2 | **Tiến trình đẩy**: quét bảng theo chu kỳ hay hàng đợi nội bộ; kích thước lô; điều gì xảy ra khi worker **chết giữa lô** (lấy lại được, không gửi trùng ngoài mức "ít nhất một lần"). | BR-02, BR-03 |
 | 3 | **Giữ thứ tự theo từng subscription** khi **nhiều worker chạy song song**: khoá theo `subscription_id`? phân mảnh? — *ràng buộc là BR-04, cách làm là TDD*. | BR-04 |
 | 4 | **Topology hàng đợi**: exchange / queue / định tuyến theo `product_id`; cô lập sự cố một sản phẩm không kéo sập sản phẩm khác. | BR-02 |
-| 5 | **Công thức giãn cách retry** (giá trị cụ thể) + trần **10 lần** + tiêu chí chuyển **Thất bại vĩnh viễn**. | BR-06, BR-07 |
-| 6 | **Sinh & truyền envelope**: cấp `event_id`, `occurred_at`, `correlation_id` ở đâu trong luồng ghi. | BR-05 |
+| 5 | **Công thức giãn cách retry** (giá trị cụ thể) + trần **10 lần** + tiêu chí chuyển **Đã ngừng tự gửi lại**. | BR-06, BR-07 |
+| 6 | **Sinh & truyền metadata**: cấp `event_id`, `occurred_at`, `correlation_id` ở đâu trong luồng ghi. | BR-05 |
 | 7 | **Đối chiếu `correlation_id`** khi nhận `subscription.command_failed` để tìm đúng lệnh gốc. | AF-03 |
-| 8 | **Cảnh báo vận hành** khi có lệnh Thất bại vĩnh viễn — kênh nào, ngưỡng nào. | AF-02b |
+| 8 | **Cảnh báo vận hành** khi có lệnh Đã ngừng tự gửi lại — kênh nào, ngưỡng nào. | AF-02b |
 
 ---
 
@@ -190,4 +194,4 @@
 | **Giao diện** | Không có — tính năng ngầm |
 | **Thiết kế kỹ thuật** | Cơ chế nằm ở **TDD M-07** *(chưa viết — việc của dev)*; các điểm bắt buộc giải: §6 |
 | **UC liên quan** | UC-INT-02, UC-INT-04, UC-INT-06, UC-LIC-03, UC-LIC-04, UC-SUB-05/07/08/09/10 |
-| **Trace PRD** | OneCRM_PRD_v2.6.md §6.7.2 (FR-INT-01), §6.7.3 (FR-INT-02) |
+| **Trace PRD** | OneCRM_PRD_v2.7.md §6.7.2 (FR-INT-01), §6.7.3 (FR-INT-02) |

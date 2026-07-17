@@ -99,6 +99,11 @@ th:hover .con-sort-icon{color:var(--text-secondary);}
 .search-input{width:100%;padding:9px 12px 9px 36px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:14px;background:white;transition:border .15s;}
 .search-input:focus{border-color:var(--border-active);box-shadow:0 0 0 3px rgba(2,104,197,.1);}.search-input::placeholder{color:var(--gray-400);}
 .filter-select{padding:9px 32px 9px 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:14px;background:white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;cursor:pointer;}
+/* Filter tab Sự kiện gửi đi / nhận về: đồng đều độ rộng để 2 tab khớp nhau (scoped, không ảnh hưởng module khác) */
+#int-pane-out .filter-select,#int-pane-in .filter-select{min-width:180px;}
+/* 2 bảng Sự kiện gửi đi / nhận về là gương của nhau → cùng độ rộng cột cố định (không lệch giữa 2 tab) */
+.int-evt table{table-layout:fixed;width:100%;}
+.int-evt td{overflow-wrap:anywhere;vertical-align:top;}
 .table-wrap{overflow-x:auto;border-radius:var(--r-md);border:1px solid var(--border);}
 table{width:100%;border-collapse:collapse;background:white;}
 thead th{padding:11px 16px;text-align:left;font-size:12px;font-weight:600;color:var(--text-secondary);background:rgba(39,39,42,.04);border-bottom:1px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:.02em;}
@@ -306,6 +311,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
 .sub-mirror-badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;}
 .sub-mirror-active{background:#ECFDF5;color:#059669;}
 .sub-mirror-grace{background:#FFF7ED;color:#C2410C;border-color:#FED7AA;}
+.sub-mirror-restricted{background:#FEF3C7;color:#B45309;}
 .sub-mirror-pending{background:#FFFBEB;color:#D97706;}
 .sub-mirror-suspended{background:#FFF7ED;color:#EA580C;}
 .sub-mirror-expired,.sub-mirror-revoked{background:#FEF2F2;color:var(--red);}
@@ -829,7 +835,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
                 <option value="ACTIVE">Active</option>
                 <option value="PROVISIONING">Provisioning</option>
                 <option value="PENDING">Pending</option>
-                <option value="GRACE">Trong gia hạn</option>
+                <option value="GRACE">Trong ân hạn</option>
                 <option value="SUSPENDED">Suspended</option>
                 <option value="EXPIRED">Expired</option>
                 <option value="REVOKED">Revoked</option>
@@ -1706,7 +1712,7 @@ const customers=[
     ],
     audit:[
       {time:'22/06/2026 08:30',source:'WEBHOOK',actor:'System',action:'Cập nhật mức sử dụng',detail:'145/200 seat',result:'SUCCESS'},
-      {time:'15/06/2026 09:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · EDR Enterprise 200 seat',result:'SUCCESS'},
+      {time:'15/06/2026 09:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.activated event · EDR Enterprise 200 seat',result:'SUCCESS'},
       {time:'15/05/2026 09:20',source:'UI',actor:'Sales A',action:'Tạo Customer',detail:'type: B2B · tax: 0101247332',result:'SUCCESS'},
     ]},
   {id:'cust-002',name:'CMC Telecom',type:'Reseller',tax:'0301234567',email:'partner@cmctelecom.vn',phone:'024 3866 1234',industry:'Viễn thông',address:'Số 99 Phổ Quang, Phường 2, Quận Phú Nhuận, TP HCM',parentId:'cust-026',deletedAt:null,createdAt:'01/05/2026',createdBy:'Sales A',
@@ -1869,7 +1875,7 @@ function onAuditSearch(){
 function renderContractsTab(c){
   const el=document.getElementById('tab-contracts');if(!el||!c)return;
   const stMap={ACTIVE:'badge-active',PENDING_PROVISION:'badge-pending',GRACE:'badge-grace',SUSPENDED:'badge-suspended',REVOKED:'badge-deleted',EXPIRED:'badge-deleted'};
-  const stLbl={ACTIVE:'Đang hoạt động',PENDING_PROVISION:'Đang triển khai',GRACE:'Trong gia hạn',SUSPENDED:'Tạm dừng',REVOKED:'Đã thu hồi',EXPIRED:'Hết hạn'};
+  const stLbl={ACTIVE:'Đang hoạt động',PENDING_PROVISION:'Đang triển khai',GRACE:'Trong ân hạn',SUSPENDED:'Tạm dừng',REVOKED:'Đã thu hồi',EXPIRED:'Hết hạn'};
   const activeCtCount=c.contracts.filter(ct=>(ct.status||'ACTIVE')==='ACTIVE').length;
   const activeSubCount=c.subs.filter(s=>s.status==='ACTIVE').length;
   let graceTotal=c.subs.filter(s=>s.status==='GRACE').length,susTotal=0;
@@ -1883,7 +1889,7 @@ function renderContractsTab(c){
   const ALLOC_THRESHOLD=10;
   const STATUS_ORDER=[{k:'ACTIVE',l:'active'},{k:'PENDING_PROVISION',l:'pending'},{k:'GRACE',l:'grace'},{k:'SUSPENDED',l:'sus'},{k:'REVOKED',l:'revoked'},{k:'EXPIRED',l:'expired'}];
 
-  // Derive startDate for an ACTIVE sub from timeline (license.active event)
+  // Derive startDate for an ACTIVE sub from timeline (license.activated event)
   const getActivatedDate=()=>{
     const evt=c.timeline.find(t=>(t.cls==='tl-dot-green'||deriveSev(t)==='SUCCESS')&&(t.title||'').toLowerCase().includes('active'));
     return evt?evt.time.split(' ')[0]:c.createdAt;
@@ -1971,7 +1977,7 @@ function openSubscriptionListAF02(custId,ctCode){
   const c=customers.find(x=>x.id===custId);if(!c)return;
   const ct=c.contracts.find(x=>x.code===ctCode);if(!ct)return;
   const stMap={ACTIVE:['#ECFDF5','#059669'],GRACE:['#FFFBEB','#D97706'],SUSPENDED:['#FFF7ED','#EA580C'],REVOKED:['#FEF2F2','#FB2C36']};
-  const stLbl={ACTIVE:'Đang hoạt động',GRACE:'Trong gia hạn',SUSPENDED:'Tạm dừng',REVOKED:'Đã thu hồi'};
+  const stLbl={ACTIVE:'Đang hoạt động',GRACE:'Trong ân hạn',SUSPENDED:'Tạm dừng',REVOKED:'Đã thu hồi'};
   let rows=[];
   (ct.pools||[]).forEach(p=>p.allocations.forEach(al=>rows.push({name:al.name,product:p.product,seats:al.seats,status:al.status})));
   rows.sort((a,b)=>b.seats-a.seats);
@@ -2274,7 +2280,7 @@ let conContracts = [
        audit:[
          {time:'2026-07-08 08:00',source:'WEBHOOK',actor:'System',action:'Usage snapshot cập nhật',detail:'seats_used: 486 / 500 (97.2%)',result:'SUCCESS'},
          {time:'2025-12-10 14:00',source:'UI',actor:'Sales A',action:'Cập nhật Subscription',detail:'endDate: 2026-01-19 · phụ lục gia hạn +30 ngày',result:'SUCCESS'},
-         {time:'2025-01-20 08:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · 500 seats',result:'SUCCESS'},
+         {time:'2025-01-20 08:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.activated event · 500 seats',result:'SUCCESS'},
          {time:'2025-01-15 10:00',source:'UI',actor:'Sales A',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · CMC EDR 500 seats',result:'SUCCESS'},
        ]},
     ]
@@ -2299,7 +2305,7 @@ let conContracts = [
          {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales B',title:'Subscription được tạo',time:'2025-03-15 09:00',detail:'HĐ: HD-CMC-2025-002 · CMC EDR 80 license · Công ty TNHH Văn Phòng'},
        ],
        audit:[
-         {time:'2025-03-15 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · 80 license',result:'SUCCESS'},
+         {time:'2025-03-15 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.activated event · 80 license',result:'SUCCESS'},
          {time:'2025-03-15 09:00',source:'UI',actor:'Sales B',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · CMC EDR 80 license',result:'SUCCESS'},
        ]},
       {id:'SUB-2026-003',contractId:'con-002',beneficiaryId:'B002',beneficiaryName:'Trường ĐH Kinh Tế HCM',
@@ -2312,7 +2318,7 @@ let conContracts = [
          {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales B',title:'Subscription được tạo',time:'2025-04-01 08:00',detail:'HĐ: HD-CMC-2025-002 · CMC EDR 60 license · Trường ĐH Kinh Tế HCM'},
        ],
        audit:[
-         {time:'2025-04-01 09:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · 60 license',result:'SUCCESS'},
+         {time:'2025-04-01 09:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.activated event · 60 license',result:'SUCCESS'},
          {time:'2025-04-01 08:00',source:'UI',actor:'Sales B',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · CMC EDR 60 license',result:'SUCCESS'},
        ]},
     ]
@@ -2341,7 +2347,7 @@ let conContracts = [
        audit:[
          {time:'2025-11-15 14:00',source:'UI',actor:'Nguyễn Manager',action:'Thu hồi Subscription',detail:'Lý do: vi phạm điều khoản · 200 seats bị revoke · license.revoke event published',result:'SUCCESS'},
          {time:'2025-11-10 10:00',source:'UI',actor:'Sales A',action:'Ghi nhận vi phạm',detail:'KH triển khai trên 312 endpoints thay vì 200 · đề xuất revoke',result:'SUCCESS'},
-         {time:'2025-09-01 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · EDR Standard 200 seat',result:'SUCCESS'},
+         {time:'2025-09-01 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.activated event · EDR Standard 200 seat',result:'SUCCESS'},
          {time:'2025-09-01 09:00',source:'UI',actor:'Sales A',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · EDR Standard 200 seat',result:'SUCCESS'},
        ]},
       {id:'SUB-2026-004',contractId:'con-003',beneficiaryId:null,beneficiaryName:null,
@@ -2359,7 +2365,7 @@ let conContracts = [
        audit:[
          {time:'2025-08-14 23:59',source:'WEBHOOK',actor:'System',action:'Sub chuyển EXPIRED',detail:'license.expired event · 1000 seats',result:'SUCCESS'},
          {time:'2025-08-07 09:00',source:'SYSTEM',actor:'System',action:'Alert sắp hết hạn',detail:'7 ngày còn lại · email gửi ops@cmc.vn',result:'SUCCESS'},
-         {time:'2025-02-15 09:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · CMC EPP 1000 seats',result:'SUCCESS'},
+         {time:'2025-02-15 09:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.activated event · CMC EPP 1000 seats',result:'SUCCESS'},
          {time:'2025-02-10 15:00',source:'UI',actor:'Sales A',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · CMC EPP 1000 seats',result:'SUCCESS'},
        ]},
     ]
@@ -2385,7 +2391,7 @@ let conContracts = [
          {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales C',title:'Subscription được tạo',time:'2025-05-01 09:00',detail:'HĐ: HD-CMC-2025-004 · CA Organization 120 license · Mekong Foods'},
        ],
        audit:[
-         {time:'2025-05-01 10:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · CA Organization 120 license',result:'SUCCESS'},
+         {time:'2025-05-01 10:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.activated event · CA Organization 120 license',result:'SUCCESS'},
          {time:'2025-05-01 09:00',source:'UI',actor:'Sales C',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · CA Organization 120 license',result:'SUCCESS'},
        ]},
       {id:'SUB-2026-006',contractId:'con-004',beneficiaryId:'B004',beneficiaryName:'Nam Long Group',
@@ -2425,7 +2431,7 @@ let conContracts = [
          {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales B',title:'Subscription được tạo',time:'2026-04-03 11:00',detail:'HĐ: HD-CMC-2026-001 · EDR Enterprise 500 seat'},
        ],
        audit:[
-         {time:'2026-04-10 09:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · EDR Enterprise 500 seat',result:'SUCCESS'},
+         {time:'2026-04-10 09:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.activated event · EDR Enterprise 500 seat',result:'SUCCESS'},
          {time:'2026-04-03 11:00',source:'UI',actor:'Sales B',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · EDR Enterprise 500 seat',result:'SUCCESS'},
        ]},
     ]
@@ -2451,7 +2457,7 @@ let conContracts = [
          {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales A',title:'Subscription được tạo',time:'2026-06-01 09:30',detail:'HĐ: HD-CMC-2026-002 · EDR Standard 50 seat'},
        ],
        audit:[
-         {time:'2026-06-05 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · 50 seat',result:'SUCCESS'},
+         {time:'2026-06-05 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.activated event · 50 seat',result:'SUCCESS'},
          {time:'2026-06-01 09:30',source:'UI',actor:'Sales A',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · EDR Standard 50 seat',result:'SUCCESS'},
        ]},
     ]
@@ -2503,7 +2509,7 @@ let conContracts = [
        ],
        audit:[
          {time:'2026-06-12 00:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển SUSPENDED',detail:'license.suspended event · payment overdue',result:'SUCCESS'},
-         {time:'2026-04-15 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event',result:'SUCCESS'},
+         {time:'2026-04-15 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.activated event',result:'SUCCESS'},
          {time:'2026-04-12 11:30',source:'UI',actor:'Sales A',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · EDR Standard 100 seat',result:'SUCCESS'},
        ]},
     ]
@@ -2529,7 +2535,7 @@ let conContracts = [
          {icon:'🔑',cls:'tl-dot-blue',source:'UI',actor:'Sales B',title:'Subscription được tạo',time:'2026-03-20 09:00',detail:'HĐ: HD-CMC-2026-005 · EDR Standard 150 license · Alpha Technology JSC'},
        ],
        audit:[
-         {time:'2026-03-20 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · 150 license',result:'SUCCESS'},
+         {time:'2026-03-20 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.activated event · 150 license',result:'SUCCESS'},
          {time:'2026-03-20 09:00',source:'UI',actor:'Sales B',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · EDR Standard 150 license',result:'SUCCESS'},
        ]},
       {id:'SUB-2026-012',contractId:'con-009',beneficiaryId:'B006',beneficiaryName:'Beta Solutions Corp',
@@ -2545,7 +2551,7 @@ let conContracts = [
        ],
        audit:[
          {time:'2026-05-15 09:00',source:'UI',actor:'Nguyễn Manager',action:'Thu hồi Subscription',detail:'Lý do: Vi phạm điều khoản sử dụng',result:'SUCCESS'},
-         {time:'2026-04-01 11:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · 80 license',result:'SUCCESS'},
+         {time:'2026-04-01 11:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.activated event · 80 license',result:'SUCCESS'},
          {time:'2026-04-01 10:00',source:'UI',actor:'Sales B',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · EDR Standard 80 license',result:'SUCCESS'},
        ]},
     ]
@@ -2587,7 +2593,7 @@ let conContracts = [
          {icon:'🔄',cls:'tl-dot-blue',source:'UI',actor:'Sales B',title:'Subscription gia hạn được tạo',time:'2027-03-01 09:00',detail:'HĐ: HD-CMC-2026-006 · EDR Enterprise 300 seat · predecessor: SUB-2026-013'},
        ],
        audit:[
-         {time:'2027-03-21 09:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · gia hạn lần 2 · 300 seat',result:'SUCCESS'},
+         {time:'2027-03-21 09:30',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.activated event · gia hạn lần 2 · 300 seat',result:'SUCCESS'},
          {time:'2027-03-01 09:00',source:'UI',actor:'Sales B',action:'Tạo Subscription (Gia hạn)',detail:'status: DRAFT · predecessor: SUB-2026-013 · EDR Enterprise 300 seat',result:'SUCCESS'},
        ]},
     ]
@@ -2613,7 +2619,7 @@ let conContracts = [
        ],
        audit:[
          {time:'2026-08-24 23:59',source:'WEBHOOK',actor:'System',action:'Sub chuyển EXPIRED',detail:'license.expired event · AV Business 80 license',result:'SUCCESS'},
-         {time:'2026-02-25 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event · 80 license',result:'SUCCESS'},
+         {time:'2026-02-25 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.activated event · 80 license',result:'SUCCESS'},
          {time:'2026-02-25 09:00',source:'UI',actor:'Sales A',action:'Tạo Subscription',detail:'status: PENDING_PROVISION · AV Business 80 license',result:'SUCCESS'},
        ]},
     ]
@@ -3713,7 +3719,8 @@ function subMirrorBadge(status){
   if(!status||status==='N/A')return`<span class="sub-mirror-badge sub-mirror-na">—</span>`;
   const map={
     ACTIVE:{cls:'sub-mirror-active',label:'Active'},
-    GRACE:{cls:'sub-mirror-grace',label:'Trong gia hạn'},
+    GRACE:{cls:'sub-mirror-grace',label:'Trong ân hạn'},
+    RESTRICTED:{cls:'sub-mirror-restricted',label:'Hạn chế tính năng'},
     PENDING:{cls:'sub-mirror-pending',label:'Pending'},
     PROVISIONING:{cls:'sub-mirror-provisioning',label:'Provisioning'},
     SUSPENDED:{cls:'sub-mirror-suspended',label:'Suspended'},
@@ -5688,7 +5695,7 @@ function licSeedData(){
     audit:[{time:'2026-07-10 00:05',source:'WEBHOOK',actor:'System',action:'Cập nhật license mirror',detail:'status: ACTIVE → EXPIRED',result:'SUCCESS'}],
   });
   // Case bổ sung 2+3 — chuỗi gia hạn: predecessor RENEWED + successor ACTIVE nhưng mirror còn PENDING
-  // (§5.5.1 — mismatch TẠM THỜI ĐƯỢC CHẤP NHẬN, không alert cho tới khi webhook license.active về)
+  // (§5.5.1 — mismatch TẠM THỜI ĐƯỢC CHẤP NHẬN, không alert cho tới khi webhook license.activated về)
   conContracts.push({
     id:'con-013',code:'HD-CMC-2026-009',
     customerId:'cust-023',customerName:'Bệnh viện Bạch Mai',customerType:'B2B',
@@ -5713,7 +5720,7 @@ function licSeedData(){
        licMirrorStatus:'PENDING',licMirrorExpiry:null,lastSync:'Chưa đồng bộ',lastSyncMins:null,
        renewalPending:true,   // §5.5.1 — loại trừ khỏi cảnh báo mismatch
        createdBy:'Sales B',createdAt:'2026-07-13T09:00:00',
-       timeline:[{icon:'📤',cls:'tl-dot-gray',source:'SYSTEM',actor:'System',title:'Đã publish subscription.renewed',time:'2026-07-13 09:01',detail:'Chờ product push license.active'}],
+       timeline:[{icon:'📤',cls:'tl-dot-gray',source:'SYSTEM',actor:'System',title:'Đã publish subscription.renewed',time:'2026-07-13 09:01',detail:'Chờ product push license.activated'}],
        audit:[{time:'2026-07-13 09:00',source:'UI',actor:'Sales B',action:'Tạo Subscription (Gia hạn)',detail:'status: ACTIVE · predecessor: SUB-2026-018',result:'SUCCESS'}]},
     ],
   });
@@ -5741,7 +5748,7 @@ function licSeedData(){
        ],
        createdBy:'Sales B',createdAt:'2026-04-05T09:30:00',
        timeline:[{icon:'✅',cls:'tl-dot-green',source:'WEBHOOK',actor:'System',title:'License đã active',time:'2026-04-10 10:00',detail:'C-Shield Enterprise · 500 instance'}],
-       audit:[{time:'2026-04-10 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.active event',result:'SUCCESS'}]},
+       audit:[{time:'2026-04-10 10:00',source:'WEBHOOK',actor:'System',action:'Sub chuyển ACTIVE',detail:'license.activated event',result:'SUCCESS'}]},
     ],
   });
 
@@ -5900,7 +5907,7 @@ function licIsOnPrem(sub){return sub.deploymentMode==='ON_PREM';}
 function licProduct(pid){return CAT_PRODUCTS.find(p=>p.id===pid)||null;}
 function licProductName(pid){return licProduct(pid)?.name||pid||'—';}
 // BR-01.1 — display name tra từ PRODUCT_MODULE_CONFIG.statusMap (raw → display), fallback về nhãn core
-const LIC_STATUS_FALLBACK={ACTIVE:'Active',PROVISIONING:'Provisioning',PENDING:'Pending',GRACE:'Trong gia hạn',SUSPENDED:'Suspended',EXPIRED:'Expired',REVOKED:'Revoked'};
+const LIC_STATUS_FALLBACK={ACTIVE:'Active',PROVISIONING:'Provisioning',PENDING:'Pending',GRACE:'Trong ân hạn',RESTRICTED:'Hạn chế tính năng',SUSPENDED:'Suspended',EXPIRED:'Expired',REVOKED:'Revoked'};
 function licStatusDisplay(sub){
   const raw=sub.licMirrorStatus;
   const m=(licProduct(sub.productId)?.statusMap||[]).find(x=>x.raw.toLowerCase()===String(raw).toLowerCase());
@@ -6749,7 +6756,7 @@ const INT_CAPS={
 function intCan(cap){return !!currentUser&&(INT_CAPS[currentUser.role]||[]).includes(cap);}
 
 /* ── DỮ LIỆU ────────────────────────────────────────────────────
-   Tên sự kiện lấy đúng theo docs/prd/inbound_outbound_concept.md.
+   Tên sự kiện lấy đúng theo docs/frs/integration/_event_catalog.md (EDR xác nhận 16/07).
    Hiển thị cho người dùng bằng TÊN NGHIỆP VỤ, không phải mã kỹ thuật. */
 const INT_OUT_LABEL={
   'subscription.submitted':'Yêu cầu khởi tạo license',
@@ -6763,15 +6770,14 @@ const INT_IN_LABEL={
   'license.pending':'Đã tiếp nhận yêu cầu',
   'license.provisioning':'Đang triển khai license',
   'license.activated':'License đã kích hoạt',
-  'license.grace_started':'License bắt đầu ân hạn',
-  'license.suspended':'License đã tạm dừng',
-  'license.expired':'License đã hết hạn',
-  'license.grace_expired':'Hết ân hạn — hạn chế tính năng',
+  'license.expiring_soon':'License sắp hết hạn',
+  'license.expired':'License vào ân hạn (khách vẫn dùng đủ)',
+  'license.grace_expired':'Hết ân hạn — chuyển sang hạn chế tính năng',
+  'license.suspended':'License đã ngừng',
+  'license.reactivated':'License đã khôi phục',
   'license.revoked':'License đã bị thu hồi',
   'license.renewed':'License cũ chuyển sang đã gia hạn',
   'license.usage_synced':'Báo cáo mức sử dụng',
-  'tenant.suspended':'Đã tạm dừng hệ thống khách hàng',
-  'tenant.reactivated':'Đã khôi phục hệ thống khách hàng',
   'subscription.provisioning.done':'Triển khai hoàn tất',
   'subscription.provisioning.failed':'Triển khai thất bại',
 };
@@ -6804,7 +6810,7 @@ function intSeed(){
      3 lệnh tạm dừng thất bại vĩnh viễn → đúng gốc rễ của banner
      "CMC EDR không thực thi lệnh từ CRM" ở màn License & Usage. */
   ['SUB-2026-010','SUB-D12','SUB-D06'].forEach((id,i)=>
-    out(id,'subscription.suspended','DEAD_LETTER',135+i*40,10,'Không kết nối được tới hàng đợi của CMC EDR (hết số lần thử)'));
+    out(id,'subscription.suspended','DEAD_LETTER',135+i*40,10,'Không kết nối được tới hàng đợi của CMC EDR'));
 
   /* ── KỊCH BẢN 2: CMC EDR — IM LẶNG (không nhận được gì) ──
      Webhook cuối cùng nhận cách đây 31 giờ → nghi sự cố phía sản phẩm. */
@@ -6831,22 +6837,22 @@ function intSeed(){
   inn('SUB-2026-006','license.provisioning','PROCESSED',180);
   inn(null,'license.activated','FAILED',95,{productId:'CA',failStage:'CORRELATION',
       failReason:'Không tìm thấy subscription khớp mã tham chiếu "TENANT-XX-999"'});           // orphan
-  inn('SUB-2026-005','license.usage_synced','FAILED',150,{signatureOk:false,failStage:'SIGNATURE',
-      failReason:'Chữ ký không hợp lệ — nguồn gửi không xác thực được'});                      // chữ ký sai
-  inn('SUB-2026-011','license.grace_started','PROCESSED',66*60);                              // rà lại 14/07: event chính thức → áp dụng bình thường, mirror = GRACE
+  // SG-4 (16/07): bỏ ca "chữ ký sai" — tin sai chữ ký bị Receiver trả 4xx, KHÔNG ghi inbox (chỉ log hạ tầng), nên không có dòng nào ở đây.
+  inn('SUB-2026-011','license.expired','PROCESSED',66*60);                                    // EDR xác nhận 16/07: license.expired = VÀO ân hạn → mirror GRACE, khách vẫn dùng đủ
+  inn('SUB-2026-011','license.grace_expired','PROCESSED',20*60);                              // hết ân hạn → mirror RESTRICTED (hạn chế tính năng 30 ngày), sub giữ ACTIVE
   inn('SUB-2026-006','license.tier_upgraded','PROCESSED',20);                                 // ví dụ: event CRM CHƯA khai báo → "loại sự kiện lạ", vẫn ghi nhận không áp dụng (EF-03)
-  inn('SUB-2026-020','license.usage_synced','RETRYING',40,{failStage:'MAPPING',failReason:'Tạm thời không đọc được dữ liệu — đang thử lại (2/5)'});
+  inn('SUB-2026-020','license.usage_synced','RETRYING',40,{failStage:'MAPPING',failReason:'Tạm thời không đọc được dữ liệu'});
 
   /* ── KỊCH BẢN 5: CMC CA — VỪA LỖI GỬI ĐI VỪA LỖI NHẬN VỀ ──
-     CA đã có sẵn lỗi nhận về (kịch bản lẻ ở trên: 1 tin lỗi tương quan + 1 tin chữ ký sai).
+     CA đã có sẵn lỗi nhận về (kịch bản lẻ ở trên: 1 tin lỗi tương quan / orphan).
      Thêm 1 lệnh gửi đi thất bại vĩnh viễn → minh hoạ đúng ca "1 sản phẩm dính cả 2 loại lỗi cùng lúc". */
-  out('SUB-2026-005','usage.force_sync_requested','DEAD_LETTER',300,10,'Không kết nối được tới hàng đợi của CMC CA (hết số lần thử)');
+  out('SUB-2026-005','usage.force_sync_requested','DEAD_LETTER',300,10,'Không kết nối được tới hàng đợi của CMC CA');
 
   /* Sự kiện gửi đi bình thường */
   out('SUB-2026-019','subscription.renewed','PUBLISHED',60,1);
   out('SUB-2026-016','usage.force_sync_requested','PUBLISHED',45,1);
   out('SUB-2026-009','subscription.submitted','PUBLISHED',20*24*60,1);   // EDR: lệnh gửi đi vẫn tới nơi — nhưng sản phẩm không báo về gì
-  out('SUB-2026-005','subscription.suspended','RETRYING',25,3,'Hàng đợi của CMC CA chưa phản hồi — đang thử lại (3/10)');
+  out('SUB-2026-005','subscription.suspended','RETRYING',25,3,'Hàng đợi của CMC CA chưa phản hồi');
   out('SUB-2026-007','usage.force_sync_requested','PENDING',2,0);
 }
 
@@ -6856,29 +6862,21 @@ function intSeed(){
 function intProductHealth(pid){
   const outs=INT_OUTBOX.filter(e=>e.productId===pid);
   const ins=INT_INBOX.filter(e=>e.productId===pid);
-  const retryOut=outs.filter(e=>e.status==='RETRYING').length;   // hàng đợi HIỆN TẠI — không giới hạn thời gian, như "Chờ gửi"
-  const pending=outs.filter(e=>e.status==='PENDING').length;      // hàng đợi HIỆN TẠI — không giới hạn thời gian
-  // rà lại 15/07: "Thất bại vĩnh viễn" và "Lỗi tồn đọng" tính tử/mẫu CÙNG một cửa sổ 7 ngày gần nhất
-  // (không phải all-time) — tránh tỷ lệ bị "pha loãng" khi OUTBOX_EVENT/WEBHOOK_INBOX tích luỹ append-only
-  // nhiều năm. Đánh đổi: một lệnh/tin kẹt lâu hơn 7 ngày sẽ không còn tính vào 2 số này — nhưng vẫn
-  // LUÔN hiển thị đầy đủ, không bị ẩn, ở UC-INT-04/UC-INT-05 (2 màn đó không lọc theo tuổi với tin chưa xử lý xong).
-  const WINDOW_MIN=7*1440;
-  const outs7=outs.filter(e=>e.ageMin<=WINDOW_MIN);
-  const ins7=ins.filter(e=>e.ageMin<=WINDOW_MIN);
-  const dead=outs7.filter(e=>e.status==='DEAD_LETTER').length;
-  const deadRate=outs7.length?Math.round(dead/outs7.length*100):0;
-  const published=outs7.filter(e=>e.status==='PUBLISHED').length;   // "Đã gửi thành công" — cùng tập outs7 với dead/outTotal, đảm bảo cộng khớp
-  const failed=ins7.filter(e=>e.status==='FAILED').length;
-  const failRate=ins7.length?Math.round(failed/ins7.length*100):0;
-  const in24=ins.filter(e=>e.ageMin<=1440).length;
-  const badSig=ins.filter(e=>e.signatureOk===false).length;   // tín hiệu bảo mật — không giới hạn thời gian, không có ngưỡng đám đông
+  // Rà lại 16/07 (PO): chỉ giữ số HÀNH ĐỘNG ĐƯỢC — hàng đợi hiện tại + việc chưa xử lý xong + im lặng.
+  // Đã BỎ throughput ("đã gửi thành công", "nhận 24h") và các % (đánh lừa ở mẫu số nhỏ). Lợi kép:
+  // vừa gọn màn, vừa xoá các phép COUNT/MAX all-time trên bảng append-only không biên (WEBHOOK_INBOX ~1,5tr/năm).
+  // Thực hệ thống: dead/failed = COUNT theo status (rẻ, có index); lastIn ĐỌC từ 'last_inbound_at' duy trì lúc ghi
+  // — KHÔNG chạy MAX(received_at) quét toàn bảng mỗi lần mở tab.
+  const retryOut=outs.filter(e=>e.status==='RETRYING').length;   // hàng đợi hiện tại
+  const pending=outs.filter(e=>e.status==='PENDING').length;     // hàng đợi hiện tại
+  const dead=outs.filter(e=>e.status==='DEAD_LETTER').length;    // lệnh chưa tới nơi — chưa xử lý (không giới hạn tuổi: kẹt là còn kẹt)
+  const failed=ins.filter(e=>e.status==='FAILED').length;        // tin xử lý lỗi — chưa xử lý
+  // SG-4 (16/07): tin CHỮ KÝ SAI không được ghi vào inbox (Receiver trả 4xx, chỉ log hạ tầng) → CRM không đếm/cảnh báo.
+  // Sự cố khoá sai đã được cảnh báo IM LẶNG bắt; điều tra giả mạo thuộc an ninh hạ tầng.
   const lastIn=ins.length?Math.min(...ins.map(e=>e.ageMin)):null;
-  // Ngưỡng im lặng: 2 × chu kỳ đẩy đã khai báo của sản phẩm — chỉ dùng để tô màu, không hiện số ra màn hình
-  const silentH=licStaleThresholdHours({productId:pid});
+  const silentH=licStaleThresholdHours({productId:pid});        // ngưỡng im lặng = 2× chu kỳ đẩy của sản phẩm (đọc từ cấu hình)
   const silent=lastIn==null||lastIn/60>=silentH;
-
-  return{pid,dead,deadRate,published,retryOut,pending,in24,failed,failRate,badSig,lastIn,silentH,silent,
-    outTotal:outs7.length,inTotal:ins7.length};
+  return{pid,dead,failed,pending,retryOut,lastIn,silentH,silent};
 }
 function intAllHealth(){return CAT_PRODUCTS.map(p=>intProductHealth(p.id));}
 
@@ -6898,17 +6896,18 @@ function intSwitchTab(t){
 let _intFilter={outStatus:'',outProduct:'',outDays:3,inStatus:'',inProduct:'',inDays:3};
 const INT_DAY_OPTIONS=[{v:3,l:'3 ngày gần nhất'},{v:7,l:'7 ngày gần nhất'},{v:30,l:'30 ngày gần nhất'},{v:0,l:'Toàn bộ'}];
 function intSetFilter(k,v,pid){
-  if(k==='outStatus'){_intFilter.outStatus=v;_intFilter.outProduct=pid||'';intRenderOutbox();}
-  if(k==='inStatus'){_intFilter.inStatus=v;_intFilter.inProduct=pid||'';intRenderInbox();}
+  // Drill-down từ tab "Tình trạng kết nối": mở "Toàn bộ" (bỏ lọc ngày) để list khớp đúng số đếm ở thẻ Kênh
+  // (đếm theo status là all-time). Query vẫn nhẹ vì đã lọc chặt theo status + sản phẩm (rất chọn lọc, có index).
+  if(k==='outStatus'){_intFilter.outStatus=v;_intFilter.outProduct=pid||'';_intFilter.outDays=0;_intPage.out=1;intRenderOutbox();}
+  if(k==='inStatus'){_intFilter.inStatus=v;_intFilter.inProduct=pid||'';_intFilter.inDays=0;_intPage.in=1;intRenderInbox();}
 }
 
 /* ── MÀN 1: TÌNH TRẠNG KẾT NỐI ──────────────────────────────────── */
 function intRenderHealth(){
   const el=document.getElementById('int-pane-health');if(!el)return;
-  el.innerHTML=`<div class="lic-note">Mỗi sản phẩm một thẻ: <strong>kênh gửi đi</strong> (events của CRM có tới nơi không) và <strong>kênh nhận về</strong> (sản phẩm có báo về không, ta có xử lý được không). Số liệu bất thường được <strong>tô đỏ</strong>.</div>
-  <div class="int-cards">${intAllHealth().map(h=>{
+  el.innerHTML=`<div class="int-cards">${intAllHealth().map(h=>{
     const prod=licProduct(h.pid);
-    const hasIssue=h.dead||h.failed||h.badSig||h.silent;
+    const hasIssue=h.dead||h.failed||h.silent;
     return`<div class="card int-card">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;">
         <div style="font-size:15px;font-weight:700;color:var(--navy);">${prod?.icon||''} ${licProductName(h.pid)}</div>
@@ -6919,27 +6918,24 @@ function intRenderHealth(){
           <div class="int-half-t">📤 Gửi đi (CRM → sản phẩm)</div>
           <div class="int-stat"><span>Chờ gửi</span><b>${h.pending}</b></div>
           <div class="int-stat"><span>Đang thử lại</span><b>${h.retryOut}</b></div>
-          <div class="int-stat"><span>Đã gửi thành công (7 ngày)</span><b>${h.outTotal?`${h.published}/${h.outTotal} events`:h.published}</b></div>
-          <div class="int-stat"><span>Thất bại vĩnh viễn (7 ngày)</span><b style="color:${h.dead?'var(--red)':'inherit'}">${h.outTotal?`${h.dead}/${h.outTotal} events (${h.deadRate}%)`:h.dead}</b></div>
+          <div class="int-stat"><span>Đã ngừng tự gửi lại</span><b style="color:${h.dead?'var(--red)':'inherit'}">${h.dead}</b></div>
         </div>
         <div class="int-half">
           <div class="int-half-t">📥 Nhận về (sản phẩm → CRM)</div>
           <div class="int-stat"><span>Nhận gần nhất</span><b style="color:${h.silent?'var(--red)':'inherit'}">${h.lastIn==null?'chưa có':licFmtMins(h.lastIn)+' trước'}</b></div>
-          <div class="int-stat"><span>Nhận trong 24 giờ</span><b>${h.in24}</b></div>
-          <div class="int-stat"><span>Lỗi tồn đọng (7 ngày)</span><b style="color:${h.failed?'var(--red)':'inherit'}">${h.inTotal?`${h.failed}/${h.inTotal} events (${h.failRate}%)`:h.failed}</b></div>
-          <div class="int-stat"><span>Chữ ký không hợp lệ</span><b style="color:${h.badSig?'var(--red)':'inherit'}">${h.badSig}</b></div>
+          <div class="int-stat"><span>Lỗi tồn đọng</span><b style="color:${h.failed?'var(--red)':'inherit'}">${h.failed}</b></div>
         </div>
       </div>
       ${hasIssue?`<div style="display:flex;gap:8px;flex-wrap:wrap;">
         ${h.dead?`<button class="btn btn-secondary btn-sm" onclick="intSwitchTab('out');intSetFilter('outStatus','DEAD_LETTER','${h.pid}')">📤 Xem ${h.dead} events chưa tới nơi →</button>`:''}
-        ${(h.failed||h.badSig)?`<button class="btn btn-secondary btn-sm" onclick="intSwitchTab('in');intSetFilter('inStatus','FAILED','${h.pid}')">📥 Xem sự kiện nhận về →</button>`:''}
+        ${h.failed?`<button class="btn btn-secondary btn-sm" onclick="intSwitchTab('in');intSetFilter('inStatus','FAILED','${h.pid}')">📥 Xem sự kiện nhận về →</button>`:''}
       </div>`:''}
     </div>`;}).join('')}</div>`;
 }
 
 /* ── MÀN 2: SỰ KIỆN GỬI ĐI ─────────────────────────────────────── */
 const INT_OUT_STATUS={PENDING:{l:'Chờ gửi',c:'sub-mirror-pending'},PUBLISHED:{l:'Đã gửi',c:'sub-mirror-active'},
-  RETRYING:{l:'Đang thử lại',c:'sub-mirror-grace'},DEAD_LETTER:{l:'Thất bại vĩnh viễn',c:'sub-mirror-revoked'}};
+  RETRYING:{l:'Đang thử lại',c:'sub-mirror-grace'},DEAD_LETTER:{l:'Đã ngừng tự gửi lại',c:'sub-mirror-revoked'}};
 /* ── PHÂN TRANG (15 dòng/trang, giống module License & Usage) ─────
    Danh sách sự kiện có thể lên hàng nghìn dòng; đổ hết ra một mạch thì
    không ai đọc được, và trình duyệt cũng đuối. */
@@ -6972,11 +6968,12 @@ function intPager(which,pg,nhan){
 function intRenderOutbox(){
   const el=document.getElementById('int-pane-out');if(!el)return;
   const allRows=INT_OUTBOX.filter(e=>(!_intFilter.outStatus||e.status===_intFilter.outStatus)&&(!_intFilter.outProduct||e.productId===_intFilter.outProduct));
-  // Lọc mặc định theo thời gian (rà lại 14/07 — BK-2): chỉ áp dụng cho lệnh ĐÃ GỬI THÀNH CÔNG.
-  // Lệnh chưa xong (Chờ gửi/Đang thử lại/Thất bại vĩnh viễn) LUÔN hiện bất kể tuổi — không được để filter ngày che mất việc còn phải xử lý.
-  const rows=allRows.filter(e=>!_intFilter.outDays||e.status!=='PUBLISHED'||e.ageMin<=_intFilter.outDays*1440)
+  // Lọc THUẦN theo thời gian (PA2, chốt 16/07): khoảng đã chọn là đúng khoảng đó — mọi trạng thái.
+  // Query thuần time-range = một index range scan, kết quả bị chặn → ổn định hiệu năng trên bảng append-only
+  // (tránh OR với điều kiện status không giới hạn tuổi). Lệnh kẹt quá cũ vẫn được tab "Tình trạng kết nối"
+  // bắt (đếm theo status, có index) và nút drill-down mở sẵn "Toàn bộ" nên không lọt.
+  const rows=allRows.filter(e=>!_intFilter.outDays||e.ageMin<=_intFilter.outDays*1440)
     .sort((a,b)=>a.ageMin-b.ageMin);
-  const hiddenByDays=allRows.length-rows.length;
   const dead=rows.filter(e=>e.status==='DEAD_LETTER');
   const pg=intSlice('out',rows);
   el.innerHTML=`
@@ -6995,9 +6992,8 @@ function intRenderOutbox(){
     <button class="btn btn-ghost btn-sm" onclick="_intFilter.outStatus='';_intFilter.outProduct='';_intFilter.outDays=3;_intPage.out=1;intRenderOutbox()">Xoá lọc</button>
     ${(dead.length&&intCan('integration:retry'))?`<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="intOpenBulk('out')">🔁 Gửi lại ${dead.length} events thất bại</button>`:''}
   </div>
-  ${hiddenByDays?`<div style="font-size:12px;color:var(--text-secondary);padding:0 4px 8px;">Đang ẩn ${hiddenByDays} events đã gửi thành công ngoài khoảng thời gian đã chọn — dữ liệu vẫn còn, không bị xoá. <a href="javascript:void(0)" onclick="_intFilter.outDays=0;_intPage.out=1;intRenderOutbox()" style="color:var(--primary);">Xem toàn bộ</a></div>`:''}
-  <div class="table-wrap lic-table"><table>
-    <thead><tr><th>Trạng thái</th><th>Event gửi đi</th><th>Khách hàng</th><th>Sản phẩm</th><th style="width:90px;text-align:center">Số lần thử</th><th>Lỗi cuối</th><th>Thời điểm</th><th></th></tr></thead>
+  <div class="table-wrap lic-table int-evt"><table>
+    <thead><tr><th style="width:9%">Trạng thái</th><th style="width:20%">Nội dung gửi đi</th><th style="width:15%">Khách hàng</th><th style="width:12%">Sản phẩm</th><th style="width:8%;text-align:center">Số lần thử</th><th style="width:20%">Lý do lỗi</th><th style="width:8%">Gửi lúc</th><th style="width:8%"></th></tr></thead>
     <tbody>${pg.rows.length?pg.rows.map(e=>{
       const st=INT_OUT_STATUS[e.status];
       const s=subFindById(e.subId);
@@ -7019,17 +7015,15 @@ function intRenderOutbox(){
 /* ── MÀN 3: SỰ KIỆN NHẬN VỀ ────────────────────────────────────── */
 const INT_IN_STATUS={RECEIVED:{l:'Đã nhận',c:'sub-mirror-pending'},PROCESSED:{l:'Đã xử lý',c:'sub-mirror-active'},
   RETRYING:{l:'Đang thử lại',c:'sub-mirror-grace'},FAILED:{l:'Xử lý lỗi',c:'sub-mirror-revoked'}};
-const INT_FAIL_STAGE={SIGNATURE:'Xác thực nguồn gửi',CORRELATION:'Nhận diện subscription',MAPPING:'Đọc dữ liệu'};
+const INT_FAIL_STAGE={CORRELATION:'Nhận diện subscription',MAPPING:'Đọc dữ liệu'};  // SG-4: bỏ SIGNATURE — tin chữ ký sai không được ghi vào inbox
 function intRenderInbox(){
   const el=document.getElementById('int-pane-in');if(!el)return;
   const allRows=INT_INBOX.filter(e=>(!_intFilter.inStatus||e.status===_intFilter.inStatus)&&(!_intFilter.inProduct||e.productId===_intFilter.inProduct));
-  // Lọc mặc định theo thời gian (rà lại 14/07 — BK-2, thay cho "ẩn usage_synced thành công" ở bản trước):
-  // chỉ áp dụng cho tin ĐÃ XỬ LÝ XONG (PROCESSED). Tin lỗi/đang thử lại/mới nhận LUÔN hiện bất kể tuổi
-  // — filter theo ngày không được che mất việc còn phải xử lý.
-  const rows=allRows.filter(e=>!_intFilter.inDays||e.status!=='PROCESSED'||e.ageMin<=_intFilter.inDays*1440)
+  // Lọc THUẦN theo thời gian (PA2, chốt 16/07): khoảng đã chọn là đúng khoảng đó — mọi trạng thái.
+  // Tin lỗi/kẹt quá cũ vẫn được tab "Tình trạng kết nối" bắt (đếm theo status, có index) + drill-down mở "Toàn bộ".
+  const rows=allRows.filter(e=>!_intFilter.inDays||e.ageMin<=_intFilter.inDays*1440)
     .sort((a,b)=>a.ageMin-b.ageMin);
-  const hiddenByDays=allRows.length-rows.length;
-  const failed=rows.filter(e=>e.status==='FAILED'&&e.failStage!=='SIGNATURE');
+  const failed=rows.filter(e=>e.status==='FAILED');
   const pg=intSlice('in',rows);
   el.innerHTML=`
   <div class="toolbar">
@@ -7047,27 +7041,28 @@ function intRenderInbox(){
     <button class="btn btn-ghost btn-sm" onclick="_intFilter.inStatus='';_intFilter.inProduct='';_intFilter.inDays=3;_intPage.in=1;intRenderInbox()">Xoá lọc</button>
     ${(failed.length&&intCan('integration:retry'))?`<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="intOpenBulk('in')">🔁 Xử lý lại ${failed.length} events lỗi</button>`:''}
   </div>
-  ${hiddenByDays?`<div style="font-size:12px;color:var(--text-secondary);padding:0 4px 8px;">Đang ẩn ${hiddenByDays} events đã xử lý xong ngoài khoảng thời gian đã chọn — dữ liệu vẫn còn, không bị xoá. <a href="javascript:void(0)" onclick="_intFilter.inDays=0;_intPage.in=1;intRenderInbox()" style="color:var(--primary);">Xem toàn bộ</a></div>`:''}
-  <div class="table-wrap lic-table"><table>
-    <thead><tr><th>Trạng thái</th><th>Nội dung báo về</th><th>Khách hàng</th><th>Sản phẩm</th><th>Xác thực</th><th>Lỗi ở bước nào</th><th>Nhận lúc</th><th></th></tr></thead>
+  <div class="table-wrap lic-table int-evt"><table>
+    <thead><tr><th style="width:9%">Trạng thái</th><th style="width:20%">Nội dung báo về</th><th style="width:15%">Khách hàng</th><th style="width:12%">Sản phẩm</th><th style="width:8%;text-align:center">Số lần thử</th><th style="width:20%">Lý do lỗi</th><th style="width:8%">Nhận lúc</th><th style="width:8%"></th></tr></thead>
     <tbody>${pg.rows.length?pg.rows.map(e=>{
       const st=INT_IN_STATUS[e.status];
-      const canRetry=e.status==='FAILED'&&e.failStage!=='SIGNATURE'&&intCan('integration:retry');
+      const canRetry=e.status==='FAILED'&&intCan('integration:retry');
+      const inMax=5;  // trần thử lại xử lý inbound (Processor) — PRD §6.7 BR-04.3
+      const att=e.attempts ?? (e.status==='PROCESSED'?1 : e.status==='FAILED'?inMax : e.status==='RETRYING'?2 : 0);
       return`<tr>
         <td><span class="sub-mirror-badge ${st.c}">${st.l}</span></td>
-        <td><div style="font-weight:600;font-size:13px;">${INT_IN_LABEL[e.eventKey]||'Sự kiện không xác định'}</div>
+        <td><div style="font-weight:600;font-size:13px;">${INT_IN_LABEL[e.eventKey]||'Sự kiện không xác định'}${!INT_IN_LABEL[e.eventKey]?` <span style="cursor:help;color:#D97706;" title="Loại sự kiện lạ — CRM vẫn ghi nhận nhưng không áp dụng. Cần khai báo event này vào cấu hình sản phẩm để lần sau tự áp dụng.">⚠️</span>`:''}</div>
           <div style="font-size:11px;color:var(--gray-400);font-family:monospace;">${e.id}</div>
-          ${!INT_IN_LABEL[e.eventKey]?`<div style="font-size:11px;color:#92400E;">Loại sự kiện lạ — vẫn ghi nhận, không áp dụng</div>`:''}</td>
+          ${!INT_IN_LABEL[e.eventKey]?`<div style="font-size:11px;color:var(--gray-500);font-family:monospace;">${e.eventKey}</div>`:''}</td>
         <td>${e.subId?`<div style="font-weight:600;">${e.customerName}</div><div style="font-size:11px;color:var(--primary);cursor:pointer;text-decoration:underline;font-family:monospace;" onclick="intTrace('${e.subId}')">${e.subId}</div>`
           :`<span class="lic-tag-onprem">Không xác định được subscription</span>`}</td>
         <td style="font-size:13px;">${licProduct(e.productId)?.icon||''} ${licProductName(e.productId)}</td>
-        <td>${e.signatureOk?'<span style="color:#059669;font-size:13px;">✔ Hợp lệ</span>':'<span style="color:var(--red);font-size:13px;font-weight:600;">✘ Không hợp lệ</span>'}</td>
-        <td style="font-size:12px;color:var(--text-secondary);max-width:300px;">${e.failStage?`<div style="font-weight:600;color:#B91C1C;">${INT_FAIL_STAGE[e.failStage]||e.failStage}</div>${e.failReason}`:'—'}</td>
+        <td style="text-align:center;font-size:13px;font-weight:600;color:${att>=inMax?'var(--red)':'inherit'}">${att>0?att+'/'+inMax:'—'}</td>
+        <td style="font-size:12px;color:var(--text-secondary);">${e.failStage?`<div style="font-weight:600;color:#B91C1C;">${INT_FAIL_STAGE[e.failStage]||e.failStage}</div>${e.failReason}`:'—'}</td>
         <td style="font-size:12px;color:var(--text-secondary);">${licFmtMins(e.ageMin)} trước</td>
         <td>${canRetry?`<button class="btn btn-secondary btn-sm" onclick="intOpenReplay('${e.id}')">Xử lý lại</button>`:''}</td>
       </tr>`;}).join(''):`<tr><td colspan="8"><div style="padding:40px;text-align:center;color:var(--text-secondary)">Không có sự kiện nào khớp bộ lọc</div></td></tr>`}
     </tbody></table></div>
-  ${intPager('in',pg,'{total} sự kiện nhận về · đang xem {from}–{to} · events có chữ ký không hợp lệ không được xử lý lại')}`;
+  ${intPager('in',pg,'{total} sự kiện nhận về · đang xem {from}–{to}')}`;
 }
 
 /* ── MÀN 4: TRA CỨU THEO SUBSCRIPTION ──────────────────────────── */
@@ -7096,7 +7091,7 @@ function intTroubledSubs(){
     m.set(subId,r);
   };
   INT_OUTBOX.filter(e=>e.status==='DEAD_LETTER').forEach(e=>add(e.subId,'dead'));
-  INT_INBOX.filter(e=>e.status==='FAILED'&&e.failStage!=='SIGNATURE').forEach(e=>add(e.subId,'failed'));
+  INT_INBOX.filter(e=>e.status==='FAILED').forEach(e=>add(e.subId,'failed'));
   return [...m.values()]
     .map(r=>({...r,sub:subFindById(r.subId)}))
     .filter(r=>r.sub)
@@ -7183,7 +7178,7 @@ function intRetryOut(id){
   // mà can thiệp vào thì thành hai lần gửi cùng một lệnh.
   if(e.status!=='DEAD_LETTER'){
     toast('error','Chưa cần gửi lại',e.status==='RETRYING'
-      ?`Hệ thống đang tự thử lại event này (lần ${e.attempts}/10). Chờ hết số lần thử rồi mới gửi lại tay.`
+      ?`Hệ thống đang tự thử lại event này (lần ${e.attempts}/10). Khi thử đủ 10 lần vẫn lỗi, bạn mới gửi lại tay được.`
       :'Event này chưa thất bại — không cần gửi lại.');
     return;
   }
@@ -7199,11 +7194,11 @@ function intRetryOut(id){
    Replay KHÔNG bắn thông báo cho khách hàng và KHÔNG sinh lệnh gửi đi mới. */
 function intReplayChain(evId){
   const e=INT_INBOX.find(x=>x.id===evId);if(!e||!e.subId)return[];
-  return INT_INBOX.filter(x=>x.subId===e.subId&&x.ageMin<=e.ageMin&&x.failStage!=='SIGNATURE')
+  return INT_INBOX.filter(x=>x.subId===e.subId&&x.ageMin<=e.ageMin)
     .sort((a,b)=>b.ageMin-a.ageMin);   // cũ → mới
 }
-const INT_EFFECT={'license.activated':'Đang hoạt động','license.suspended':'Tạm dừng','license.expired':'Hạn chế tính năng',
-  'license.grace_started':'Trong ân hạn','license.grace_expired':'Hạn chế tính năng','license.revoked':'Đã thu hồi',
+const INT_EFFECT={'license.activated':'Đang hoạt động','license.reactivated':'Đang hoạt động','license.suspended':'Đã ngừng','license.expired':'Trong ân hạn',
+  'license.grace_expired':'Hạn chế tính năng','license.revoked':'Đã thu hồi','license.expiring_soon':'Sắp hết hạn',
   'license.renewed':'Đã gia hạn','license.pending':'Chờ kích hoạt','license.provisioning':'Đang triển khai'};
 function intExpectedState(chain){
   let st=null;chain.forEach(e=>{if(INT_EFFECT[e.eventKey])st=INT_EFFECT[e.eventKey];});
@@ -7248,7 +7243,7 @@ function intOpenBulk(kind){
       </div>
       <div style="margin-top:12px;font-size:13px;">${list.map(e=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);">${INT_OUT_LABEL[e.eventKey]||e.eventKey} · <span style="font-family:monospace;">${e.subId}</span> · ${e.customerName}</div>`).join('')}</div>`;
   }else{
-    const failed=INT_INBOX.filter(e=>e.status==='FAILED'&&e.failStage!=='SIGNATURE');
+    const failed=INT_INBOX.filter(e=>e.status==='FAILED');
     const bySub={};failed.forEach(e=>{const k=e.subId||'(không xác định)';bySub[k]=(bySub[k]||0)+1;});
     const capped=failed.length>INT_BATCH_MAX;
     _intReplayCtx={type:'bulk-in',list:failed.slice(0,INT_BATCH_MAX)};

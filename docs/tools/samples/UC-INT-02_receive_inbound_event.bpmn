@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0"
+  id="Definitions_UC_INT_02" targetNamespace="http://onecrm/bpmn">
+  <bpmn:collaboration id="Collaboration_1">
+    <bpmn:participant id="Participant_1" name="UC-INT-02 — Tiếp nhận &amp; xử lý sự kiện từ sản phẩm (Inbound)" processRef="Process_1" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_1" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_System" name="System (CRM — Webhook Inbox &amp; Worker)">
+        <bpmn:flowNodeRef>Gw2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw5</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw6</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw7</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw8</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw9</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node9</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node10</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EF01a</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EF02a</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EF03a</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EF04a</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EF05a</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AF01a</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AF01b</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AF02a</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AF02b</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End5</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Product" name="Sản phẩm (Product Module — hệ thống ngoài)">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node1</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="StartEvent_1" name="Trạng thái đổi / tới lịch báo / lệnh không thực thi được" />
+    <bpmn:sendTask id="Node1" name="① Gửi sự kiện về CRM (kèm metadata: event_id, event_key, occurred_at, subscription_id, correlation_id, schema_version)" />
+
+    <bpmn:exclusiveGateway id="Gw2" name="② Chữ ký hợp lệ?" />
+    <bpmn:serviceTask id="Node3" name="③ Ghi nhận 'Đã nhận' + trả 200 OK cho sản phẩm NGAY (xử lý sau)" />
+    <bpmn:exclusiveGateway id="Gw4" name="④ Đã xử lý event_id này chưa?" />
+    <bpmn:exclusiveGateway id="Gw5" name="⑤ Map được về subscription?" />
+    <bpmn:exclusiveGateway id="Gw6" name="⑥ Loại sự kiện có trong bảng ánh xạ?" />
+    <bpmn:exclusiveGateway id="Gw7" name="⑦ occurred_at mới hơn tin đã áp dụng gần nhất?" />
+    <bpmn:exclusiveGateway id="Gw8" name="⑧ Đủ trường bắt buộc?" />
+    <bpmn:exclusiveGateway id="Gw9" name="⑨ Phân loại theo event_key?" />
+    <bpmn:serviceTask id="Node9" name="⑨ Áp dụng theo bảng ánh xạ: cập nhật license_mirror.status (+ sub.end_date/status nếu license.activated)" />
+    <bpmn:serviceTask id="Node10" name="⑩ Ghi 1 dòng tiến độ + nhật ký hoạt động → tin 'Đã xử lý'" />
+
+    <bpmn:serviceTask id="EF01a" name="EF-01. Trả 4xx, từ chối NGAY — KHÔNG ghi WEBHOOK_INBOX; chỉ log hạ tầng (rate-limited + source IP)" />
+    <bpmn:serviceTask id="EF02a" name="EF-02. Ghi nhận, nhãn 'không xác định được subscription', cảnh báo — không đoán" />
+    <bpmn:serviceTask id="EF03a" name="EF-03. Ghi nhận, nhãn 'loại sự kiện lạ — không áp dụng', cảnh báo" />
+    <bpmn:serviceTask id="EF04a" name="EF-04. Ghi nhận, nhãn 'đến muộn — không áp dụng' (không phải lỗi, đang bảo vệ dữ liệu)" />
+    <bpmn:serviceTask id="EF05a" name="EF-05. Thử lại tối đa 5 lần → 'Xử lý lỗi', GIỮ NGUYÊN tin (thường lỗi phía CRM)" />
+
+    <bpmn:serviceTask id="AF01a" name="AF-01a. Cập nhật số đã dùng + last_synced_at — KHÔNG ghi dòng tiến độ" />
+    <bpmn:serviceTask id="AF01b" name="AF-01b. Nếu dùng > số đã bán: vẫn lưu, ghi 'bất thường dữ liệu' + cảnh báo" />
+    <bpmn:serviceTask id="AF02a" name="AF-02a. Đối chiếu correlation_id → tìm đúng lệnh gốc đã gửi" />
+    <bpmn:serviceTask id="AF02b" name="AF-02b. Đánh dấu lệnh gốc 'Sản phẩm từ chối' + lý do → UC-LIC-04 (KHÔNG đổi license)" />
+
+    <bpmn:endEvent id="End1" name="End 1 · Đã áp dụng" />
+    <bpmn:endEvent id="End2" name="End 2 · Tin trùng — bỏ qua" />
+    <bpmn:endEvent id="End3" name="End 3 · Đã ghi nhận sản phẩm từ chối lệnh" />
+    <bpmn:endEvent id="End4" name="End 4 · Ghi nhận, chưa áp dụng → chờ xử lý lại (UC-INT-05)" />
+    <bpmn:endEvent id="End5" name="End 5 · Từ chối 4xx — không lưu inbox" />
+
+    <bpmn:textAnnotation id="TRIGGER">
+      <bpmn:text>TRIGGER — Sản phẩm gửi sự kiện khi trạng thái license đổi, khi báo mức dùng (chu kỳ 3 giờ), hoặc khi không thực thi được lệnh. Đây là ĐƯỜNG DUY NHẤT để trạng thái license trong CRM thay đổi (YT-1).</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="As1" sourceRef="TRIGGER" targetRef="StartEvent_1" />
+
+    <bpmn:sequenceFlow id="M1" sourceRef="StartEvent_1" targetRef="Node1" />
+    <bpmn:sequenceFlow id="M2" name="gửi tới CRM" sourceRef="Node1" targetRef="Gw2" />
+    <bpmn:sequenceFlow id="M3" name="Có" sourceRef="Gw2" targetRef="Node3" />
+    <bpmn:sequenceFlow id="M4" name="(chuyển xử lý nền)" sourceRef="Node3" targetRef="Gw4" />
+    <bpmn:sequenceFlow id="M5" name="Chưa" sourceRef="Gw4" targetRef="Gw5" />
+    <bpmn:sequenceFlow id="M6" name="Có" sourceRef="Gw5" targetRef="Gw6" />
+    <bpmn:sequenceFlow id="M7" name="Có" sourceRef="Gw6" targetRef="Gw7" />
+    <bpmn:sequenceFlow id="M8" name="Có" sourceRef="Gw7" targetRef="Gw8" />
+    <bpmn:sequenceFlow id="M9" name="Có" sourceRef="Gw8" targetRef="Gw9" />
+    <bpmn:sequenceFlow id="M10" name="license.* (đổi trạng thái)" sourceRef="Gw9" targetRef="Node9" />
+    <bpmn:sequenceFlow id="M11" sourceRef="Node9" targetRef="Node10" />
+    <bpmn:sequenceFlow id="M12" sourceRef="Node10" targetRef="End1" />
+
+    <bpmn:sequenceFlow id="D1" name="Rồi → bỏ qua" sourceRef="Gw4" targetRef="End2" />
+
+    <bpmn:sequenceFlow id="E1" name="Không" sourceRef="Gw2" targetRef="EF01a" />
+    <bpmn:sequenceFlow id="E1b" sourceRef="EF01a" targetRef="End5" />
+    <bpmn:sequenceFlow id="E2" name="Không" sourceRef="Gw5" targetRef="EF02a" />
+    <bpmn:sequenceFlow id="E2b" sourceRef="EF02a" targetRef="End4" />
+    <bpmn:sequenceFlow id="E3" name="Không" sourceRef="Gw6" targetRef="EF03a" />
+    <bpmn:sequenceFlow id="E3b" sourceRef="EF03a" targetRef="End4" />
+    <bpmn:sequenceFlow id="E4" name="Không" sourceRef="Gw7" targetRef="EF04a" />
+    <bpmn:sequenceFlow id="E4b" sourceRef="EF04a" targetRef="End4" />
+    <bpmn:sequenceFlow id="E5" name="Không" sourceRef="Gw8" targetRef="EF05a" />
+    <bpmn:sequenceFlow id="E5b" sourceRef="EF05a" targetRef="End4" />
+
+    <bpmn:sequenceFlow id="A1" name="usage_synced" sourceRef="Gw9" targetRef="AF01a" />
+    <bpmn:sequenceFlow id="A2" sourceRef="AF01a" targetRef="AF01b" />
+    <bpmn:sequenceFlow id="A3" sourceRef="AF01b" targetRef="End1" />
+    <bpmn:sequenceFlow id="B1" name="command_failed" sourceRef="Gw9" targetRef="AF02a" />
+    <bpmn:sequenceFlow id="B2" sourceRef="AF02a" targetRef="AF02b" />
+    <bpmn:sequenceFlow id="B3" sourceRef="AF02b" targetRef="End3" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+      <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true">
+        <dc:Bounds x="160" y="160" width="2400" height="900" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true" color:background-color="#E3EEFF" color:border-color="#2f4b8c">
+        <dc:Bounds x="190" y="160" width="2370" height="560" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Product_di" bpmnElement="Lane_Product" isHorizontal="true" color:background-color="#E7F5EE" color:border-color="#2f9e6b">
+        <dc:Bounds x="190" y="720" width="2370" height="340" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1" color:background-color="#1f7a4d" color:border-color="#1f7a4d">
+        <dc:Bounds x="240" y="820" width="40" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node1_di" bpmnElement="Node1" color:background-color="#E7F5EE" color:border-color="#2f9e6b">
+        <dc:Bounds x="340" y="798" width="200" height="84" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Gw2_di" bpmnElement="Gw2" color:background-color="#FFF3CF" color:border-color="#e0a800">
+        <dc:Bounds x="455" y="275" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node3_di" bpmnElement="Node3">
+        <dc:Bounds x="570" y="258" width="180" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw4_di" bpmnElement="Gw4" color:background-color="#FFF3CF" color:border-color="#e0a800">
+        <dc:Bounds x="860" y="275" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw5_di" bpmnElement="Gw5" color:background-color="#FFF3CF" color:border-color="#e0a800">
+        <dc:Bounds x="1040" y="275" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw6_di" bpmnElement="Gw6" color:background-color="#FFF3CF" color:border-color="#e0a800">
+        <dc:Bounds x="1220" y="275" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw7_di" bpmnElement="Gw7" color:background-color="#FFF3CF" color:border-color="#e0a800">
+        <dc:Bounds x="1400" y="275" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw8_di" bpmnElement="Gw8" color:background-color="#FFF3CF" color:border-color="#e0a800">
+        <dc:Bounds x="1580" y="275" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw9_di" bpmnElement="Gw9" color:background-color="#FFF3CF" color:border-color="#e0a800">
+        <dc:Bounds x="1760" y="275" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node9_di" bpmnElement="Node9">
+        <dc:Bounds x="1870" y="258" width="190" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node10_di" bpmnElement="Node10">
+        <dc:Bounds x="2100" y="258" width="180" height="84" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="EF01a_di" bpmnElement="EF01a" color:background-color="#FDE3E3" color:border-color="#e02424">
+        <dc:Bounds x="400" y="428" width="160" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EF02a_di" bpmnElement="EF02a" color:background-color="#FDE3E3" color:border-color="#e02424">
+        <dc:Bounds x="985" y="428" width="160" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EF03a_di" bpmnElement="EF03a" color:background-color="#FDE3E3" color:border-color="#e02424">
+        <dc:Bounds x="1165" y="428" width="160" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EF04a_di" bpmnElement="EF04a" color:background-color="#FDE3E3" color:border-color="#e02424">
+        <dc:Bounds x="1345" y="428" width="160" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EF05a_di" bpmnElement="EF05a" color:background-color="#FDE3E3" color:border-color="#e02424">
+        <dc:Bounds x="1525" y="428" width="160" height="84" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="AF01a_di" bpmnElement="AF01a">
+        <dc:Bounds x="1760" y="470" width="190" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AF01b_di" bpmnElement="AF01b">
+        <dc:Bounds x="2010" y="470" width="200" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AF02a_di" bpmnElement="AF02a">
+        <dc:Bounds x="1760" y="600" width="190" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AF02b_di" bpmnElement="AF02b">
+        <dc:Bounds x="2010" y="600" width="230" height="84" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="End1_di" bpmnElement="End1" color:background-color="#111827" color:border-color="#111827">
+        <dc:Bounds x="2420" y="280" width="40" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End2_di" bpmnElement="End2" color:background-color="#111827" color:border-color="#111827">
+        <dc:Bounds x="2420" y="370" width="40" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End4_di" bpmnElement="End4" color:background-color="#111827" color:border-color="#111827">
+        <dc:Bounds x="2420" y="460" width="40" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End3_di" bpmnElement="End3" color:background-color="#111827" color:border-color="#111827">
+        <dc:Bounds x="2420" y="600" width="40" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End5_di" bpmnElement="End5" color:background-color="#111827" color:border-color="#111827">
+        <dc:Bounds x="2420" y="690" width="40" height="40" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="TRIGGER_di" bpmnElement="TRIGGER" color:border-color="#2f6bff">
+        <dc:Bounds x="300" y="60" width="470" height="90" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="M1_di" bpmnElement="M1">
+        <di:waypoint x="280" y="840" /><di:waypoint x="340" y="840" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="M2_di" bpmnElement="M2">
+        <di:waypoint x="360" y="798" /><di:waypoint x="360" y="300" /><di:waypoint x="455" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="M3_di" bpmnElement="M3">
+        <di:waypoint x="505" y="300" /><di:waypoint x="570" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="M4_di" bpmnElement="M4">
+        <di:waypoint x="750" y="300" /><di:waypoint x="860" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="M5_di" bpmnElement="M5">
+        <di:waypoint x="910" y="300" /><di:waypoint x="1040" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="M6_di" bpmnElement="M6">
+        <di:waypoint x="1090" y="300" /><di:waypoint x="1220" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="M7_di" bpmnElement="M7">
+        <di:waypoint x="1270" y="300" /><di:waypoint x="1400" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="M8_di" bpmnElement="M8">
+        <di:waypoint x="1450" y="300" /><di:waypoint x="1580" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="M9_di" bpmnElement="M9">
+        <di:waypoint x="1630" y="300" /><di:waypoint x="1760" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="M10_di" bpmnElement="M10">
+        <di:waypoint x="1810" y="300" /><di:waypoint x="1870" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="M11_di" bpmnElement="M11">
+        <di:waypoint x="2060" y="300" /><di:waypoint x="2100" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="M12_di" bpmnElement="M12">
+        <di:waypoint x="2280" y="300" /><di:waypoint x="2420" y="300" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="D1_di" bpmnElement="D1" color:border-color="#2f6bff">
+        <di:waypoint x="885" y="275" /><di:waypoint x="885" y="215" /><di:waypoint x="2490" y="215" /><di:waypoint x="2490" y="390" /><di:waypoint x="2460" y="390" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="E1_di" bpmnElement="E1" color:border-color="#e02424">
+        <di:waypoint x="480" y="325" /><di:waypoint x="480" y="428" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E1b_di" bpmnElement="E1b" color:border-color="#e02424">
+        <di:waypoint x="480" y="512" /><di:waypoint x="480" y="710" /><di:waypoint x="2420" y="710" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E2_di" bpmnElement="E2" color:border-color="#e02424">
+        <di:waypoint x="1065" y="325" /><di:waypoint x="1065" y="428" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E2b_di" bpmnElement="E2b" color:border-color="#e02424">
+        <di:waypoint x="1065" y="512" /><di:waypoint x="1065" y="690" /><di:waypoint x="2360" y="690" /><di:waypoint x="2360" y="480" /><di:waypoint x="2420" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E3_di" bpmnElement="E3" color:border-color="#e02424">
+        <di:waypoint x="1245" y="325" /><di:waypoint x="1245" y="428" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E3b_di" bpmnElement="E3b" color:border-color="#e02424">
+        <di:waypoint x="1245" y="512" /><di:waypoint x="1245" y="685" /><di:waypoint x="2350" y="685" /><di:waypoint x="2350" y="480" /><di:waypoint x="2420" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E4_di" bpmnElement="E4" color:border-color="#e02424">
+        <di:waypoint x="1425" y="325" /><di:waypoint x="1425" y="428" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E4b_di" bpmnElement="E4b" color:border-color="#e02424">
+        <di:waypoint x="1425" y="512" /><di:waypoint x="1425" y="680" /><di:waypoint x="2340" y="680" /><di:waypoint x="2340" y="480" /><di:waypoint x="2420" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E5_di" bpmnElement="E5" color:border-color="#e02424">
+        <di:waypoint x="1605" y="325" /><di:waypoint x="1605" y="428" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E5b_di" bpmnElement="E5b" color:border-color="#e02424">
+        <di:waypoint x="1605" y="512" /><di:waypoint x="1605" y="675" /><di:waypoint x="2330" y="675" /><di:waypoint x="2330" y="480" /><di:waypoint x="2420" y="480" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="A1_di" bpmnElement="A1" color:border-color="#2f6bff">
+        <di:waypoint x="1785" y="325" /><di:waypoint x="1785" y="450" /><di:waypoint x="1855" y="450" /><di:waypoint x="1855" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A2_di" bpmnElement="A2" color:border-color="#2f6bff">
+        <di:waypoint x="1950" y="512" /><di:waypoint x="2010" y="512" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A3_di" bpmnElement="A3" color:border-color="#2f6bff">
+        <di:waypoint x="2210" y="512" /><di:waypoint x="2440" y="512" /><di:waypoint x="2440" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B1_di" bpmnElement="B1" color:border-color="#2f6bff">
+        <di:waypoint x="1785" y="325" /><di:waypoint x="1785" y="360" /><di:waypoint x="1700" y="360" /><di:waypoint x="1700" y="642" /><di:waypoint x="1760" y="642" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B2_di" bpmnElement="B2" color:border-color="#2f6bff">
+        <di:waypoint x="1950" y="642" /><di:waypoint x="2010" y="642" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B3_di" bpmnElement="B3" color:border-color="#2f6bff">
+        <di:waypoint x="2240" y="642" /><di:waypoint x="2350" y="642" /><di:waypoint x="2350" y="620" /><di:waypoint x="2420" y="620" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="As1_di" bpmnElement="As1" color:border-color="#2f6bff">
+        <di:waypoint x="420" y="150" /><di:waypoint x="260" y="150" /><di:waypoint x="260" y="820" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

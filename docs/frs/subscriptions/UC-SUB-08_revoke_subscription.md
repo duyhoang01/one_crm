@@ -11,10 +11,10 @@
 |---|---|
 | **Mã Use Case** | UC-SUB-08 |
 | **Tên** | Thu hồi Subscription |
-| **Mô tả** | Manager hoặc License Admin thu hồi một subscription đang hoạt động, bị treo, hoặc đang chờ cấp phát. Thao tác yêu cầu nhập lý do thu hồi và xác nhận. Sau khi thu hồi, `sub.status` và `sub.licMirrorStatus` đều chuyển sang `REVOKED`. CRM publish event `subscription.terminated` qua Outbox → RabbitMQ để Product Module xử lý phía kỹ thuật (YT-3). Thu hồi là hành động không thể hoàn tác trong Phase 1. |
+| **Mô tả** | Manager hoặc License Admin thu hồi một subscription đang hoạt động, bị treo, hoặc đang chờ cấp phát. Thao tác yêu cầu nhập lý do thu hồi và xác nhận. Sau khi thu hồi, `sub.status` chuyển sang `REVOKED` (CRM không đụng `licMirrorStatus` — mirror chỉ-đọc, §3.4). CRM publish event `subscription.terminated` qua Outbox → RabbitMQ để Product Module xử lý phía kỹ thuật (YT-3). Thu hồi là hành động không thể hoàn tác trong Phase 1. |
 | **Tác nhân** | Manager, License Admin |
 | **Tiền điều kiện** | (1) Đã đăng nhập với role Manager hoặc License Admin; có quyền `subscription:revoke`. (2) Subscription tồn tại và `sub.status ∈ {ACTIVE, SUSPENDED, PENDING_PROVISION}`. |
-| **Hậu điều kiện** | (Thành công) `sub.status = REVOKED`, `sub.licMirrorStatus = REVOKED`, `sub.licMirrorExpiry = null`, `sub.lastSync = '—'`. Event `subscription.terminated` được publish vào Outbox. Timeline và Audit ghi nhận hành động. Hệ thống điều hướng về UC-SUB-01. (Thất bại) Trạng thái không thay đổi. |
+| **Hậu điều kiện** | (Thành công) `sub.status = REVOKED`, `sub.licMirrorExpiry = null`, `sub.lastSync = '—'`. Event `subscription.terminated` được publish vào Outbox. Timeline và Audit ghi nhận hành động. Hệ thống điều hướng về UC-SUB-01. (Thất bại) Trạng thái không thay đổi. |
 | **Trigger** | Manager click "⊘ Thu hồi" trong hero section UC-SUB-03. |
 | **Liên kết** | UC-SUB-01 (Danh sách — điều hướng về sau khi thu hồi), UC-SUB-03 (Chi tiết — nơi trigger hành động) |
 
@@ -26,7 +26,7 @@
 | **BR-02** | Subscription có thể bị thu hồi khi `sub.status ∈ {ACTIVE, SUSPENDED, PENDING_PROVISION}`. Nút "⊘ Thu hồi" hiển thị ở trạng thái active với các status này. |
 | **BR-03** | Subscription không thể bị thu hồi khi `sub.status ∈ {REVOKED, EXPIRED, DRAFT, RENEWED}`. Nút "⊘ Thu hồi" **ẩn hoàn toàn** với các status này (không hiển thị disabled). |
 | **BR-04** | Lý do thu hồi (free text) là **bắt buộc**. Nút "⊘ Thu hồi" trong modal bị disable cho đến khi người dùng nhập ít nhất một ký tự vào textarea lý do. |
-| **BR-05** | Sau khi thu hồi thành công: `sub.status = REVOKED`, `sub.licMirrorStatus = REVOKED`, `sub.licMirrorExpiry = null`, `sub.lastSync = '—'`. |
+| **BR-05** | Sau khi thu hồi thành công: `sub.status = REVOKED`, `sub.licMirrorExpiry = null`, `sub.lastSync = '—'`. **CRM KHÔNG tự ghi `licMirrorStatus`** — mirror là bản soi chiếu chỉ-đọc, chỉ đổi khi product gửi `license.revoked` (YT-1, §3.4); Phase 1 EDR chưa gửi nên mirror giữ nguyên và mismatch REVOKED được ẩn. |
 | **BR-06** | Hệ thống ghi timeline entry: icon 🔴, nội dung "Subscription bị thu hồi", `Lý do: [reason]`, actor = tên Manager thực hiện. |
 | **BR-07** | Hệ thống ghi audit entry: action "Thu hồi Subscription", detail = lý do thu hồi, result = SUCCESS. |
 | **BR-08** | Sau khi thu hồi thành công: toast "Đã thu hồi — [sub.id] trạng thái chuyển sang REVOKED". Hệ thống điều hướng về UC-SUB-01 (Danh sách Subscription). |
@@ -50,12 +50,12 @@
 | **4** | User | Nhập lý do thu hồi vào textarea (free text, bắt buộc). | — |
 | **5** | System | Textarea có ≥ 1 ký tự → **ENABLE** nút "⊘ Thu hồi" trong modal. | BR-04 |
 | **6** | User | **[Gateway — Xác nhận thu hồi?]** "⊘ Thu hồi" → tiếp bước 7. "Hủy" / click ngoài modal → **AF-01**. | — |
-| **7** | System | Cập nhật: `sub.status = REVOKED`, `sub.licMirrorStatus = REVOKED`, `sub.licMirrorExpiry = null`, `sub.lastSync = '—'`. | BR-05 |
+| **7** | System | Cập nhật: `sub.status = REVOKED`, `sub.licMirrorExpiry = null`, `sub.lastSync = '—'`. | BR-05 |
 | **8** | System | Ghi timeline entry: icon 🔴, "Subscription bị thu hồi", `Lý do: [reason]`, actor = Manager. | BR-06 |
 | **9** | System | Ghi audit entry: action "Thu hồi Subscription", detail = lý do, result = SUCCESS. | BR-07 |
 | **10** | System | Publish event `subscription.terminated` qua Outbox → RabbitMQ. | BR-09 |
 | **11** | System | Đóng modal; toast "Đã thu hồi — [sub.id] → REVOKED"; điều hướng về UC-SUB-01, cập nhật danh sách. | BR-08 |
-| → | — | **End 1 (Success)** — `sub.status` & `licMirrorStatus = REVOKED`, event đã publish, timeline+audit ghi nhận, điều hướng về UC-SUB-01. | — |
+| → | — | **End 1 (Success)** — `sub.status = REVOKED` (mirror giữ nguyên — §3.4), event đã publish, timeline+audit ghi nhận, điều hướng về UC-SUB-01. | — |
 
 ### 2.2 Luồng phụ
 
@@ -82,7 +82,7 @@
 
 | # | Tên | Điều kiện |
 |---|---|---|
-| **End 1** | Success — Thu hồi thành công | `sub.status = REVOKED`, `sub.licMirrorStatus = REVOKED`, `sub.licMirrorExpiry = null`, `sub.lastSync = '—'`; event `subscription.terminated` đã publish qua Outbox → RabbitMQ; timeline + audit ghi nhận; điều hướng về UC-SUB-01, cập nhật danh sách |
+| **End 1** | Success — Thu hồi thành công | `sub.status = REVOKED`, `sub.licMirrorExpiry = null`, `sub.lastSync = '—'`; event `subscription.terminated` đã publish qua Outbox → RabbitMQ; timeline + audit ghi nhận; điều hướng về UC-SUB-01, cập nhật danh sách |
 | **End 2** | Cancelled — AF-01 | Người dùng nhấn "Hủy" / click ngoài modal; dữ liệu không đổi; ở lại UC-SUB-03 |
 | **End 3** | Rejected — EF-01 | Sub không tồn tại hoặc `sub.status` không cho phép hoặc role không đủ quyền — không mở modal, dữ liệu không đổi |
 
@@ -183,7 +183,7 @@ Nút "⊘ Thu hồi" trong modal chuyển sang **active** sau khi Manager nhập
 
 | Mã | Given | When | Then |
 |---|---|---|---|
-| AC-SUB-08-13 | Modal đang mở, Manager đã nhập lý do "Khách hàng yêu cầu ngừng dịch vụ". | Click "⊘ Thu hồi" trong modal. | (**Bước 7**, BR-05) `sub.status` = REVOKED, `sub.licMirrorStatus` = REVOKED, `sub.licMirrorExpiry` = null, `sub.lastSync` = '—'. |
+| AC-SUB-08-13 | Modal đang mở, Manager đã nhập lý do "Khách hàng yêu cầu ngừng dịch vụ". | Click "⊘ Thu hồi" trong modal. | (**Bước 7**, BR-05) `sub.status` = REVOKED, `sub.licMirrorExpiry` = null, `sub.lastSync` = '—'. |
 | AC-SUB-08-14 | Thu hồi thành công. | Xem timeline của sub. | (**Bước 8**, BR-06) Có entry mới nhất: icon 🔴, "Subscription bị thu hồi", "Lý do: Khách hàng yêu cầu ngừng dịch vụ", actor = tên Manager. |
 | AC-SUB-08-15 | Thu hồi thành công. | Xem audit log của sub. | (**Bước 9**, BR-07) Có audit entry: action "Thu hồi Subscription", detail = lý do đã nhập, result = SUCCESS. |
 | AC-SUB-08-20 | Thu hồi hợp lệ, sub đã chuyển REVOKED (**bước 7**). | Sau khi cập nhật trạng thái. | (**Bước 10**, BR-09) Event `subscription.terminated` được publish vào Outbox → RabbitMQ để Product Module xử lý. CRM **không** gọi API Product trực tiếp (YT-3: passive observer). |
