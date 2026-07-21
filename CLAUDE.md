@@ -7,7 +7,7 @@
 ### Tech stack
 - Frontend: React + Vite (đang phát triển)
 - Demo/prototype: HTML SPA tĩnh tại `docs/demo/`
-- Tài liệu: Markdown (FRS) + DOCX (PRD)
+- Tài liệu: Markdown — PRD (`docs/prd/OneCRM_PRD_v2.7.md`, nguồn sự thật) + FRS (`docs/frs/`). **Bản đồ tổng: `docs/README.md`**
 
 ---
 
@@ -16,46 +16,42 @@
 ```
 one_crm/
 ├── docs/
-│   ├── assets/
-│   │   ├── M-01_customers/     # Ảnh cho module Khách hàng
-│   │   ├── M-02_contracts/     # Ảnh cho module Hợp đồng
-│   │   └── shared/
-│   ├── demo/
-│   │   ├── v2.2.x_customers.html   # Demo SPA module Khách hàng
-│   │   └── v2.3.2_contracts.html   # Demo SPA module Hợp đồng
-│   ├── frs/
-│   │   ├── _templates/
-│   │   │   ├── checklist_frs.md    # Self-review bắt buộc trước khi submit FRS
-│   │   │   └── frs_template.md     # Template FRS chuẩn
-│   │   ├── customers/          # UC-CUS-01..05
-│   │   └── contracts/          # UC-CON-01..06
-│   └── prd/
-│       └── OneCRM_PRD_v2.3.docx    # Nguồn sự thật — mọi FRS phải trace về đây
+│   ├── README.md               # ⭐ BẢN ĐỒ tài liệu — đọc ĐẦU TIÊN (module map · quy ước · điều hướng)
+│   ├── TRACEABILITY.md         # Ma trận truy vết UC ↔ FRS ↔ demo ↔ trạng thái
+│   ├── prd/
+│   │   └── OneCRM_PRD_v2.7.md   # ⭐ Nguồn sự thật HIỆN HÀNH (v2.3–v2.6 giữ lịch sử)
+│   ├── frs/                    # Đặc tả chi tiết — 1 thư mục / module (xem README)
+│   │   ├── _templates/         # checklist_frs · checklist_ui · frs_template
+│   │   ├── customers/ contracts/ subscriptions/ catalog/ licenses/
+│   │   ├── integration/ audit_notification/ settings/
+│   │   └── (mỗi folder: UC-*.md + _bpmn_prompts.md hoặc _event_catalog.md)
+│   ├── demo/                   # SPA HTML tĩnh, versioned theo module (v1.0 → v2.8)
+│   ├── assets/                 # Ảnh BPMN/wireframe/screen — M-0X_<domain>/ + settings/ + shared/
+│   ├── plans/                  # Ghi chú quyết định · open-question · kế hoạch
+│   └── tools/                  # bpmn_editor.html + samples/*.bpmn
 ```
 
 ---
 
 ## 3. Module map
 
-| Module | Code | Mô tả | UC |
-|---|---|---|---|
-| Customer Management | M-01 (CUS) | Quản lý khách hàng B2B | UC-CUS-01..05 |
-| Contract Management | M-02 (CON) | Quản lý hợp đồng & subscription | UC-CON-01..06 |
+> Bản đồ đầy đủ + chi tiết UC: **`docs/README.md`** và **`docs/TRACEABILITY.md`**. Bảng dưới là tra cứu nhanh.
 
-### UC-CUS (Khách hàng)
-- UC-CUS-01: Danh sách khách hàng
-- UC-CUS-02: Tạo khách hàng
-- UC-CUS-03: Xem chi tiết khách hàng (360°)
-- UC-CUS-04: Cập nhật khách hàng
-- UC-CUS-05: Xóa khách hàng
+| Module | Code (UC prefix) | Mô tả | UC | PRD | FRS folder |
+|---|---|---|---|---|---|
+| Customer Management | M-01 (CUS) | Quản lý khách hàng B2B | UC-CUS-01..05 | §6.1 | `frs/customers/` |
+| Contract Management | M-02 (CON) | Hợp đồng lightweight | UC-CON-01..06 | §6.2 | `frs/contracts/` |
+| Subscription Management | M-03 (SUB) | Đối tượng thương mại chính | UC-SUB-01..10 | §6.3 | `frs/subscriptions/` |
+| Product & Package Catalog | M-04 (CAT) | Danh mục sản phẩm & gói | UC-CAT-01..07 | §6.4 | `frs/catalog/` |
+| License Mirror & Usage | M-05 (LIC) | Gương trạng thái license + mức dùng | UC-LIC-01..04 | §6.5 | `frs/licenses/` |
+| Provisioning Timeline | M-06 (EVT) | Dòng thời gian provisioning | *(chỉ PRD — chưa tách FRS)* | §6.6 | — |
+| Integration Layer | M-07 (INT) | Outbox/webhook — event-driven passive | UC-INT-01..06 | §6.7 | `frs/integration/` |
+| Audit & Notification | M-08 (AUD/NOT) | Nhật ký + thông báo | UC-AUD-01 · UC-NOT-01..03 | §6.8 | `frs/audit_notification/` |
+| **Cấu hình** *(menu gom — KHÔNG phải module riêng)* | SET / USR | Màn cấu hình vận hành; nội dung thuộc M-04/M-07/M-08 + nền tảng | UC-SET-01..03 · UC-USR-01 | *(rải theo module)* | `frs/settings/` |
+| EDR Module | PM-01 (EDR) | Product Module đầy đủ (Phase 2) | — | §6.9 | *(trong PRD)* |
+| C-Shield / AV | PM-02 / PM-03 | Skeleton khai báo | — | §6.10 / §6.11 | *(trong PRD)* |
 
-### UC-CON (Hợp đồng)
-- UC-CON-01: Danh sách hợp đồng
-- UC-CON-02: Tạo hợp đồng
-- UC-CON-03: Xem chi tiết hợp đồng
-- UC-CON-04: Cập nhật hợp đồng
-- UC-CON-05: Quản lý đính kèm
-- UC-CON-06: Xóa hợp đồng
+**Nguồn sự thật:** PRD hiện hành = `OneCRM_PRD_v2.7.md` (v2.3–v2.6 giữ lịch sử). Mọi BR/AC/luồng trace về đây.
 
 ---
 
