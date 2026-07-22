@@ -124,7 +124,7 @@
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 
-> **Demo HTML:** [docs/demo/v2.5.0_catalog.html](../../demo/v2.5.0_catalog.html) — hàm `pkgRenderTable`, `pkgVisibleRows`, `pkgRenderPager`, `pkgRowActions`, `pkgSort`, `pkgStatusBadge`.
+> **Demo HTML:** [docs/demo/v2.8.0_audit_notification.html](../../demo/v2.8.0_audit_notification.html) — hàm `pkgRenderTable`, `pkgVisibleRows`, `pkgRenderPager`, `pkgRowActions`, `pkgSort`, `pkgStatusBadge`.
 
 **Screenshot — Danh sách Gói sản phẩm:**
 

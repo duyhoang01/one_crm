@@ -382,7 +382,7 @@ Search bar cố định ở đầu panel (ngoài scroll container).
 
 | Thuộc tính | Giá trị |
 |---|---|
-| **Demo HTML** | [v2.3.2_contracts.html](../../demo/v2.3.2_contracts.html) |
+| **Demo HTML** | [v2.8.0_audit_notification.html](../../demo/v2.8.0_audit_notification.html) |
 | **Figma** | _(chưa có link — cần BA bổ sung)_ |
 | **API Contract** | _(chưa có link — cần BE bổ sung)_ |
 | **UC liên quan** | UC-CON-01 (Danh sách HĐ) · UC-CON-04 (Cập nhật HĐ) · UC-CON-05 (Quản lý đính kèm) · UC-CON-06 (Xóa HĐ) · UC-CUS-03 (Customer 360°) |

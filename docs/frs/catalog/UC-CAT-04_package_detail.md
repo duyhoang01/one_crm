@@ -111,7 +111,7 @@
 
 ### 3.1 Tổng quan màn hình
 
-> **Demo HTML:** [docs/demo/v2.5.0_catalog.html](../../demo/v2.5.0_catalog.html)
+> **Demo HTML:** [docs/demo/v2.8.0_audit_notification.html](../../demo/v2.8.0_audit_notification.html)
 > **Hàm chính:** `pkgOpenDetail`, `pkgSwitchTab`, `pkgDetailActions`, `pkgFeatureGridHtml`, `pkgFamilyVersions`
 
 Trang Chi tiết Gói gồm 3 khu vực xếp dọc từ trên xuống:

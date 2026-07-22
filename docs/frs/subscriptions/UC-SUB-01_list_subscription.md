@@ -99,7 +99,7 @@
 
 ### 3.1 Tổng quan màn hình
 
-> **Demo HTML:** [docs/demo/v2.4.0_subscriptions.html](../../demo/v2.4.0_subscriptions.html)
+> **Demo HTML:** [docs/demo/v2.8.0_audit_notification.html](../../demo/v2.8.0_audit_notification.html)
 
 Màn hình Danh sách Subscription gồm 3 khu vực chính:
 1. **Thanh công cụ (Toolbar):** Ô tìm kiếm, multi-select Trạng thái, dropdown Sản phẩm, dropdown Loại HĐ, toggle "Sắp hết hạn", nút "Xóa bộ lọc", nút "+ Thêm Subscription".

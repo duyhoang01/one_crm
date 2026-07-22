@@ -2291,7 +2291,7 @@ function renderTable(data,page){
   empty.classList.add('hidden');
   const tp=Math.max(1,Math.ceil(active.length/PAGE_SIZE));if(listPage>tp)listPage=tp;
   const s=(listPage-1)*PAGE_SIZE,rows=active.slice(s,s+PAGE_SIZE);
-  tbody.innerHTML=rows.map(c=>{const sa=c.subs.filter(x=>x.status==='ACTIVE').length;const delOk=canDeleteCustomer(c);const delBtn=delOk?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openDelete('${c.id}')" style="color:var(--red);border-color:var(--red);">🗑️</button>`:`<button class="btn btn-ghost btn-sm" disabled title="${deleteBlockedTooltip(c)}" style="color:var(--gray-400);border-color:var(--border);opacity:.5;cursor:not-allowed;">🗑️</button>`;
+  tbody.innerHTML=rows.map(c=>{const sa=c.subs.filter(x=>x.status==='ACTIVE').length;const delOk=canDeleteCustomer(c);const delBtn=delOk?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openDelete('${c.id}')" style="color:var(--red);border-color:var(--red);">🗑️ Xóa</button>`:`<button class="btn btn-ghost btn-sm" disabled title="${deleteBlockedTooltip(c)}" style="color:var(--gray-400);border-color:var(--border);opacity:.5;cursor:not-allowed;">🗑️ Xóa</button>`;
     return`<tr onclick="showCustomer360('${c.id}')"><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:8px;background:${typeColor(c.type)};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;flex-shrink:0;">${c.name.charAt(0)}</div><div><div class="col-name">${c.name}</div><div style="font-size:12px;color:var(--text-secondary);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.address||'—'}</div></div></div></td><td><span class="badge badge-${c.type.toLowerCase()}">${c.type}</span></td><td style="font-family:monospace;font-size:13px;">${c.tax||'—'}</td><td style="font-size:13px;">${c.email||'—'}</td><td>${c.subs.length>0?`<div style="font-size:13px;font-weight:500;">${c.subs.length} sub</div><div style="font-size:12px;color:var(--text-secondary);">${sa} active</div>`:'<span style="color:var(--text-secondary);font-size:13px;">Chưa có</span>'}</td><td onclick="event.stopPropagation()"><div style="display:flex;gap:4px;"><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openEdit('${c.id}')">✏️ Sửa</button>${delBtn}</div></td></tr>`;
   }).join('');
   const from=s+1,to=Math.min(s+PAGE_SIZE,active.length);document.getElementById('pageInfo').textContent=`Hiển thị ${from}–${to} / ${active.length} kết quả`;
@@ -2307,7 +2307,7 @@ function render360(c){
   const parent=c.parentId?customers.find(x=>x.id===c.parentId):null;
   const children=customers.filter(x=>x.parentId===c.id&&!x.deletedAt);
   const statusTxt=c.deletedAt?'Đã xóa':'Đang hoạt động',statusCls=c.deletedAt?'color:var(--red)':'color:#059669';
-  document.getElementById('profileHero').innerHTML=`<div class="profile-header"><div class="profile-id"><div class="profile-avatar">${c.name.charAt(0)}</div><div><div class="profile-name">${c.name}</div><div class="profile-meta"><span class="badge badge-${c.type.toLowerCase()}" style="margin-right:8px;">${c.type}</span><span style="${statusCls};font-size:12px;font-weight:500;">● ${statusTxt}</span></div></div></div><div class="profile-actions">${!c.deletedAt?`<button class="btn btn-secondary" onclick="openEdit('${c.id}')">✏️ Chỉnh sửa</button>${canDeleteCustomer(c)?`<button class="btn btn-ghost" onclick="openDelete('${c.id}')" style="color:var(--red);border-color:var(--red);">🗑️ Xóa</button>`:`<button class="btn btn-ghost" disabled title="${deleteBlockedTooltip(c)}" style="color:var(--gray-400);border-color:var(--border);opacity:.5;cursor:not-allowed;">🗑️ Xóa</button>`}`:''}<button class="btn btn-ghost" onclick="showView('list');document.getElementById('breadcrumbCurrent').textContent='Khách hàng'">← Quay lại</button></div></div>`;
+  document.getElementById('profileHero').innerHTML=`<div class="profile-header"><div class="profile-id"><div class="profile-avatar">${c.name.charAt(0)}</div><div><div class="profile-name">${c.name}</div><div class="profile-meta"><span class="badge badge-${c.type.toLowerCase()}" style="margin-right:8px;">${c.type}</span><span style="${statusCls};font-size:12px;font-weight:500;">● ${statusTxt}</span></div></div></div><div class="profile-actions">${!c.deletedAt?`<button class="btn btn-secondary" onclick="openEdit('${c.id}')">✏️ Sửa</button>${canDeleteCustomer(c)?`<button class="btn btn-ghost" onclick="openDelete('${c.id}')" style="color:var(--red);border-color:var(--red);">🗑️ Xóa</button>`:`<button class="btn btn-ghost" disabled title="${deleteBlockedTooltip(c)}" style="color:var(--gray-400);border-color:var(--border);opacity:.5;cursor:not-allowed;">🗑️ Xóa</button>`}`:''}<button class="btn btn-ghost" onclick="showView('list');document.getElementById('breadcrumbCurrent').textContent='Khách hàng'">← Quay lại</button></div></div>`;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelector('.tab').classList.add('active');
   ['tab-overview','tab-contracts','tab-timeline','tab-audit'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   document.getElementById('tab-overview').classList.remove('hidden');
@@ -3010,8 +3010,8 @@ function conRenderTable(){
     if(!isManager) delTitle='Chỉ Manager mới được xóa';
     else if(!canDel) delTitle='Đã có Subscription, không thể xóa';
     const delBtn=(canDel&&isManager)
-      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();conOpenDelete('${c.id}')" style="color:var(--red);border-color:var(--red)">🗑️</button>`
-      :`<button class="btn btn-ghost btn-sm" disabled title="${delTitle}" style="opacity:.4;cursor:not-allowed">🗑️</button>`;
+      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();conOpenDelete('${c.id}')" style="color:var(--red);border-color:var(--red)">🗑️ Xóa</button>`
+      :`<button class="btn btn-ghost btn-sm" disabled title="${delTitle}" style="opacity:.4;cursor:not-allowed">🗑️ Xóa</button>`;
     return`<tr onclick="conOpenDetail('${c.id}')">
       <td><div style="font-weight:600;color:var(--navy);font-size:13px;font-family:monospace">${c.code}</div><div style="font-size:11px;color:var(--text-secondary);margin-top:2px">${conFmtDate(c.createdAt)}</div></td>
       <td><div style="font-weight:500">${c.customerName}</div><div style="font-size:11px;color:var(--text-secondary)">${c.customerType}</div></td>
@@ -3020,7 +3020,7 @@ function conRenderTable(){
       <td><div style="font-size:13px;font-weight:500">${c.subs.length} sub${c.subs.length!==1?'s':''}</div><div style="font-size:11px;color:#059669">${subActiveCnt(c)} active</div></td>
       <td>${poolSummary(c)}</td>
       <td onclick="event.stopPropagation()"><div style="display:flex;gap:4px">
-        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();conOpenEdit('${c.id}')">✏️</button>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();conOpenEdit('${c.id}')">✏️ Sửa</button>
         ${delBtn}
       </div></td>
     </tr>`;
@@ -3055,7 +3055,7 @@ function conOpenDetail(id){
         </div>
       </div>
       <div class="con-detail-actions">
-        <button class="btn btn-secondary btn-sm" onclick="conOpenEdit('${c.id}')">✏️ Chỉnh sửa</button>
+        <button class="btn btn-secondary btn-sm" onclick="conOpenEdit('${c.id}')">✏️ Sửa</button>
         ${delBtn}
         <button class="btn btn-ghost btn-sm" onclick="conShowView('list')">← Quay lại</button>
       </div>
@@ -4091,14 +4091,12 @@ function subRenderTable(data,page){
   if(!allSubs.length){tbody.innerHTML='';if(empty)empty.classList.remove('hidden');document.getElementById('subPageInfo').textContent='0 kết quả';document.getElementById('subPageBtns').innerHTML='';subUpdateSortIcons();return;}
   if(empty)empty.classList.add('hidden');
 
-  const TRASH_ICON=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
-
   tbody.innerHTML=rows.map(sub=>{
     const isDraftRow=sub.status==='DRAFT';
     const editDraftRowBtn=isDraftRow
-      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenEditSub('${sub.id}')" title="Sửa Draft" style="font-size:13px;">✏️</button>`:'';
+      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenEditSub('${sub.id}')" title="Sửa Draft" style="font-size:13px;">✏️ Sửa</button>`:'';
     const deleteDraftRowBtn=isDraftRow
-      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Xóa Draft">${TRASH_ICON}</button>`:'';
+      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Xóa Draft">🗑️ Xóa</button>`:'';
     const beneficiary=sub.contractType==='RESELLER'&&sub.beneficiaryName
       ?`<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">→ ${sub.beneficiaryName}</div>`:''
     return`<tr onclick="subOpenDetail('${sub.id}')">
@@ -4470,7 +4468,7 @@ function subRenderHero(sub){
   const canEdit=subCanEdit(sub);
   const backBtn=`<button class="btn btn-ghost" onclick="subShowView('list');subRenderTable();document.getElementById('breadcrumbCurrent').textContent='Subscription';">← Quay lại</button>`;
   const approveBtn=isDraft?`<button class="btn btn-primary" onclick="subOpenApproveDraft('${sub.id}')">✅ Xác nhận</button>`:'';
-  const deleteDraftBtn=isDraft?`<button class="btn btn-danger" onclick="subOpenDeleteDraft('${sub.id}')">🗑️ Xóa</button>`:'';
+  const deleteDraftBtn=isDraft?`<button class="btn btn-ghost" onclick="subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red)">🗑️ Xóa</button>`:'';
   const editBtn=canEdit?`<button class="btn btn-secondary btn-sm" onclick="subOpenEditSub('${sub.id}')">✏️ Sửa</button>`:'';
   const suspendBtn=canSuspend?`<button class="btn btn-ghost btn-sm" onclick="subOpenSuspend('${sub.id}')" style="color:#D97706;border-color:#D97706;">⏸ Tạm dừng</button>`:'';
   const resumeBtn=canResume?`<button class="btn btn-ghost btn-sm" onclick="subOpenResume('${sub.id}')" style="color:#059669;border-color:#059669;">▶ Khôi phục</button>`:'';
@@ -5529,10 +5527,10 @@ function pkgRowActions(p,sc){
     ? pkgActDisabled('✏️ Sửa','Gói đã ngừng bán nên không sửa được')
     : `<button class="btn btn-secondary btn-sm" onclick="pkgOpenEdit('${p.id}')">✏️ Sửa</button>`;
   let delBtn;
-  if(p.status==='DRAFT'&&pkgCanDelete(p)) delBtn=`<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red)" onclick="pkgConfirm('delete','${p.id}')" title="Xóa gói">🗑️</button>`;
-  else if(p.status==='DRAFT') delBtn=pkgActDisabled('🗑️','Chỉ người tạo gói hoặc Manager mới xóa được');
-  else if(p.status==='ACTIVE') delBtn=pkgActDisabled('🗑️',"Gói đang bán nên không xóa được — muốn dừng, hãy dùng 'Ngừng bán' ở trang chi tiết");
-  else delBtn=pkgActDisabled('🗑️','Gói đã ngừng bán được giữ lại để tra cứu, không xóa');
+  if(p.status==='DRAFT'&&pkgCanDelete(p)) delBtn=`<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red)" onclick="pkgConfirm('delete','${p.id}')" title="Xóa gói">🗑️ Xóa</button>`;
+  else if(p.status==='DRAFT') delBtn=pkgActDisabled('🗑️ Xóa','Chỉ người tạo gói hoặc Manager mới xóa được');
+  else if(p.status==='ACTIVE') delBtn=pkgActDisabled('🗑️ Xóa',"Gói đang bán nên không xóa được — muốn dừng, hãy dùng 'Ngừng bán' ở trang chi tiết");
+  else delBtn=pkgActDisabled('🗑️ Xóa','Gói đã ngừng bán được giữ lại để tra cứu, không xóa');
   return `<div class="pkg-actions-bar">${editBtn}${delBtn}</div>`;
 }
 
@@ -5605,7 +5603,7 @@ function pkgOpenDetail(id){
 }
 function pkgSwitchTab(t){document.querySelectorAll('#pkg-view-detail .pkg-tab').forEach(x=>x.classList.toggle('active',x.dataset.t===t));document.querySelectorAll('#pkg-view-detail .pkg-tabpane').forEach(x=>x.classList.remove('active'));document.getElementById('pkgtab-'+t).classList.add('active');}
 function pkgDetailActions(p){
-  if(p.status==='DRAFT')return `${pkgCanPublish(p)?`<button class="btn btn-secondary btn-sm" onclick="pkgConfirm('publish','${p.id}')">🚀 Xuất bản</button>`:pkgActDisabled('🚀 Xuất bản','Chỉ Sales tạo gói hoặc Manager mới được xuất bản')}<button class="btn btn-ghost btn-sm" onclick="pkgOpenEdit('${p.id}')">✏️ Sửa</button>${pkgCanDelete(p)?`<button class="btn btn-danger btn-sm" onclick="pkgConfirm('delete','${p.id}')">🗑️ Xóa</button>`:pkgActDisabled('🗑️ Xóa','Chỉ Sales tạo gói hoặc Manager mới được xóa')}`;
+  if(p.status==='DRAFT')return `${pkgCanPublish(p)?`<button class="btn btn-secondary btn-sm" onclick="pkgConfirm('publish','${p.id}')">🚀 Xuất bản</button>`:pkgActDisabled('🚀 Xuất bản','Chỉ Sales tạo gói hoặc Manager mới được xuất bản')}<button class="btn btn-ghost btn-sm" onclick="pkgOpenEdit('${p.id}')">✏️ Sửa</button>${pkgCanDelete(p)?`<button class="btn btn-ghost btn-sm" onclick="pkgConfirm('delete','${p.id}')" style="color:var(--red);border-color:var(--red)">🗑️ Xóa</button>`:pkgActDisabled('🗑️ Xóa','Chỉ Sales tạo gói hoặc Manager mới được xóa')}`;
   if(p.status==='ACTIVE')return `<button class="btn btn-ghost btn-sm" onclick="pkgOpenEdit('${p.id}')">✏️ Sửa</button>${pkgCanRetire()?`<button class="btn btn-ghost btn-sm" style="color:var(--amber);border-color:#FDE68A" onclick="pkgConfirm('retire','${p.id}')">⏹ Ngừng bán</button>`:pkgActDisabled('⏹ Ngừng bán','Chỉ Manager mới được ngừng bán gói')}`;
   if(p.status==='RETIRED')return pkgCanPublish(p)?`<button class="btn btn-secondary btn-sm" onclick="pkgConfirm('rollback','${p.id}')" title="Tạo phiên bản nháp mới sao chép cấu hình này">↩️ Rollback</button>`:pkgActDisabled('↩️ Rollback','Chỉ Sales tạo gói hoặc Manager mới được rollback');
   return '';

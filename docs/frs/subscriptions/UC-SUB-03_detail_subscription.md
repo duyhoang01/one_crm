@@ -136,7 +136,7 @@
 
 ### 3.1 Tổng quan màn hình
 
-> **Demo HTML:** [docs/demo/v2.4.0_subscriptions.html](../../demo/v2.4.0_subscriptions.html)
+> **Demo HTML:** [docs/demo/v2.8.0_audit_notification.html](../../demo/v2.8.0_audit_notification.html)
 > **Hàm chính:** `subOpenDetail(id)`, `subRenderHero(sub)`, `subSwitchTab(el, sub, panelId)`, `subRenderInfo(sub)`, `subRenderLicense(sub)`, `subRenderTimeline(sub)`, `subRenderAuditLog(sub)`
 
 Trang Chi tiết Subscription gồm 4 khu vực xếp dọc từ trên xuống:
