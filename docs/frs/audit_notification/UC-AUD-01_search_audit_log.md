@@ -47,7 +47,7 @@
 |---|---|---|
 | **1** | Người dùng | Mở menu **Audit log**. |
 | **2** | System | **[Gateway — Có quyền `audit:view`?]**<br>→ **[Có]**: tiếp bước 3.<br>→ **[Không]**: sang EF-01. |
-| **3** | System | Lọc theo **khoảng thời gian mặc định (30 ngày)** (BR-03); tính **KPI** trên tập trong khoảng (BR-08); render bảng đầy đủ 7 cột — **cột Chi tiết (before → after + lý do) hiển thị sẵn trong cột** (BR-05) — + sticky header. |
+| **3** | System | Lọc theo **khoảng thời gian mặc định (30 ngày)** (BR-03); tính **KPI** trên tập trong khoảng (BR-08); **sắp theo thời gian giảm dần — mới nhất trên cùng** (đảm bảo bằng code, không dựa thứ tự lưu); render bảng đầy đủ 7 cột — **cột Chi tiết (before → after + lý do) hiển thị sẵn trong cột** (BR-05) — + sticky header. |
 | **4** | Người dùng | **[Gateway — Thao tác?]**<br>→ Thu hẹp / lọc / tìm / chip **"Chỉ thất bại"**: sang **AF-01**.<br>→ Bấm liên kết **Đối tượng**: **End 2** (mở màn hồ sơ liên quan).<br>→ Không thao tác: **End 1**. |
 
 > **Không có tương tác bấm-dòng-để-mở-chi-tiết** — bảng phẳng, before → after + lý do luôn hiển thị sẵn trong cột Chi tiết.

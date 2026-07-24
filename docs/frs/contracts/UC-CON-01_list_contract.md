@@ -94,7 +94,7 @@ Màn hình Danh sách Hợp đồng bao gồm 3 khu vực chính:
 
 | # | Cột | Nguồn dữ liệu | Mô tả hiển thị | Sortable |
 |---|---|---|---|---|
-| 1 | **Mã HĐ** | `contract.code` | Dòng 1: mã HĐ — font monospace, bold, màu navy. Dòng 2: `contract.createdAt` định dạng `dd/MM/yyyy`, font nhỏ, màu xám. | ✅ |
+| 1 | **Mã HĐ** | `contract.code` | Dòng 1: mã HĐ — font monospace, bold, màu navy. Dòng 2: nhãn **"Tạo: "** + `contract.createdAt` định dạng `dd/MM/yyyy`, font nhỏ, màu xám — nhãn giúp phân biệt với cột **Ngày ký** (`signedDate`) và làm rõ danh sách đang sort theo ngày tạo. | ✅ |
 | 2 | **Khách hàng** | `contract.customerName` | Dòng 1: tên khách hàng. Dòng 2: loại KH (B2B / Reseller / B2C / Other), font nhỏ, màu xám. | ✅ |
 | 3 | **Loại HĐ** | `contract.type` | Badge: `DIRECT` → xanh dương; `RESELLER` → tím. | ✅ |
 | 4 | **Ngày ký** | `contract.signedDate` | Định dạng `dd/MM/yyyy`. Hiển thị "—" khi `signedDate = null`. | ✅ |

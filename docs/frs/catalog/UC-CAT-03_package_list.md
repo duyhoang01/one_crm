@@ -107,8 +107,7 @@
 │ Gói sản phẩm  ›  Gói sản phẩm                                (breadcrumb)    │
 ├────────────────────────────────────────────────────────────────────────────┤
 │ Gói sản phẩm (Package)                                        [ ＋ Thêm gói ]│
-│ Danh sách gói bán hàng của từng sản phẩm. Mặc định hiện phiên bản hiện hành  │
-│ của mỗi mã gói — tích "Hiện mọi phiên bản" để xem lịch sử version.           │
+│ Gói bán của từng sản phẩm — số lượng license, thời lượng, tính năng        │
 ├────────────────────────────────────────────────────────────────────────────┤
 │ [🔎 Tìm theo mã gói, tên gói...] [Tất cả sản phẩm▾] [Trạng thái▾] ☐ Hiện mọi│
 │                                                                phiên bản     │
@@ -137,7 +136,7 @@
 | Component | Loại | Mô tả |
 |---|---|---|
 | Tiêu đề | Heading | "Gói sản phẩm (Package)". |
-| Subtitle | Text | "Danh sách gói bán hàng của từng sản phẩm. Mặc định hiện phiên bản hiện hành của mỗi mã gói — tích 'Hiện mọi phiên bản' để xem lịch sử version." |
+| Subtitle | Text | "Gói bán của từng sản phẩm — số lượng license, thời lượng, tính năng". *(Hành vi mặc định gộp phiên bản hiện hành + tích "Hiện mọi phiên bản" để xem lịch sử version: xem Business Rules.)* |
 | Nút "＋ Thêm gói" | Primary button | Mở form Tạo gói (UC riêng) → **End 2**. |
 
 #### Thanh công cụ (Toolbar)

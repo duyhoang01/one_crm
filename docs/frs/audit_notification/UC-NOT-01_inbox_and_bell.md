@@ -43,7 +43,7 @@
 |---|---|---|
 | **1** | Người dùng | Bấm **chuông 🔔** (bảng xổ) **HOẶC** mở menu **Thông báo → tab Hộp thư của tôi**. |
 | **2** | System | Lọc thông báo theo **VAI TRÒ** người nhận của người dùng hiện tại (theo vai trò, **không** theo số lượng — BR-02/03).<br>**[Gateway — Vai trò có nhận thông báo thương mại?]**<br>→ **[Không]** (License Admin / Auditor): sang **AF-02**.<br>→ **[Có]**: tiếp bước 3. |
-| **3** | System | Render danh sách (chuông: vài mục gần nhất; hộp thư: đầy đủ); chấm xanh = chưa đọc; badge số chưa đọc (BR-05, BR-08). |
+| **3** | System | Render danh sách **sắp theo thời gian, mới nhất trên cùng** (chuông: vài mục gần nhất; hộp thư: đầy đủ); chấm xanh = chưa đọc; badge số chưa đọc (BR-05, BR-08). |
 | **4** | Người dùng | **[Gateway — Thao tác?]**<br>→ Bấm 1 thông báo: **AF-01**.<br>→ "Đánh dấu tất cả đã đọc" (bảng xổ chuông là nút "Đọc hết"): tiếp bước 5.<br>→ "Xem tất cả →" (chỉ ở bảng xổ chuông): **End 2** (mở Hộp thư đầy đủ).<br>→ Không thao tác: **End 1** (ở lại). |
 | **5** | System | Đánh dấu **tất cả** thông báo là đã đọc; cập nhật badge chưa đọc + tắt chấm đỏ chuông (BR-05) → **quay bước 4**. |
 

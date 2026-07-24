@@ -760,7 +760,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
       <div id="module-customer">
       <div class="view active" id="view-list">
         <div class="page-header">
-          <div><div class="page-title">Danh sách Khách hàng</div><div class="page-subtitle">Quản lý toàn bộ hồ sơ khách hàng — B2B, Reseller, B2C, Other</div></div>
+          <div><div class="page-title">Danh sách Khách hàng</div><div class="page-subtitle">Hồ sơ khách hàng tập trung — B2B, Reseller, B2C, Other</div></div>
           <button class="btn btn-primary" onclick="openModal('modalCreate')">＋ Thêm Khách hàng</button>
         </div>
         <div class="toolbar">
@@ -798,7 +798,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <div class="page-header">
             <div>
               <div class="page-title">Danh sách Hợp đồng</div>
-              <div class="page-subtitle">Quản lý hợp đồng thương mại — trực tiếp (Direct) & đại lý (Reseller)</div>
+              <div class="page-subtitle">Hợp đồng thương mại — trực tiếp (Direct) & đại lý (Reseller)</div>
             </div>
             <button class="btn btn-primary" onclick="conOpenModal('conModalCreate')">＋ Thêm Hợp đồng</button>
           </div>
@@ -948,7 +948,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <div class="page-header">
             <div>
               <div class="page-title">Sản phẩm (Product Catalog)</div>
-              <div class="page-subtitle">Danh mục sản phẩm đã đăng ký.</div>
+              <div class="page-subtitle">Sản phẩm an ninh mạng đang phân phối — nguồn để tạo gói & subscription</div>
             </div>
           </div>
           <div class="cat-kanban" id="catKanban"></div>
@@ -964,7 +964,7 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
           <div class="page-header">
             <div>
               <div class="page-title">Gói sản phẩm (Package)</div>
-              <div class="page-subtitle">Danh sách gói bán hàng của từng sản phẩm.</div>
+              <div class="page-subtitle">Gói bán của từng sản phẩm — số lượng license, thời lượng, tính năng</div>
             </div>
             <button class="btn btn-primary" onclick="pkgOpenCreate()">＋ Thêm gói</button>
           </div>
@@ -2286,12 +2286,12 @@ function showCustomer360(id){
 /* ── TABLE ────────────────────────────────────────────── */
 function renderTable(data,page){
   const tbody=document.getElementById('customerTable'),empty=document.getElementById('tableEmpty');
-  const active=data.filter(c=>!c.deletedAt);lastFilteredActive=active;listPage=page||1;
+  const active=data.filter(c=>!c.deletedAt).sort((a,b)=>(a.name||'').localeCompare(b.name||'','vi'));lastFilteredActive=active;listPage=page||1;
   if(!active.length){tbody.innerHTML='';empty.classList.remove('hidden');document.getElementById('pageInfo').textContent='0 kết quả';document.querySelector('.page-btns').innerHTML='';return;}
   empty.classList.add('hidden');
   const tp=Math.max(1,Math.ceil(active.length/PAGE_SIZE));if(listPage>tp)listPage=tp;
   const s=(listPage-1)*PAGE_SIZE,rows=active.slice(s,s+PAGE_SIZE);
-  tbody.innerHTML=rows.map(c=>{const sa=c.subs.filter(x=>x.status==='ACTIVE').length;const delOk=canDeleteCustomer(c);const delBtn=delOk?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openDelete('${c.id}')" style="color:var(--red);border-color:var(--red);">🗑️ Xóa</button>`:`<button class="btn btn-ghost btn-sm" disabled title="${deleteBlockedTooltip(c)}" style="color:var(--gray-400);border-color:var(--border);opacity:.5;cursor:not-allowed;">🗑️ Xóa</button>`;
+  tbody.innerHTML=rows.map(c=>{const sa=c.subs.filter(x=>x.status==='ACTIVE').length;const delOk=canDeleteCustomer(c);const delBtn=delOk?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openDelete('${c.id}')" style="color:var(--red);">🗑️ Xóa</button>`:`<button class="btn btn-ghost btn-sm" disabled title="${deleteBlockedTooltip(c)}" style="color:var(--gray-400);border-color:var(--border);opacity:.5;cursor:not-allowed;">🗑️ Xóa</button>`;
     return`<tr onclick="showCustomer360('${c.id}')"><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:8px;background:${typeColor(c.type)};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;flex-shrink:0;">${c.name.charAt(0)}</div><div><div class="col-name">${c.name}</div><div style="font-size:12px;color:var(--text-secondary);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.address||'—'}</div></div></div></td><td><span class="badge badge-${c.type.toLowerCase()}">${c.type}</span></td><td style="font-family:monospace;font-size:13px;">${c.tax||'—'}</td><td style="font-size:13px;">${c.email||'—'}</td><td>${c.subs.length>0?`<div style="font-size:13px;font-weight:500;">${c.subs.length} sub</div><div style="font-size:12px;color:var(--text-secondary);">${sa} active</div>`:'<span style="color:var(--text-secondary);font-size:13px;">Chưa có</span>'}</td><td onclick="event.stopPropagation()"><div style="display:flex;gap:4px;"><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openEdit('${c.id}')">✏️ Sửa</button>${delBtn}</div></td></tr>`;
   }).join('');
   const from=s+1,to=Math.min(s+PAGE_SIZE,active.length);document.getElementById('pageInfo').textContent=`Hiển thị ${from}–${to} / ${active.length} kết quả`;
@@ -2307,7 +2307,7 @@ function render360(c){
   const parent=c.parentId?customers.find(x=>x.id===c.parentId):null;
   const children=customers.filter(x=>x.parentId===c.id&&!x.deletedAt);
   const statusTxt=c.deletedAt?'Đã xóa':'Đang hoạt động',statusCls=c.deletedAt?'color:var(--red)':'color:#059669';
-  document.getElementById('profileHero').innerHTML=`<div class="profile-header"><div class="profile-id"><div class="profile-avatar">${c.name.charAt(0)}</div><div><div class="profile-name">${c.name}</div><div class="profile-meta"><span class="badge badge-${c.type.toLowerCase()}" style="margin-right:8px;">${c.type}</span><span style="${statusCls};font-size:12px;font-weight:500;">● ${statusTxt}</span></div></div></div><div class="profile-actions">${!c.deletedAt?`<button class="btn btn-secondary" onclick="openEdit('${c.id}')">✏️ Sửa</button>${canDeleteCustomer(c)?`<button class="btn btn-ghost" onclick="openDelete('${c.id}')" style="color:var(--red);border-color:var(--red);">🗑️ Xóa</button>`:`<button class="btn btn-ghost" disabled title="${deleteBlockedTooltip(c)}" style="color:var(--gray-400);border-color:var(--border);opacity:.5;cursor:not-allowed;">🗑️ Xóa</button>`}`:''}<button class="btn btn-ghost" onclick="showView('list');document.getElementById('breadcrumbCurrent').textContent='Khách hàng'">← Quay lại</button></div></div>`;
+  document.getElementById('profileHero').innerHTML=`<div class="profile-header"><div class="profile-id"><div class="profile-avatar">${c.name.charAt(0)}</div><div><div class="profile-name">${c.name}</div><div class="profile-meta"><span class="badge badge-${c.type.toLowerCase()}" style="margin-right:8px;">${c.type}</span><span style="${statusCls};font-size:12px;font-weight:500;">● ${statusTxt}</span></div></div></div><div class="profile-actions">${!c.deletedAt?`<button class="btn btn-secondary" onclick="openEdit('${c.id}')">✏️ Sửa</button>${canDeleteCustomer(c)?`<button class="btn btn-ghost" onclick="openDelete('${c.id}')" style="color:var(--red);">🗑️ Xóa</button>`:`<button class="btn btn-ghost" disabled title="${deleteBlockedTooltip(c)}" style="color:var(--gray-400);border-color:var(--border);opacity:.5;cursor:not-allowed;">🗑️ Xóa</button>`}`:''}<button class="btn btn-ghost" onclick="showView('list');document.getElementById('breadcrumbCurrent').textContent='Khách hàng'">← Quay lại</button></div></div>`;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelector('.tab').classList.add('active');
   ['tab-overview','tab-contracts','tab-timeline','tab-audit'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   document.getElementById('tab-overview').classList.remove('hidden');
@@ -3010,10 +3010,10 @@ function conRenderTable(){
     if(!isManager) delTitle='Chỉ Manager mới được xóa';
     else if(!canDel) delTitle='Đã có Subscription, không thể xóa';
     const delBtn=(canDel&&isManager)
-      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();conOpenDelete('${c.id}')" style="color:var(--red);border-color:var(--red)">🗑️ Xóa</button>`
+      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();conOpenDelete('${c.id}')" style="color:var(--red)">🗑️ Xóa</button>`
       :`<button class="btn btn-ghost btn-sm" disabled title="${delTitle}" style="opacity:.4;cursor:not-allowed">🗑️ Xóa</button>`;
     return`<tr onclick="conOpenDetail('${c.id}')">
-      <td><div style="font-weight:600;color:var(--navy);font-size:13px;font-family:monospace">${c.code}</div><div style="font-size:11px;color:var(--text-secondary);margin-top:2px">${conFmtDate(c.createdAt)}</div></td>
+      <td><div style="font-weight:600;color:var(--navy);font-size:13px;font-family:monospace">${c.code}</div><div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Tạo: ${conFmtDate(c.createdAt)}</div></td>
       <td><div style="font-weight:500">${c.customerName}</div><div style="font-size:11px;color:var(--text-secondary)">${c.customerType}</div></td>
       <td>${c.type==='DIRECT'?'<span class="con-badge con-badge-direct">🏢 Direct</span>':'<span class="con-badge con-badge-reseller">🤝 Reseller</span>'}</td>
       <td style="font-size:13px">${conFmtDate(c.signedDate)}</td>
@@ -3043,7 +3043,7 @@ function conOpenDetail(id){
   if(!isManager) delTitle='Chỉ Manager mới được xóa';
   else if(!canDel) delTitle='Đã có Subscription, không thể xóa';
   const delBtn=(canDel&&isManager)
-    ?`<button class="btn btn-ghost btn-sm" onclick="conOpenDelete('${c.id}')" style="color:var(--red);border-color:var(--red)">🗑️ Xóa</button>`
+    ?`<button class="btn btn-ghost btn-sm" onclick="conOpenDelete('${c.id}')" style="color:var(--red)">🗑️ Xóa</button>`
     :`<button class="btn btn-ghost btn-sm" disabled title="${delTitle}" style="opacity:.4;cursor:not-allowed">🗑️ Xóa</button>`;
   document.getElementById('conDetailHero').innerHTML=`
     <div class="con-detail-header">
@@ -4096,7 +4096,7 @@ function subRenderTable(data,page){
     const editDraftRowBtn=isDraftRow
       ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenEditSub('${sub.id}')" title="Sửa Draft" style="font-size:13px;">✏️ Sửa</button>`:'';
     const deleteDraftRowBtn=isDraftRow
-      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red);gap:4px;" title="Xóa Draft">🗑️ Xóa</button>`:'';
+      ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();subOpenDeleteDraft('${sub.id}')" style="color:var(--red);gap:4px;" title="Xóa Draft">🗑️ Xóa</button>`:'';
     const beneficiary=sub.contractType==='RESELLER'&&sub.beneficiaryName
       ?`<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">→ ${sub.beneficiaryName}</div>`:''
     return`<tr onclick="subOpenDetail('${sub.id}')">
@@ -4468,7 +4468,7 @@ function subRenderHero(sub){
   const canEdit=subCanEdit(sub);
   const backBtn=`<button class="btn btn-ghost" onclick="subShowView('list');subRenderTable();document.getElementById('breadcrumbCurrent').textContent='Subscription';">← Quay lại</button>`;
   const approveBtn=isDraft?`<button class="btn btn-primary" onclick="subOpenApproveDraft('${sub.id}')">✅ Xác nhận</button>`:'';
-  const deleteDraftBtn=isDraft?`<button class="btn btn-ghost" onclick="subOpenDeleteDraft('${sub.id}')" style="color:var(--red);border-color:var(--red)">🗑️ Xóa</button>`:'';
+  const deleteDraftBtn=isDraft?`<button class="btn btn-ghost" onclick="subOpenDeleteDraft('${sub.id}')" style="color:var(--red)">🗑️ Xóa</button>`:'';
   const editBtn=canEdit?`<button class="btn btn-secondary btn-sm" onclick="subOpenEditSub('${sub.id}')">✏️ Sửa</button>`:'';
   const suspendBtn=canSuspend?`<button class="btn btn-ghost btn-sm" onclick="subOpenSuspend('${sub.id}')" style="color:#D97706;border-color:#D97706;">⏸ Tạm dừng</button>`:'';
   const resumeBtn=canResume?`<button class="btn btn-ghost btn-sm" onclick="subOpenResume('${sub.id}')" style="color:#059669;border-color:#059669;">▶ Khôi phục</button>`:'';
@@ -5527,7 +5527,7 @@ function pkgRowActions(p,sc){
     ? pkgActDisabled('✏️ Sửa','Gói đã ngừng bán nên không sửa được')
     : `<button class="btn btn-secondary btn-sm" onclick="pkgOpenEdit('${p.id}')">✏️ Sửa</button>`;
   let delBtn;
-  if(p.status==='DRAFT'&&pkgCanDelete(p)) delBtn=`<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red)" onclick="pkgConfirm('delete','${p.id}')" title="Xóa gói">🗑️ Xóa</button>`;
+  if(p.status==='DRAFT'&&pkgCanDelete(p)) delBtn=`<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="pkgConfirm('delete','${p.id}')" title="Xóa gói">🗑️ Xóa</button>`;
   else if(p.status==='DRAFT') delBtn=pkgActDisabled('🗑️ Xóa','Chỉ người tạo gói hoặc Manager mới xóa được');
   else if(p.status==='ACTIVE') delBtn=pkgActDisabled('🗑️ Xóa',"Gói đang bán nên không xóa được — muốn dừng, hãy dùng 'Ngừng bán' ở trang chi tiết");
   else delBtn=pkgActDisabled('🗑️ Xóa','Gói đã ngừng bán được giữ lại để tra cứu, không xóa');
@@ -5603,7 +5603,7 @@ function pkgOpenDetail(id){
 }
 function pkgSwitchTab(t){document.querySelectorAll('#pkg-view-detail .pkg-tab').forEach(x=>x.classList.toggle('active',x.dataset.t===t));document.querySelectorAll('#pkg-view-detail .pkg-tabpane').forEach(x=>x.classList.remove('active'));document.getElementById('pkgtab-'+t).classList.add('active');}
 function pkgDetailActions(p){
-  if(p.status==='DRAFT')return `${pkgCanPublish(p)?`<button class="btn btn-secondary btn-sm" onclick="pkgConfirm('publish','${p.id}')">🚀 Xuất bản</button>`:pkgActDisabled('🚀 Xuất bản','Chỉ Sales tạo gói hoặc Manager mới được xuất bản')}<button class="btn btn-ghost btn-sm" onclick="pkgOpenEdit('${p.id}')">✏️ Sửa</button>${pkgCanDelete(p)?`<button class="btn btn-ghost btn-sm" onclick="pkgConfirm('delete','${p.id}')" style="color:var(--red);border-color:var(--red)">🗑️ Xóa</button>`:pkgActDisabled('🗑️ Xóa','Chỉ Sales tạo gói hoặc Manager mới được xóa')}`;
+  if(p.status==='DRAFT')return `${pkgCanPublish(p)?`<button class="btn btn-secondary btn-sm" onclick="pkgConfirm('publish','${p.id}')">🚀 Xuất bản</button>`:pkgActDisabled('🚀 Xuất bản','Chỉ Sales tạo gói hoặc Manager mới được xuất bản')}<button class="btn btn-ghost btn-sm" onclick="pkgOpenEdit('${p.id}')">✏️ Sửa</button>${pkgCanDelete(p)?`<button class="btn btn-ghost btn-sm" onclick="pkgConfirm('delete','${p.id}')" style="color:var(--red)">🗑️ Xóa</button>`:pkgActDisabled('🗑️ Xóa','Chỉ Sales tạo gói hoặc Manager mới được xóa')}`;
   if(p.status==='ACTIVE')return `<button class="btn btn-ghost btn-sm" onclick="pkgOpenEdit('${p.id}')">✏️ Sửa</button>${pkgCanRetire()?`<button class="btn btn-ghost btn-sm" style="color:var(--amber);border-color:#FDE68A" onclick="pkgConfirm('retire','${p.id}')">⏹ Ngừng bán</button>`:pkgActDisabled('⏹ Ngừng bán','Chỉ Manager mới được ngừng bán gói')}`;
   if(p.status==='RETIRED')return pkgCanPublish(p)?`<button class="btn btn-secondary btn-sm" onclick="pkgConfirm('rollback','${p.id}')" title="Tạo phiên bản nháp mới sao chép cấu hình này">↩️ Rollback</button>`:pkgActDisabled('↩️ Rollback','Chỉ Sales tạo gói hoặc Manager mới được rollback');
   return '';
@@ -5981,7 +5981,7 @@ function licSeedData(){
     signedDate:'2026-04-05',description:'C-Shield Enterprise — bảo vệ ứng dụng di động Vingroup.',
     createdBy:'Sales B',createdAt:'2026-04-05T09:00:00',poolItems:[],
     subs:[
-      {id:'SUB-2026-020',contractId:'con-014',beneficiaryId:null,beneficiaryName:null,
+      {id:'SUB-2026-020',createdAt:'2026-04-08T09:00:00',contractId:'con-014',beneficiaryId:null,beneficiaryName:null,
        productId:'C_SHIELD',packageId:'PKG-CS-02',packageName:'C-Shield Enterprise',
        startDate:'2026-04-10',endDate:'2027-04-09',licenseQty:null,seatCount:500,
        status:'ACTIVE',note:'',
@@ -7770,7 +7770,7 @@ function notifRender(){
 }
 function notifRenderInbox(){
   const base=NOTIF_INBOX.filter(n=>n.roles.includes(currentUser.role));
-  let items=base;
+  let items=base; // NOTIF_INBOX seed đã xếp mới→cũ; 'time' là nhãn hiển thị (Hôm nay/Hôm qua/13/07) nên KHÔNG sort theo chuỗi được — giữ đúng thứ tự seed. (Khi backend có timestamp thật → sort desc theo đó.)
   const unread=base.filter(n=>!NOTIF_READ.has(n.id)).length;
   if(notifInboxFilter==='unread')items=base.filter(n=>!NOTIF_READ.has(n.id));
   const head=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
@@ -7936,7 +7936,8 @@ function audApplyFilter(){
     (!audFilter.entity||r.entity.type===audFilter.entity)&&
     (!af||r.actor.toLowerCase().includes(af))&&
     (!audFilter.result||r.result===audFilter.result)&&
-    (!q||`${r.actor} ${r.action} ${r.detail}`.toLowerCase().includes(q)));
+    (!q||`${r.actor} ${r.action} ${r.detail}`.toLowerCase().includes(q)))
+    .sort((a,b)=>audParse(b.time)-audParse(a.time)); // mới → cũ (tường minh, không dựa thứ tự seed)
   const kpis=`<div class="mini-kpis" style="margin-bottom:14px;">
       <div class="mini-kpi"><div class="k-label">Thao tác trong khoảng</div><div class="k-value">${total}</div><div class="k-sub">bản ghi</div></div>
       <div class="mini-kpi ${failed?'red':''}"><div class="k-label">Thất bại</div><div class="k-value">${failed}</div><div class="k-sub">cần điều tra</div></div>
@@ -8140,7 +8141,7 @@ function usersRender(){
       <span class="badge badge-b2b">${amEsc(u.role)}</span></div>`).join('');
   const head=`<tr><th>Quyền hạn</th>${CAP_ROLES.map(r=>`<th class="cap-role">${r}</th>`).join('')}</tr>`;
   const rows=CAP_MATRIX.map(m=>`<tr><td>${amEsc(m.cap)}</td>${CAP_ROLES.map(r=>`<td>${m.roles.includes(r)?'<span class="cap-yes">●</span>':'<span class="cap-no">—</span>'}</td>`).join('')}</tr>`).join('');
-  body.innerHTML=`<div class="mod-head"><div><div class="page-title">Người dùng & phân quyền</div><div class="page-subtitle">Danh sách tài khoản và ma trận quyền theo vai trò — giai đoạn này chỉ để xem</div></div></div>
+  body.innerHTML=`<div class="mod-head"><div><div class="page-title">Người dùng & phân quyền</div><div class="page-subtitle">Tài khoản và ma trận quyền theo vai trò — màn chỉ đọc</div></div></div>
     <div class="set-panel">
       <div class="set-panel-head"><p>Quản trị tài khoản do hệ thống định danh chung của công ty đảm nhiệm — màn này chỉ để <b>xem</b>.</p><span class="set-owner">Quản trị tài khoản đầy đủ sẽ bổ sung ở giai đoạn sau</span></div>
       <div style="font-weight:600;color:var(--navy);margin-bottom:6px;">Tài khoản demo</div>

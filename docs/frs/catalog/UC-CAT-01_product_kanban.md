@@ -80,9 +80,8 @@ Màn hình read-only, không có thao tác ghi dữ liệu nên **không phát s
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ 📦 Sản phẩm (Product Catalog)                                 │
-│ Danh mục sản phẩm đã đăng ký — mỗi thẻ là 1 sản phẩm, bên     │
-│ trong liệt kê các gói. Click thẻ để xem chi tiết. Product do  │
-│ Admin đăng ký 1 lần (read-only).                              │
+│ Sản phẩm an ninh mạng đang phân phối                         │
+│ — nguồn để tạo gói & subscription                            │
 ├──────────────────────────────────────────────────────────────┤
 │  ┌────────────────────────┐   ┌────────────────────────┐     │
 │  │ 🛡️ CMC EDR    ● Đang..│   │ 📱 C-Shield   ● Đang.. │     │  ← click đầu thẻ
@@ -113,7 +112,7 @@ Màn hình read-only, không có thao tác ghi dữ liệu nên **không phát s
 | # | Thành phần | Loại | Mô tả |
 |---|---|---|---|
 | 1 | Page header — tiêu đề | Text | "Sản phẩm (Product Catalog)". |
-| 2 | Page header — subtitle | Text | "Danh mục sản phẩm đã đăng ký — mỗi thẻ là 1 sản phẩm, bên trong liệt kê các gói. Click thẻ để xem chi tiết. Product do Admin đăng ký 1 lần (read-only)." |
+| 2 | Page header — subtitle | Text | "Sản phẩm an ninh mạng đang phân phối — nguồn để tạo gói & subscription". *(Chi tiết hành vi: mỗi thẻ 1 sản phẩm, click để xem chi tiết, Product do Admin đăng ký 1 lần — xem §1 Mô tả & Business Rules.)* |
 | 3 | Breadcrumb | Text | Hiển thị "Sản phẩm". |
 | 4 | Lưới Kanban `.cat-kanban` | Grid layout | Grid 2 cột, `gap` giữa các thẻ, `align-items: start`. Responsive về 1 cột khi bề rộng ≤ 820px (BR-02). |
 | 5 | Thẻ sản phẩm (card) | Card | Mỗi thẻ = 1 product. Gồm phần đầu (click được → End 1) và nút cuối thẻ (→ End 2). |
