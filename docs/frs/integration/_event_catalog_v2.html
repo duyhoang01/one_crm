@@ -739,17 +739,17 @@ img{ max-width:100%; }
 <tr><td><code>package_code</code></td><td>Có</td><td><strong>Package</strong> · <code>code</code></td><td>Mã gói CRM — để truy vết/đối soát commercial.</td></tr>
 <tr><td><code>features[]</code></td><td>—</td><td><strong>Package</strong> · <code>features[]</code></td><td>Add-on theo key kỹ thuật EDR (vd <code>vulnerability-detection</code>…); đã ràng buộc theo <code>featureCatalog</code> của EDR (UC-CAT BR-01.5). CRM gửi trực tiếp, không hardcode ở lõi.</td></tr>
 <tr><td><code>seat_count</code></td><td>Có</td><td><strong>Subscription</strong> · <code>license_qty</code></td><td>Số ghế.</td></tr>
-<tr><td><code>subscription_plan</code></td><td>Có</td><td><strong>Package</strong> · <code>duration_months</code></td><td>🔴 <strong>Lệch enum</strong>: CRM đang {12, 24, 36} = 1/2/3 năm; EDR cần 1/3/5 năm — xem ghi chú dưới.</td></tr>
-<tr><td><code>activation.full_name</code></td><td>Có</td><td><strong>Subscription</strong> <em>— sẽ bổ sung</em></td><td>Họ tên chủ tài khoản kích hoạt.</td></tr>
-<tr><td><code>activation.username</code></td><td>Có</td><td><strong>Subscription</strong> <em>— sẽ bổ sung</em></td><td>Tên đăng nhập — duy nhất, không dấu cách (trùng → EDR báo <code>ACCOUNT_OWNER_EXISTS</code>).</td></tr>
-<tr><td><code>activation.email</code></td><td>Có</td><td><strong>Subscription</strong> <em>— sẽ bổ sung</em></td><td>Email chủ tài khoản — duy nhất.</td></tr>
+<tr><td><code>subscription_plan</code></td><td>Có</td><td><strong>Package</strong> · <code>duration_months</code></td><td>🔴 <strong>Lệch enum</strong> (OQ-CAT-06, §6): CRM đang {12, 24, 36} = 1/2/3 năm; EDR cần 1/3/5 năm — xem ghi chú dưới.</td></tr>
+<tr><td><code>activation.full_name</code></td><td>Có</td><td><strong>Subscription</strong> · <code>activation_account.full_name</code></td><td>Họ tên chủ tài khoản kích hoạt.</td></tr>
+<tr><td><code>activation.username</code></td><td>Có</td><td><strong>Subscription</strong> · <code>activation_account.username</code></td><td>Tên đăng nhập — duy nhất, không dấu cách (trùng → EDR báo <code>ACCOUNT_OWNER_EXISTS</code>).</td></tr>
+<tr><td><code>activation.email</code></td><td>Có</td><td><strong>Subscription</strong> · <code>activation_account.email</code></td><td>Email chủ tài khoản — duy nhất.</td></tr>
 </tbody>
 </table>
 <blockquote>
 <p>🔴 <strong>Hai điểm CRM cần xử lý (đã đối chiếu PRD/FRS):</strong></p>
 <ul>
-<li><strong>Kỳ hạn lệch enum:</strong> CRM dùng <code>duration_months</code> ∈ {12, 24, 36} = <strong>1/2/3 năm</strong> (UC-CAT BR-01.3), còn EDR chỉ nhận <strong>1/3/5 năm</strong> → CRM thiếu 5 năm, thừa 2 năm. Cần chốt: EDR mở thêm giá trị, hay CRM đổi enum kỳ hạn cho gói EDR.</li>
-<li><strong>Tài khoản kích hoạt chưa được thu thập:</strong> UC-SUB-02 (tạo subscription) hiện chưa capture <code>full_name</code> / <code>username</code> / <code>email</code>. Ba trường này <strong>định nghĩa trước ở đây</strong>, sẽ <strong>bổ sung mục "Tài khoản kích hoạt" vào subscription</strong> (UC-SUB-02/05) sau.</li>
+<li><strong>Kỳ hạn lệch enum (OQ-CAT-06, §6 — CHƯA chốt):</strong> CRM dùng <code>duration_months</code> ∈ {12, 24, 36} = <strong>1/2/3 năm</strong> (UC-CAT BR-01.3), còn EDR chỉ nhận <strong>1/3/5 năm</strong> (12/36/60) → CRM thiếu 5 năm (60 tháng), thừa 2 năm (24 tháng). Cần chốt: EDR mở thêm giá trị, hay CRM đổi enum kỳ hạn cho gói EDR.</li>
+<li><strong>Tài khoản kích hoạt — đã bổ sung:</strong> subscription nay lưu <code>activation_account</code> (<code>full_name</code> / <code>username</code> / <code>email</code>, PRD §5.3.4), thu thập ở UC-SUB-02 (BR-13) và sửa ở UC-SUB-04; đưa vào payload khi Xác nhận (UC-SUB-05).</li>
 </ul>
 </blockquote>
 <hr />
@@ -816,6 +816,11 @@ Kết quả: license SAI trạng thái, và sai vĩnh viễn.</code></pre>
 <tr>
 <td><strong>OQ-INT-05</strong></td>
 <td><strong>CHƯA chốt:</strong> đề xuất chặn event đến muộn theo <code>occurred_at</code> + cột <code>license_mirror.last_event_occurred_at</code> (§5.2).</td>
+<td>🔴 Cần chốt với EDR</td>
+</tr>
+<tr>
+<td><strong>OQ-CAT-06</strong></td>
+<td><strong>CHƯA chốt:</strong> kỳ hạn gói EDR lệch enum — CRM <code>duration_months</code> ∈ {12, 24, 36} (1/2/3 năm) vs EDR nhận 1/3/5 năm (12/36/60). Ảnh hưởng <code>subscription_plan</code> trong payload <code>subscription.submitted</code> (§4.2.1). Hướng: (a) EDR mở thêm 60 tháng, hoặc (b) CRM đổi enum kỳ hạn cho gói EDR (UC-CAT BR-01.3, PRD §5.3.5/§6.9.3).</td>
 <td>🔴 Cần chốt với EDR</td>
 </tr>
 </tbody>

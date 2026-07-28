@@ -2,9 +2,9 @@
 
 **HỆ THỐNG ONECRM**
 
-**Phiên bản**: 2.7.1
+**Phiên bản**: 2.7.2
 
-**Ngày phát hành**: 24/07/2026
+**Ngày phát hành**: 28/07/2026
 
 **Người soạn**: Nguyễn Công Giang
 
@@ -22,6 +22,7 @@
 | 2.6.1 | 13/07/2026 | Nguyễn Công Giang | **Chốt 20 Open Question của M-05** (`docs/plans/M-05_open_questions.md`):<br>· **§5.3.5 PACKAGE — bỏ trường `price`**: giai đoạn này **không có scope về giá**; gói chỉ định nghĩa số lượng license, thời lượng, danh sách tính năng.<br>· **§5.3.7 `runtime_config`** — chuẩn hoá 7 khoá cấu hình cho M-05 (chu kỳ đẩy 24h · SLA lệch 15 phút · báo gia hạn 60 ngày · sắp dùng hết 90% · `auto_reconcile_after_hours` để trống thì **không kiểm tra**).<br>· **BR-04.7 — bỏ quota theo người dùng** (vận hành cần đồng bộ hàng loạt sau sự cố).<br>· **Quy ước tên quyền toàn dự án: `{tài_nguyên}:{hành_động}`** (`license:view`, `license:force_sync`, `license:view_portal`, `license:view_issues`).<br>· On-premise: vẫn hiện trong danh sách License & Usage với nhãn "Không theo dõi tự động", **loại khỏi mọi cảnh báo**.<br>· Auditor: **xem được** danh sách + chi tiết, không có hành động tạo tác động.<br>**FRS:** bộ `UC-LIC-01..04` tại `docs/frs/licenses/`. |
 | 2.6 | 13/07/2026 | Nguyễn Công Giang | Module **M-05 License Mirror & Usage Tracking**:<br>**§6.5.1 viết lại hoàn toàn** — mục tiêu module, 2 nhóm người dùng & thời điểm dùng, 4 pain point, khái niệm cốt lõi, **ranh giới CRM được/không được làm**, 3 tình huống dễ hiểu nhầm (GRACE ≠ mismatch · sub vừa gia hạn ACTIVE+mirror PENDING là hợp lệ · `used > total` là lỗi dữ liệu, không phải overage), vị trí trong luồng dữ liệu, phạm vi Phase 1.<br>**Chốt OQ-07 + quyết định mới (§6.5.1h):** (1) Force Sync gán theo **capability `usage.force_sync`** (Sales/CSKH/Manager/License Admin; Auditor không) + **quota 20 lượt/giờ/người** — bịt lỗ hổng rate-limit-theo-sub không chặn được quét hàng loạt; (2) Product Module declare **`runtime_config.supports_force_sync`** → false thì ẩn nút; (3) deep-link portal gated bằng quyền **`license:view_portal`** (chỉ là gợi ý hiển thị, **không phải bảo mật** — product tự enforce), URL lấy từ **`runtime_config.portal_url_template`**, chỉ hiện khi đã có `external_ref`, ghi audit khi click.<br>**Demo:** `docs/demo/v2.6.0_license.html`. |
 | 2.7 | 17/07/2026 | Nguyễn Công Giang | **Đồng bộ module M-07 Integration Layer với bộ FRS UC-INT-01..06** (đã chốt demo `v2.7.0_integration` 16/07).<br>**§6.7.1 viết lại theo format a/b/c** (bài toán · ai dùng · 4 pain point) + mục **d) hợp đồng metadata** + mục **e) bảng link 6 FRS UC-INT** (FRS là nguồn chốt hành vi).<br>**Sửa lệch FR-INT ↔ FRS:** FR-INT-03 **SG-4** (sai chữ ký → 4xx, KHÔNG ghi inbox, chỉ log hạ tầng); FR-INT-04 **giữ thứ tự per subscription** (không per correlation_id) + **chống đến muộn** theo `occurred_at` (BR-05) + **command-ack** `license.*`/`correlation_id` (BR-12) + ánh xạ GRACE/RESTRICTED/SUSPENDED; FR-INT-06 tách 2 luồng — gửi lại lệnh outbox (chỉ DEAD_LETTER, giữ `event_id`) và **xử lý lại inbox THEO CHUỖI** (không báo khách, không phát event mới, xem trước, dừng giữa chừng).<br>**Thêm §6.7.8 FR-INT-07 Channel Health Dashboard** (UC-INT-03 — trước ghi "chưa có trong PRD v2.6").<br>**Data model:** WEBHOOK_INBOX +`occurred_at` +`schema_version` (`event_type`→`event_key`); LICENSE_MIRROR +`last_event_occurred_at` +`last_change_source` +`source_command_event_id`; OUTBOX_EVENT +`product_id` (`event_type`→`event_key`). |
+| 2.7.2 | 28/07/2026 | Nguyễn Công Giang | **Bổ sung Tài khoản kích hoạt (activation account) + ghi nhận OQ kỳ hạn EDR** — chốt từ demo `v2.8.0_audit_notification.html`. *(Khác 2.7.1: đợt này **CÓ đụng data model**.)*<br>**① §5.3.4 SUBSCRIPTION:** thêm `activation_account` (jsonb — `full_name` / `username` / `email`), bắt buộc với sản phẩm cần provisioning (EDR); thu thập ở UC-SUB-02 (BR-13), sửa ở UC-SUB-04, hiển thị ở UC-SUB-03.<br>**② §6.9.6 Outbound Mapping:** payload `subscription.submitted` bổ sung khối `activation` — nguồn từ `subscription.activation_account`.<br>**③ OQ-CAT-06 (mới):** kỳ hạn gói EDR lệch enum — `duration_months` {12,24,36} (1/2/3 năm) vs EDR 1/3/5 năm (12/36/60); **CHƯA chốt** (EDR mở 60 tháng hay CRM đổi enum). Ghi nhận, chưa đổi enum.<br>**FRS đồng bộ:** UC-SUB-02/03/04/05; Event Catalog v2 (`_event_catalog_v2.md` §4.2.1/§6); UC-INT-01/02 trỏ catalog v2. |
 | 2.7.1 | 24/07/2026 | Nguyễn Công Giang | **Đợt nhất quán UI/UX + sort mặc định — thay đổi ở tầng demo (`v2.8.0`) & FRS; KHÔNG đổi FR / BR / data model của PRD.** *(Dev: không phải migrate schema hay đổi API; chi tiết hành vi nằm ở FRS tương ứng.)*<br>**① Nút thao tác (toàn app):** nút **Xóa bỏ highlight** (đỏ đặc → chữ đỏ + viền xám; **giữ** đỏ đặc cho nút xác nhận trong modal); **"Chỉnh sửa" → "Sửa"**; danh sách bổ sung chữ **"✏️ Sửa" / "🗑️ Xóa"** (KH · HĐ · Sub · Gói); thống nhất icon 🗑️.<br>**② Sub-title 5 màn** viết lại (Khách hàng · Hợp đồng · Sản phẩm · Gói · Người dùng) — bỏ động từ thừa, bỏ rò ghi chú phạm vi.<br>**③ Danh sách HĐ:** thêm nhãn **"Tạo:"** trước `createdAt` để phân biệt với cột **Ngày ký** (`signedDate`) — UC-CON-01.<br>**④ Sort mặc định (sửa lỗi + đảm bảo bằng code):** **Khách hàng** sort Tên A→Z (demo trước **THIẾU** dù UC-CUS-01 BR-04 đã yêu cầu); **Audit log** sort thời gian giảm dần tường minh (UC-AUD-01); **Thông báo** giữ mới→cũ theo seed vì `time` là nhãn hiển thị (UC-NOT-01); thêm `createdAt` cho bản ghi mẫu SUB-2026-020.<br>**FRS đồng bộ:** UC-CON-01 · UC-CAT-01 · UC-CAT-03 · UC-AUD-01 · UC-NOT-01. |
 
 ---
@@ -241,6 +242,7 @@ SELECT id, contract_id, product_id FROM contract_pool_item WHERE package_id IS N
 | **OQ-CAT-02** | **Hint upsell** khi gia hạn trên gói `RETIRED` ("Gói đã ngừng bán, bản hiện hành là v{n}") → biến dọn catalog thành cơ hội bán (YT-2). |
 | **OQ-CAT-03** | Bắt buộc **`change_note`** cho mỗi version + màn **so sánh diff 2 version**? |
 | **OQ-CAT-04** | **On-prem = perpetual** (trọn đời) — có kèm **maintenance term** (cái renew được) không? Ảnh hưởng YT-2. |
+| **OQ-CAT-06** | **Kỳ hạn gói EDR lệch enum** — CRM `duration_months` {12,24,36} (1/2/3 năm) vs EDR **1/3/5 năm** (12/36/60). Ảnh hưởng `subscription_plan` trong payload `subscription.submitted` (§6.9.6). Hướng: EDR mở 60 tháng hay CRM đổi enum gói EDR. (Chi tiết ở danh sách OQ cuối tài liệu · Event Catalog §4.2.1.) |
 
 ---
 
@@ -1015,6 +1017,7 @@ Phase 1 KHÔNG có: status/lifecycle, total_value, milestone, e-signature, appro
 | seat_count | int | optional | Tuỳ package |
 | license_qty | int | optional | Số license rút từ pool HĐ RESELLER |
 | scope | jsonb | optional | Cấu hình sản phẩm riêng của từng sub (per-customer): nhập khi tạo (UC-SUB-02), sửa được (UC-SUB-04), hiển thị ở chi tiết (UC-SUB-03). Các trường do Product Module khai báo qua `scope_schema` (§5.3.7). Vd EDR: `{tenant_mode: "MULTI"}` (Kiểu tổ chức). Sản phẩm không khai báo schema → NULL. |
+| activation_account | jsonb | optional | **Tài khoản kích hoạt** — tài khoản quản trị cấp cho khách hàng để đăng nhập/kích hoạt sản phẩm: `{full_name, username, email}`. Nhập khi tạo (UC-SUB-02, BR-13), sửa được (UC-SUB-04), hiển thị ở chi tiết (UC-SUB-03). **Bắt buộc với sản phẩm cần provisioning (EDR)**; sản phẩm không cần → NULL. Đưa vào payload `subscription.submitted` (§6.9.6 · Event Catalog §4.2.1). |
 | deal_code | string | optional | Tag combo/bundle |
 | note | text | optional | Sales note |
 | suspend_reason | text | optional | Lý do tạm dừng — set khi sub → SUSPENDED (FR-SUB-09 / UC-SUB-09); xóa (NULL) khi resume (FR-SUB-10 / UC-SUB-10). Hiển thị lại trong modal Khôi phục để tham khảo. Transient: chỉ có giá trị khi status=SUSPENDED. |
@@ -1485,6 +1488,7 @@ Nút hành động ở chi tiết sub hiển thị **có điều kiện theo rol
 - **FR-SUB-05 (Xác nhận / UC-SUB-05):** thêm **re-check race condition** tại thời điểm confirm (sub có thể đã đổi trạng thái khi modal đang mở).
 - **FR-SUB-09/10 (Tạm dừng / Khôi phục):** lý do tạm dừng lưu vào `subscription.suspend_reason`, hiển thị lại ở modal Khôi phục (xem §5.3.4).
 - **Cấu hình sản phẩm (scope) chuyển về Subscription:** cấu hình riêng theo từng KH (vd EDR: **Kiểu tổ chức** MULTI/SINGLE) là dữ liệu **per-sub** — lưu ở `subscription.scope` (§5.3.4), nhập khi tạo (UC-SUB-02), sửa được (UC-SUB-04), hiển thị ở chi tiết (UC-SUB-03). Trường `scope_template` **đã gỡ khỏi PACKAGE** (§5.3.5); Product Module khai báo schema scope qua field mới `scope_schema` trong PRODUCT_MODULE_CONFIG (§5.3.7). **✅ v2.5: đã đồng bộ xong** — §6.9.3 (EDR Package Schema) và §6.4 (M-04 Catalog) đã gỡ `tier` / `tenant_mode` / `scope_template` khỏi cấp package.
+- **Tài khoản kích hoạt (activation account) — mới v2.7.2:** tài khoản quản trị cấp cho khách hàng để đăng nhập/kích hoạt sản phẩm (Họ tên / Tên đăng nhập / Email) là dữ liệu **per-sub** — lưu ở `subscription.activation_account` (§5.3.4), **bắt buộc** với sản phẩm cần provisioning (EDR): nhập khi tạo (UC-SUB-02 BR-13), sửa được (UC-SUB-04), hiển thị ở chi tiết (UC-SUB-03), đưa vào payload `subscription.submitted` khi Xác nhận (UC-SUB-05 · §6.9.6 · Event Catalog §4.2.1).
 - **Nút hành động** ở trang chi tiết (UC-SUB-03) hiển thị **có điều kiện theo role + status** — bảng đầy đủ tại UC-SUB-03 §3.2.
 
 > Business Rule, Acceptance Criteria và API chi tiết của từng FR-SUB xem trong file FRS tương ứng. FR-SUB-11 (bên dưới) là hàm hệ thống (worker), không có UC người dùng nên giữ nguyên đặc tả trong PRD.
@@ -2073,7 +2077,7 @@ EDR (Endpoint Detection & Response) là sản phẩm B2B của CMC. Kiến trúc
 
 **Validation**:
 
-- `duration_months` ∈ {12, 24, 36}
+- `duration_months` ∈ {12, 24, 36} — ⚠️ **OQ-CAT-06 (CHƯA chốt):** EDR thực bán 1/3/5 năm (12/36/60); enum hiện thiếu 60, thừa 24. Chưa đổi — xem OQ-CAT-06 ở danh sách Open Questions.
 
 - `default_seat_count` \> 0
 
@@ -2120,9 +2124,11 @@ Tín hiệu up-sell là seats_used gần seats_total (vd ≥ 90%), không phải
 
 > **Đồng bộ 16/07/2026 theo `_event_catalog.md` §4 (nguồn sự thật).** Tên event: `subscription.submitted` (không phải `created`), `subscription.reactivated` (không phải `resumed`), `subscription.terminated` (không phải `revoked`), `subscription.renewed` là event riêng (không tái dùng `created + RENEWAL`).
 
+> **Chi tiết trường payload `subscription.submitted`** (bao gồm khối `activation` — `full_name` / `username` / `email`): xem **Event Catalog v2 §4.2.1** (`docs/frs/integration/_event_catalog_v2.md`). Nguồn `activation` là `SUBSCRIPTION.activation_account` (§5.3.4), thu thập ở UC-SUB-02/04.
+
 | Sub action | Event publish | Payload |
 |----|----|----|
-| Submit | subscription.submitted | customer, contract_code, **package (gồm `package_id`, `package_code`, `package_version`, `features`)**, scope, dates, correlation_id |
+| Submit | subscription.submitted | customer, contract_code, **package (gồm `package_id`, `package_code`, `package_version`, `features`)**, scope, **activation (`full_name`, `username`, `email` — nguồn `subscription.activation_account`)**, dates, correlation_id |
 | Suspend | subscription.suspended | correlation_id, reason |
 | Resume | subscription.reactivated | correlation_id, reason |
 | Revoke | subscription.terminated | correlation_id, reason |
@@ -2803,6 +2809,7 @@ Hệ thống quản ~5.000 KH B2C có PII (họ tên, DOB, địa chỉ, email, 
 | **OQ-CAT-03** | Có bắt buộc **`change_note`** cho mỗi version gói (lý do thay đổi) + màn **so sánh diff 2 version** không? | BA | Thấp | Chưa chốt |
 | **OQ-CAT-04** | **On-prem = perpetual** (license trọn đời) — có kèm **maintenance term** (cái mới renew được) không? Ảnh hưởng YT-2 (doanh thu = gia hạn). | BA + Sales | Trung | Phase on-prem |
 | ~~**OQ-CAT-05**~~ | ~~HĐ DIRECT có được ghim nhiều gói không?~~ → ✅ **ĐÃ CHỐT 13/07/2026: Phase 1 = 1 gói / 1 HĐ DIRECT.** Cần nhiều gói thì tách nhiều HĐ. Bảng `CONTRACT_PACKAGE` (§5.3.2b) giữ dạng 1:N để mở rộng ở phase sau mà **không phải migration schema**. Ghi chú v2.2 *"HĐ DIRECT nhiều product là hợp lệ"* **không còn hiệu lực** ở Phase 1. | BA | — | ✅ Chốt |
+| **OQ-CAT-06** | **Kỳ hạn gói EDR lệch enum** — CRM `duration_months` ∈ {12, 24, 36} (1/2/3 năm, §6.9.3 · UC-CAT BR-01.3) nhưng EDR bán **1/3/5 năm** (12/36/60) → CRM **thiếu 60 tháng**, **thừa 24 tháng**. Ảnh hưởng `subscription_plan` trong payload `subscription.submitted` (§6.9.6 · Event Catalog §4.2.1). Hướng: (a) EDR mở thêm 60 tháng, hoặc (b) CRM đổi enum kỳ hạn cho gói EDR. **Chưa đổi data model** đợt này (v2.7.2 chỉ ghi nhận). | BA + Team EDR | Trung | Chưa chốt |
 
 # GLOSSARY
 

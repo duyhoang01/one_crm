@@ -1,6 +1,6 @@
 # UC-SUB-02 — Tạo Subscription
 
-> Module: M-03 Subscription Management | Phiên bản: 1.3 | Ngày: 13/07/2026
+> Module: M-03 Subscription Management | Phiên bản: 1.4 | Ngày: 28/07/2026
 > Trạng thái: Draft for Review
 
 ---
@@ -34,6 +34,7 @@
 | **BR-09** | Các field Khách hàng, Loại hợp đồng, Gói sản phẩm, Thời hạn, Ngày hết hạn đều là readonly — tự động điền từ dữ liệu hợp đồng, người dùng không chỉnh sửa. |
 | **BR-10** | Ngày bắt đầu và Ngày hết hạn là **dự kiến** — không phải nguồn sự thật. Sau khi Product Module kích hoạt license, ngày hết hạn thực sẽ được đồng bộ lại qua webhook `license.activated`. |
 | **BR-11** | **Cấu hình sản phẩm (scope):** sau khi xác định gói, nếu Product Module của sản phẩm khai báo `scope_schema` (PRD §5.3.7), form hiển thị mục "Cấu hình sản phẩm" với các trường do sản phẩm định nghĩa. Với **CMC EDR**: trường **Kiểu tổ chức** (`tenant_mode`) — `MULTI` (Multi organization) hoặc `SINGLE` (Single organization), bắt buộc, mặc định `MULTI`. Scope là cấu hình riêng của từng sub (per-customer), lưu vào `subscription.scope` (jsonb). Sản phẩm không khai báo `scope_schema` → không hiển thị mục này, `scope = null`. |
+| **BR-13** | **Tài khoản kích hoạt:** khi tạo sub, bắt buộc nhập tài khoản quản trị sẽ cấp cho khách hàng để đăng nhập và kích hoạt sản phẩm — gồm **Họ tên**, **Tên đăng nhập**, **Email**. Email phải đúng định dạng. Lưu vào `subscription.activation_account` (jsonb: `full_name`, `username`, `email` — PRD §5.3.4). Đây là dữ liệu định danh người quản trị phía khách hàng, được đưa vào payload `subscription.submitted` khi Xác nhận (UC-SUB-05). |
 
 ---
 
@@ -50,7 +51,7 @@
 | **1** | System | Mở modal "Thêm Subscription mới"; form rỗng; sinh sẵn mã Sub `SUB-{YYYY}-{NNN}` (ẩn, không hiện trên form). | BR-01 |
 | **2** | User (Sales / Manager) | Tìm và chọn hợp đồng (theo mã HĐ hoặc tên khách hàng). | Chọn lại HĐ khác → **AF-03** |
 | **3** | System | Auto-fill Khách hàng + Loại hợp đồng (readonly); xác định Gói & Thời hạn theo loại HĐ; mặc định Ngày bắt đầu = hôm nay; tính Ngày hết hạn = start + `duration_months` − 1; hiện hint pool nếu RESELLER; nếu sản phẩm khai báo `scope_schema` → hiển thị mục **Cấu hình sản phẩm** với giá trị mặc định. | BR-03, BR-04, BR-05, BR-11; RESELLER ≥ 2 pool → **AF-01** |
-| **4** | User | Nhập field bắt buộc theo loại HĐ — DIRECT: Số thiết bị (> 0); RESELLER: Đơn vị thụ hưởng + Số license (> 0, ≤ pool); chọn **Cấu hình sản phẩm** (scope) nếu có — vd EDR: Kiểu tổ chức. | BR-06, BR-07, BR-08, BR-11 |
+| **4** | User | Nhập field bắt buộc theo loại HĐ — DIRECT: Số thiết bị (> 0); RESELLER: Đơn vị thụ hưởng + Số license (> 0, ≤ pool); chọn **Cấu hình sản phẩm** (scope) nếu có — vd EDR: Kiểu tổ chức; nhập **Tài khoản kích hoạt** (Họ tên, Tên đăng nhập, Email). | BR-06, BR-07, BR-08, BR-11, BR-13 |
 | **5** | User | (Tuỳ chọn) Chỉnh Ngày bắt đầu → Ngày hết hạn tự cập nhật (**AF-02**); nhập Deal Code, Ghi chú. | BR-05 |
 | **6** | User | Click "💾 Tạo". | "Hủy" / ✕ bất kỳ lúc nào → **AF-C** |
 | **7** | System | **[Gateway — Form hợp lệ?]** Có → tiếp bước 8. Không → **EF** (validation inline). | Validate theo loại HĐ |
@@ -103,6 +104,8 @@
 | **EF-03** | DIRECT — Số thiết bị ≤ 0 | "Số thiết bị phải lớn hơn 0" — dưới field Số thiết bị |
 | **EF-04** | RESELLER — chưa chọn Đơn vị thụ hưởng | "Vui lòng chọn đơn vị thụ hưởng" — dưới dropdown Đơn vị thụ hưởng |
 | **EF-05** | RESELLER — Số license > pool khả dụng | "Vượt pool khả dụng — còn lại {X} license" — dưới field Số license |
+| **EF-06** | Thiếu trường Tài khoản kích hoạt (Họ tên hoặc Tên đăng nhập để trống) | "Vui lòng nhập họ tên" / "Tên đăng nhập là bắt buộc" — dưới field tương ứng |
+| **EF-07** | Email tài khoản kích hoạt sai định dạng | "Vui lòng nhập email hợp lệ" — dưới field Email |
 
 Với mọi EF: System giữ nguyên form, không đóng modal. Người dùng sửa lỗi rồi submit lại → **quay bước 6** (không kết thúc luồng).
 
@@ -128,8 +131,9 @@ Modal "Thêm Subscription mới" gồm 5 phần theo thứ tự từ trên xuố
 1. **Hợp đồng** — ô tìm kiếm có thể tìm theo mã hoặc tên khách hàng.
 2. **Thông tin hợp đồng** — readonly, tự hiện sau khi chọn HĐ.
 3. **Sản phẩm & License** — gói, thời hạn, fields license/seats tuỳ theo loại HĐ, và mục **Cấu hình sản phẩm** (scope) nếu sản phẩm khai báo schema — vd EDR: Kiểu tổ chức (Multi/Single organization).
-4. **Thời gian** — ngày bắt đầu (dự kiến) và ngày hết hạn (dự kiến, readonly).
-5. **Bổ sung** — Deal Code và Ghi chú (tuỳ chọn).
+4. **Tài khoản kích hoạt** — tài khoản quản trị cấp cho khách hàng để đăng nhập/kích hoạt sản phẩm: Họ tên, Email, Tên đăng nhập (đều bắt buộc). Đặt ngay sau mục Kiểu tổ chức.
+5. **Thời gian** — ngày bắt đầu (dự kiến) và ngày hết hạn (dự kiến, readonly).
+6. **Bổ sung** — Deal Code và Ghi chú (tuỳ chọn).
 
 **Screenshot — Form khởi đầu (chưa chọn hợp đồng):**
 
@@ -156,10 +160,13 @@ Modal "Thêm Subscription mới" gồm 5 phần theo thứ tự từ trên xuố
 | 6 | Số thiết bị | ✓ (DIRECT) | Number input | Chỉ hiện với DIRECT. Phải > 0. |
 | 7 | Đơn vị thụ hưởng | ✓ (RESELLER) | Select | Chỉ hiện với RESELLER. Chọn từ danh sách đơn vị thụ hưởng đã đăng ký. |
 | 8 | Số license | ✓ (RESELLER) | Number input | Chỉ hiện với RESELLER. Phải > 0 và ≤ số license còn lại trong pool. Hint "Còn X / Y license khả dụng" hiển thị bên dưới. |
-| 9 | Ngày bắt đầu (dự kiến) | — | Date picker | Tuỳ chọn. Nếu để trống khi gói được xác định, hệ thống mặc định hôm nay. |
-| 10 | Ngày hết hạn (dự kiến) | — | Date readonly | Tự tính = Ngày bắt đầu + `duration_months` - 1 ngày. Cập nhật realtime khi Ngày bắt đầu thay đổi. |
-| 11 | Deal Code | — | Text input | Tuỳ chọn. Không validate format. |
-| 12 | Ghi chú | — | Textarea | Tuỳ chọn. |
+| 9 | Tài khoản kích hoạt — Họ tên | ✓ | Text input | Họ tên người quản trị phía khách hàng. Bắt buộc. Lưu vào `activation_account.full_name`. |
+| 10 | Tài khoản kích hoạt — Email | ✓ | Email input | Email quản trị. Bắt buộc, phải đúng định dạng email. Lưu vào `activation_account.email`. |
+| 11 | Tài khoản kích hoạt — Tên đăng nhập | ✓ | Text input | Tên đăng nhập quản trị. Bắt buộc. Lưu vào `activation_account.username`. Bố cục: Họ tên \| Email cùng hàng, Tên đăng nhập ở hàng dưới. |
+| 12 | Ngày bắt đầu (dự kiến) | — | Date picker | Tuỳ chọn. Nếu để trống khi gói được xác định, hệ thống mặc định hôm nay. |
+| 13 | Ngày hết hạn (dự kiến) | — | Date readonly | Tự tính = Ngày bắt đầu + `duration_months` - 1 ngày. Cập nhật realtime khi Ngày bắt đầu thay đổi. |
+| 14 | Deal Code | — | Text input | Tuỳ chọn. Không validate format. |
+| 15 | Ghi chú | — | Textarea | Tuỳ chọn. |
 
 ### 3.3 Footer modal
 
@@ -225,6 +232,14 @@ Modal "Thêm Subscription mới" gồm 5 phần theo thứ tự từ trên xuố
 | AC-SUB-02-21 | HĐ sản phẩm EDR, chọn Kiểu tổ chức = Single organization, form hợp lệ. | Click "💾 Tạo". | Sub tạo với `scope.tenant_mode = "SINGLE"`; giá trị hiển thị lại ở UC-SUB-03. Kết thúc tại **End 1 (Success)**. |
 | AC-SUB-02-22 | Chọn HĐ có sản phẩm không khai báo `scope_schema`. | Gói được xác định. | Mục "Cấu hình sản phẩm" **không** hiển thị; sub tạo với `scope = null`. |
 
+### Nhóm 7: Tài khoản kích hoạt
+
+| Mã | Given | When | Then |
+|---|---|---|---|
+| AC-SUB-02-24 | Đã chọn HĐ, để trống Họ tên hoặc Tên đăng nhập. | Click "💾 Tạo" (**bước 6**). | Gateway (**bước 7**) → **EF-06**: lỗi inline "Vui lòng nhập họ tên" / "Tên đăng nhập là bắt buộc" dưới field tương ứng; modal không đóng. |
+| AC-SUB-02-25 | Đã chọn HĐ, nhập Email = "admin@" (sai định dạng). | Click "💾 Tạo". | Gateway (**bước 7**) → **EF-07**: lỗi inline "Vui lòng nhập email hợp lệ" dưới field Email; modal không đóng. |
+| AC-SUB-02-26 | Form hợp lệ, nhập Tài khoản kích hoạt: Họ tên "Nguyễn Văn An" · Tên đăng nhập "admin.fpt" · Email "admin@fpt.com.vn". | Click "💾 Tạo" → Gateway hợp lệ (**bước 7 → 8**). | Sub tạo với `activation_account = {full_name, username, email}`; giá trị hiển thị lại ở UC-SUB-03 (mục Tài khoản kích hoạt) và được đưa vào payload `subscription.submitted` khi Xác nhận (UC-SUB-05). Kết thúc tại **End 1 (Success)**. |
+
 ---
 
 ## 5. Lịch sử thay đổi
@@ -235,6 +250,7 @@ Modal "Thêm Subscription mới" gồm 5 phần theo thứ tự từ trên xuố
 | 1.1 | 09/07/2026 | Claude (AI) | Đồng bộ §2 theo BPMN UC-SUB-02: đánh lại còn 8 bước khớp badge (gateway = **bước 7**); DIRECT/RESELLER gộp trong nội dung task, không tách gateway loại HĐ; chuyển AF/EF sang style block `**[…]** — kích hoạt tại bước N`; **bổ sung AF-C (Hủy tạo) → End 2**; gom trigger EF-01..EF-05 về **bước 7** và nêu rõ EF là vòng lặp sửa lỗi quay **bước 6** (không phải End Event); thêm **§2.4 End Events** (End 1 Success, End 2 Cancelled). §4: căn AC theo bước/End Event; thêm **AC-19** (AF-C → End 2). |
 | 1.2 | 10/07/2026 | Claude (AI) | Bổ sung **Cấu hình sản phẩm (scope)** per-sub do Product Module khai báo (`scope_schema`, PRD §5.3.7): thêm **BR-11**; §2.1 bước 3–4 hiển thị & chọn scope; §3.1/§3.2 mô tả mục "Cấu hình sản phẩm" (EDR: Kiểu tổ chức MULTI/SINGLE, 2 card ngang); §4 thêm Nhóm 6 (AC-20..22). Đồng bộ demo `v2.4.0_subscriptions.html` + PRD §5.3.4/§5.3.5 (gỡ `scope_template` khỏi PACKAGE)/§5.3.7. |
 | 1.3 | 13/07/2026 | Claude (AI) | **Đồng bộ versioning gói (M-04)**: thêm **BR-12** — gói **kế thừa từ HĐ đã ghim phiên bản**, KHÔNG lấy bản `ACTIVE` hiện hành của catalog; gói `RETIRED` vẫn tạo được sub trong HĐ đã ký. Cập nhật **BR-03** (RESELLER: 1 pool = 1 gói) và **BR-08** (tra pool theo `packageId`). AF-01 đổi từ `optgroup` theo sản phẩm → **mỗi pool 1 option**. Tên gói hiển thị kèm phiên bản. Thêm **AC-SUB-02-23**. Nguồn: `docs/plans/M-04_versioning_decisions.md` (D1, D2, D3). |
+| 1.4 | 28/07/2026 | Claude (AI) | **Bổ sung Tài khoản kích hoạt (activation account)**: thêm **BR-13**; §2.1 bước 4 nhập tài khoản; §2.3 thêm **EF-06/EF-07** (thiếu trường / email sai định dạng); §3.1 thêm nhóm **"Tài khoản kích hoạt"** (Họ tên \| Email, Tên đăng nhập) đặt sau Kiểu tổ chức; §3.2 thêm 3 field (9–11), renumber ngày/Deal Code/Ghi chú; §4 thêm **Nhóm 7 (AC-24..26)**; chụp lại 3 ảnh form. Lưu vào `subscription.activation_account` (PRD §5.3.4) → payload `subscription.submitted` (catalog v2 §4.2.1). Chốt từ demo `v2.8.0_audit_notification.html`. |
 
 ### Review Checklist (self-review)
 

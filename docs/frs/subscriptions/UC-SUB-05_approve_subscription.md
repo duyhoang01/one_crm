@@ -1,6 +1,6 @@
 # UC-SUB-05 — Xác nhận Subscription
 
-> Module: M-03 Subscription Management | Phiên bản: 1.0 | Ngày: 09/07/2026
+> Module: M-03 Subscription Management | Phiên bản: 1.2 | Ngày: 28/07/2026
 > Trạng thái: Draft for Review
 
 ---
@@ -25,7 +25,7 @@
 | **BR-01** | Chỉ subscription có `sub.status = DRAFT` mới có thể xác nhận. Nút "✅ Xác nhận" chỉ hiển thị khi `sub.status = DRAFT`. |
 | **BR-02** | Các actor có quyền xác nhận: Sales, CSKH, License Admin, Manager (bất kỳ ai trong các role này đã đăng nhập). |
 | **BR-03** | Sau khi xác nhận: `sub.status = PENDING_PROVISION`. |
-| **BR-04** | System publish event `subscription.submitted` qua Outbox → Product Module nhận và bắt đầu provisioning. |
+| **BR-04** | System publish event `subscription.submitted` qua Outbox → Product Module nhận và bắt đầu provisioning. Nội dung payload được đặc tả tại [Event Catalog §4.2.1](../integration/_event_catalog_v2.md) — bao gồm cấu hình sản phẩm (scope) và **Tài khoản kích hoạt** (`activation_account`: họ tên / tên đăng nhập / email) đã thu thập ở UC-SUB-02/04. |
 | **BR-05** | Hệ thống ghi timeline entry: icon 📤, nội dung "Subscription được phê duyệt & gửi provisioning", mô tả trạng thái `DRAFT → PENDING_PROVISION · Sự kiện subscription.submitted đã publish`. |
 | **BR-06** | Hệ thống ghi audit entry: action `Phê duyệt Subscription (DRAFT → PENDING_PROVISION)`, detail `Gửi yêu cầu provisioning tới hệ thống product`, result `SUCCESS`. |
 | **BR-07** | Modal xác nhận hiển thị tóm tắt thông tin sub (Mã Sub, Khách hàng, Gói, Hợp đồng) để người dùng review trước khi confirm. Với hợp đồng RESELLER, bổ sung dòng Đơn vị thụ hưởng. |
@@ -189,3 +189,4 @@ Modal "Xác nhận Subscription" xuất hiện từ hero section của màn UC-S
 |---|---|---|---|
 | 1.0 | 09/07/2026 | BA Team | Khởi tạo tài liệu — Draft for Review. |
 | 1.1 | 09/07/2026 | Claude (AI) | Đồng bộ §2 theo BPMN UC-SUB-05: nhúng ảnh BPMN; tách bước 2/5/6 thành Gateway riêng; **bổ sung bước 6 — gateway re-check race condition**; đánh lại số bước 1–10 khớp badge; thêm §2.4 End Events. AC: căn lại tham chiếu bước/End Event, thêm AC-15 (Outbox publish) và AC-16 (pre-check bước 2). |
+| 1.2 | 28/07/2026 | Claude (AI) | **BR-04**: ghi chú payload `subscription.submitted` (đặc tả tại Event Catalog §4.2.1) nay bao gồm **Tài khoản kích hoạt** (`activation_account`) thu thập ở UC-SUB-02/04. Không đổi luồng/AC. Đồng bộ activation account (PRD §5.3.4, catalog v2). |

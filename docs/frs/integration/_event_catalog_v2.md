@@ -322,15 +322,15 @@ Danh sách trường theo đúng yêu cầu tạo tenant của EDR (đối chi�
 | `package_code` | Có | **Package** · `code` | Mã gói CRM — để truy vết/đối soát commercial. |
 | `features[]` | — | **Package** · `features[]` | Add-on theo key kỹ thuật EDR (vd `vulnerability-detection`…); đã ràng buộc theo `featureCatalog` của EDR (UC-CAT BR-01.5). CRM gửi trực tiếp, không hardcode ở lõi. |
 | `seat_count` | Có | **Subscription** · `license_qty` | Số ghế. |
-| `subscription_plan` | Có | **Package** · `duration_months` | 🔴 **Lệch enum**: CRM đang {12, 24, 36} = 1/2/3 năm; EDR cần 1/3/5 năm — xem ghi chú dưới. |
-| `activation.full_name` | Có | **Subscription** *— sẽ bổ sung* | Họ tên chủ tài khoản kích hoạt. |
-| `activation.username` | Có | **Subscription** *— sẽ bổ sung* | Tên đăng nhập — duy nhất, không dấu cách (trùng → EDR báo `ACCOUNT_OWNER_EXISTS`). |
-| `activation.email` | Có | **Subscription** *— sẽ bổ sung* | Email chủ tài khoản — duy nhất. |
+| `subscription_plan` | Có | **Package** · `duration_months` | 🔴 **Lệch enum** (OQ-CAT-06, §6): CRM đang {12, 24, 36} = 1/2/3 năm; EDR cần 1/3/5 năm — xem ghi chú dưới. |
+| `activation.full_name` | Có | **Subscription** · `activation_account.full_name` | Họ tên chủ tài khoản kích hoạt. |
+| `activation.username` | Có | **Subscription** · `activation_account.username` | Tên đăng nhập — duy nhất, không dấu cách (trùng → EDR báo `ACCOUNT_OWNER_EXISTS`). |
+| `activation.email` | Có | **Subscription** · `activation_account.email` | Email chủ tài khoản — duy nhất. |
 
 > 🔴 **Hai điểm CRM cần xử lý (đã đối chiếu PRD/FRS):**
 >
-> - **Kỳ hạn lệch enum:** CRM dùng `duration_months` ∈ {12, 24, 36} = **1/2/3 năm** (UC-CAT BR-01.3), còn EDR chỉ nhận **1/3/5 năm** → CRM thiếu 5 năm, thừa 2 năm. Cần chốt: EDR mở thêm giá trị, hay CRM đổi enum kỳ hạn cho gói EDR.
-> - **Tài khoản kích hoạt chưa được thu thập:** UC-SUB-02 (tạo subscription) hiện chưa capture `full_name` / `username` / `email`. Ba trường này **định nghĩa trước ở đây**, sẽ **bổ sung mục "Tài khoản kích hoạt" vào subscription** (UC-SUB-02/05) sau.
+> - **Kỳ hạn lệch enum (OQ-CAT-06, §6 — CHƯA chốt):** CRM dùng `duration_months` ∈ {12, 24, 36} = **1/2/3 năm** (UC-CAT BR-01.3), còn EDR chỉ nhận **1/3/5 năm** (12/36/60) → CRM thiếu 5 năm (60 tháng), thừa 2 năm (24 tháng). Cần chốt: EDR mở thêm giá trị, hay CRM đổi enum kỳ hạn cho gói EDR.
+> - **Tài khoản kích hoạt — đã bổ sung:** subscription nay lưu `activation_account` (`full_name` / `username` / `email`, PRD §5.3.4), thu thập ở [UC-SUB-02](../subscriptions/UC-SUB-02_create_subscription.md) (BR-13) và sửa ở [UC-SUB-04](../subscriptions/UC-SUB-04_edit_subscription.md); đưa vào payload khi Xác nhận ([UC-SUB-05](../subscriptions/UC-SUB-05_approve_subscription.md)).
 
 ---
 
@@ -402,3 +402,4 @@ Kết quả: license SAI trạng thái, và sai vĩnh viễn.
 | **OQ-INT-01** | **CHƯA chốt:** đề xuất Tạm dừng/Khôi phục xác nhận qua `license.suspended` / `license.reactivated` mang `correlation_id` (§3.3) — bỏ `tenant.*`. | 🔴 Cần chốt với EDR |
 | **OQ-INT-04** | **CHƯA chốt:** đề xuất metadata 7 trường (§2) là chuẩn bắt buộc — cần thống nhất với sản phẩm. | 🔴 Cần chốt với EDR |
 | **OQ-INT-05** | **CHƯA chốt:** đề xuất chặn event đến muộn theo `occurred_at` + cột `license_mirror.last_event_occurred_at` (§5.2). | 🔴 Cần chốt với EDR |
+| **OQ-CAT-06** | **CHƯA chốt:** kỳ hạn gói EDR lệch enum — CRM `duration_months` ∈ {12, 24, 36} (1/2/3 năm) vs EDR nhận 1/3/5 năm (12/36/60). Ảnh hưởng `subscription_plan` trong payload `subscription.submitted` (§4.2.1). Hướng: (a) EDR mở thêm 60 tháng, hoặc (b) CRM đổi enum kỳ hạn cho gói EDR (UC-CAT BR-01.3, PRD §5.3.5/§6.9.3). | 🔴 Cần chốt với EDR |

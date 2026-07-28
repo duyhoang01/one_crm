@@ -1,6 +1,6 @@
 # UC-SUB-04 — Chỉnh sửa Subscription
 
-> Module: M-03 Subscription Management | Phiên bản: 1.2 | Ngày: 10/07/2026
+> Module: M-03 Subscription Management | Phiên bản: 1.3 | Ngày: 28/07/2026
 > Trạng thái: Draft for Review
 
 ---
@@ -32,6 +32,7 @@
 | **BR-08** | Deal Code và Ghi chú là tùy chọn. |
 | **BR-09** | Sau khi lưu thành công, form đóng lại, hệ thống cập nhật hero + tab Thông tin chung của trang UC-SUB-03 (nếu đang mở detail) hoặc cập nhật dòng trong danh sách UC-SUB-01. |
 | **BR-10** | **Cấu hình sản phẩm (scope):** nếu sản phẩm có khai báo `scope_schema` (PRD §5.3.7), form hiển thị mục "Cấu hình sản phẩm" với giá trị hiện tại của sub (`subscription.scope`); người dùng sửa được. Với **CMC EDR**: trường **Kiểu tổ chức** (`tenant_mode`) — `MULTI` / `SINGLE`. Lưu lại vào `subscription.scope`. Sản phẩm không khai báo → không hiển thị mục này. |
+| **BR-11** | **Tài khoản kích hoạt:** form hiển thị mục "Tài khoản kích hoạt" với giá trị hiện tại của sub (`subscription.activation_account`) — **Họ tên**, **Tên đăng nhập**, **Email** — pre-fill để người dùng chỉnh. Cả 3 bắt buộc; Email phải đúng định dạng. Lưu lại vào `subscription.activation_account` (PRD §5.3.4). |
 
 ---
 
@@ -48,7 +49,7 @@
 | **1** | User (Sales / CSKH / License Admin / Manager) | Click ✏️ tại row subscription (UC-SUB-01) hoặc click "✏️ Sửa" trong hero section (UC-SUB-03). | Nút chỉ hiện khi `sub.status = DRAFT` — BR-01 |
 | **2** | System | **[Gateway — Sub tồn tại VÀ `sub.status = DRAFT`?]** Có → tiếp bước 3. Không → **EF-01**. | Pre-check tại thời điểm click |
 | **3** | System | Mở modal "Chỉnh sửa Subscription"; pre-fill toàn bộ dữ liệu hiện tại; Mã Sub + Gói sản phẩm + Thời hạn readonly (🔒). | BR-02, BR-03 |
-| **4** | User | Chỉnh sửa field theo loại HĐ — DIRECT: Số seats (>0); RESELLER: Đơn vị thụ hưởng + Số license (>0); chỉnh **Cấu hình sản phẩm** (scope) nếu có — vd EDR: Kiểu tổ chức. Tùy chọn: đổi hợp đồng → **AF-01**; nhập Ngày bắt đầu → **AF-02**. | BR-05, BR-06, BR-10 |
+| **4** | User | Chỉnh sửa field theo loại HĐ — DIRECT: Số seats (>0); RESELLER: Đơn vị thụ hưởng + Số license (>0); chỉnh **Cấu hình sản phẩm** (scope) nếu có — vd EDR: Kiểu tổ chức; chỉnh **Tài khoản kích hoạt** (Họ tên, Tên đăng nhập, Email — pre-fill sẵn). Tùy chọn: đổi hợp đồng → **AF-01**; nhập Ngày bắt đầu → **AF-02**. | BR-05, BR-06, BR-10, BR-11 |
 | **5** | User | Click "💾 Lưu thay đổi". "Hủy" / ✕ → **AF-C**. | — |
 | **6** | System | **[Gateway — Dữ liệu hợp lệ?]** Có → tiếp bước 7. Không → **EF-02**. | Validate toàn bộ form |
 | **7** | System | Lưu thay đổi vào DB; nếu đổi hợp đồng → dịch chuyển sub khỏi contract cũ, gắn contract mới. | BR-04 |
@@ -91,11 +92,11 @@
 | **EF-01b** | System | Không thay đổi dữ liệu; trạng thái sub giữ nguyên. |
 | → | — | **End 3 (Rejected)** — kết thúc luồng. |
 
-**[EF-02: Validate thất bại]** — kích hoạt tại **bước 6** khi dữ liệu không hợp lệ (Hợp đồng trống / DIRECT seats ≤ 0 / RESELLER chưa chọn ĐVTH / RESELLER license ≤ 0).
+**[EF-02: Validate thất bại]** — kích hoạt tại **bước 6** khi dữ liệu không hợp lệ (Hợp đồng trống / DIRECT seats ≤ 0 / RESELLER chưa chọn ĐVTH / RESELLER license ≤ 0 / thiếu trường Tài khoản kích hoạt / Email tài khoản sai định dạng).
 
 | Bước | Tác nhân | Hành động / Phản hồi |
 |---|---|---|
-| **EF-02a** | System | Hiển thị lỗi inline bên dưới từng field không hợp lệ (BR-05, BR-06). |
+| **EF-02a** | System | Hiển thị lỗi inline bên dưới từng field không hợp lệ (BR-05, BR-06, BR-11). |
 | **EF-02b** | System | Giữ nguyên form với dữ liệu đã nhập; không lưu; modal không đóng. |
 | → | — | Sửa lỗi rồi submit lại → **quay bước 5** (KHÔNG phải End Event). |
 
@@ -139,6 +140,12 @@
 │  Đơn vị thụ hưởng *           Số license *             │
 │  [Chọn đơn vị thụ hưởng   ▼] [100                   ]  │
 │                                                          │
+│  ── Tài khoản kích hoạt ─────────────────────────────    │
+│  Họ tên *                     Email *                    │
+│  [Nguyễn Văn An            ]  [admin@fpt.com.vn       ]  │
+│  Tên đăng nhập *                                         │
+│  [admin.fpt                                           ]  │
+│                                                          │
 │  Ngày bắt đầu                 Ngày hết hạn (tự tính)   │
 │  [01/08/2026               ]  [31/07/2027          🔒]  │
 │                                                          │
@@ -167,6 +174,9 @@
 | 3 | Gói sản phẩm | Text readonly | Tự điền từ hợp đồng đã chọn. Hiển thị icon 🔒. Không thể chỉnh sửa trực tiếp (BR-03). |
 | 4 | Thời hạn | Text readonly | Tự điền từ package của hợp đồng. Định dạng "X tháng". Hiển thị icon 🔒. |
 | 4b | Cấu hình sản phẩm | Radio group (2 card ngang) | Chỉ hiển thị khi sản phẩm có `scope_schema`. EDR: "Kiểu tổ chức" — 2 card Multi/Single organization, pre-fill giá trị hiện tại của sub (`sub.scope`). |
+| 4c | Tài khoản kích hoạt — Họ tên | Text input | Pre-fill `sub.activationAccount.fullName`. Bắt buộc. |
+| 4d | Tài khoản kích hoạt — Email | Email input | Pre-fill `sub.activationAccount.email`. Bắt buộc, đúng định dạng. |
+| 4e | Tài khoản kích hoạt — Tên đăng nhập | Text input | Pre-fill `sub.activationAccount.username`. Bắt buộc. Bố cục: Họ tên \| Email cùng hàng, Tên đăng nhập ở hàng dưới. |
 | 5 | Số seats | Number input | Chỉ hiển thị khi `contractType = DIRECT`. Placeholder: "Nhập số seats". |
 | 6 | Đơn vị thụ hưởng | Select dropdown | Chỉ hiển thị khi `contractType = RESELLER`. Danh sách đơn vị thụ hưởng đã đăng ký. |
 | 7 | Số license | Number input | Chỉ hiển thị khi `contractType = RESELLER`. Placeholder: "Nhập số license". |
@@ -185,6 +195,9 @@
 | 2 | Gói sản phẩm | — | Tất cả | Readonly; tự động từ hợp đồng. Hiển thị icon 🔒. |
 | 3 | Thời hạn | — | Tất cả | Readonly; VD: "12 tháng". Hiển thị icon 🔒. |
 | 3b | Kiểu tổ chức (scope) | ✓ | Sản phẩm có scope (EDR) | Radio; `MULTI` / `SINGLE`; pre-fill giá trị hiện tại. Lưu `subscription.scope.tenant_mode`. |
+| 3c | Tài khoản kích hoạt — Họ tên | ✓ | Tất cả | Pre-fill giá trị hiện tại; lỗi: "Vui lòng nhập họ tên". Lưu `activation_account.full_name`. |
+| 3d | Tài khoản kích hoạt — Email | ✓ | Tất cả | Pre-fill; đúng định dạng email; lỗi: "Vui lòng nhập email hợp lệ". Lưu `activation_account.email`. |
+| 3e | Tài khoản kích hoạt — Tên đăng nhập | ✓ | Tất cả | Pre-fill; lỗi: "Tên đăng nhập là bắt buộc". Lưu `activation_account.username`. |
 | 4 | Số seats | ✓ | DIRECT only | Số nguyên > 0; lỗi: "Số seats phải > 0". |
 | 5 | Đơn vị thụ hưởng | ✓ | RESELLER only | Dropdown; lỗi: "Vui lòng chọn đơn vị thụ hưởng". |
 | 6 | Số license | ✓ | RESELLER only | Số nguyên > 0; lỗi: "Số license phải > 0". |
@@ -206,6 +219,7 @@
 | AC-SUB-04-03 | Sub DIRECT đang mở form edit. | Quan sát form. | Chỉ hiển thị field Số seats. Không hiển thị Đơn vị thụ hưởng và Số license. |
 | AC-SUB-04-04 | Sub RESELLER đang mở form edit. | Quan sát form. | Hiển thị Đơn vị thụ hưởng và Số license (có giá trị hiện tại). Không hiển thị Số seats. |
 | AC-SUB-04-18 | Sub sản phẩm EDR có `scope.tenant_mode = "SINGLE"`. | Mở form edit. | Mục "Cấu hình sản phẩm" hiện; "Kiểu tổ chức" pre-fill chọn "Single organization" (card được tô nền xanh). |
+| AC-SUB-04-20 | Sub DRAFT có `activation_account = {fullName:"Lê Quốc Cường", username:"admin.edrgov", email:"admin@edr-gov.vn"}`. | Mở form edit. | Mục "Tài khoản kích hoạt" hiện; 3 ô Họ tên / Email / Tên đăng nhập pre-fill đúng giá trị hiện tại của sub. |
 
 ### Nhóm 2: Validate
 
@@ -216,6 +230,7 @@
 | AC-SUB-04-07 | HĐ DIRECT, người dùng nhập Số seats = 0. | Click "💾 Lưu thay đổi". | Lỗi inline bên dưới Số seats: "Số seats phải > 0". Modal không đóng. |
 | AC-SUB-04-08 | HĐ RESELLER, người dùng xóa lựa chọn Đơn vị thụ hưởng. | Click "💾 Lưu thay đổi". | Lỗi inline bên dưới Đơn vị thụ hưởng: "Vui lòng chọn đơn vị thụ hưởng". Modal không đóng. |
 | AC-SUB-04-16 | HĐ RESELLER, người dùng nhập Số license = 0. | Click "💾 Lưu thay đổi". | Gateway (**bước 6**) phát hiện dữ liệu không hợp lệ → **EF-02**: lỗi inline "Số license phải > 0"; modal giữ nguyên; sau khi sửa, người dùng submit lại (**quay bước 5**), không kết thúc luồng. |
+| AC-SUB-04-21 | Form edit đang mở; người dùng xóa trắng Họ tên (hoặc nhập Email = "admin@" sai định dạng). | Click "💾 Lưu thay đổi". | Gateway (**bước 6**) → **EF-02**: lỗi inline "Vui lòng nhập họ tên" / "Vui lòng nhập email hợp lệ" dưới field tương ứng; modal không đóng; sửa rồi submit lại (**quay bước 5**). |
 
 ### Nhóm 3: Lưu thành công
 
@@ -225,6 +240,7 @@
 | AC-SUB-04-10 | Sub RESELLER, sửa Đơn vị thụ hưởng và Số license. | Click "💾 Lưu thay đổi". | `beneficiaryId` và `licenseQty` cập nhật. Modal đóng. Toast "Đã cập nhật thành công". Kết thúc **End 1 (Success)**. |
 | AC-SUB-04-11 | Sub đang gắn với HĐ "HD-A". Người dùng đổi sang HĐ "HD-B" (cùng loại). | Click "💾 Lưu thay đổi". | Sub bị tách khỏi HD-A và gắn vào HD-B (**bước 7**, BR-04). Modal đóng. Toast "Đã cập nhật thành công". Kết thúc **End 1 (Success)**. |
 | AC-SUB-04-19 | Sub EDR có `scope.tenant_mode = "MULTI"`. Đổi Kiểu tổ chức thành Single organization. | Click "💾 Lưu thay đổi". | `scope.tenant_mode` cập nhật thành "SINGLE" (BR-10). Modal đóng. Toast "Đã cập nhật thành công". Chi tiết UC-SUB-03 hiển thị "Single organization". Kết thúc **End 1 (Success)**. |
+| AC-SUB-04-22 | Sub DRAFT, sửa Email tài khoản kích hoạt thành "admin2@edr-gov.vn"; form hợp lệ. | Click "💾 Lưu thay đổi". | `activation_account.email` cập nhật (BR-11). Modal đóng. Toast "Đã cập nhật thành công". Chi tiết UC-SUB-03 hiển thị email mới ở mục Tài khoản kích hoạt. Kết thúc **End 1 (Success)**. |
 | AC-SUB-04-17 | Sub DIRECT đang mở form edit, người dùng đã sửa Số seats. | Nhấn "Hủy" hoặc ✕ (**AF-C**). | Modal đóng, không lưu bất kỳ thay đổi nào; `seats` giữ nguyên giá trị cũ. Kết thúc **End 2 (Cancelled)**. |
 
 ### Nhóm 4: Tính toán tự động
@@ -250,3 +266,4 @@
 | 1.0 | 09/07/2026 | BA Team | Khởi tạo tài liệu — Draft for Review. |
 | 1.1 | 09/07/2026 | Claude (AI) | Đồng bộ §2 theo BPMN UC-SUB-04: đánh lại còn **8 bước** khớp badge; gộp Gateway vào 1 ô tại **bước 2** (pre-check DRAFT) và **bước 6** (validate); thêm §2.4 End Events (End 1 Success / End 2 Cancelled / End 3 Rejected); bổ sung **AF-C (Hủy chỉnh sửa)**; chuẩn hóa AF-01/AF-02/EF-01/EF-02 theo style bảng. §4: căn AC theo bước/End Event, thêm AC-16 (EF-02 loop RESELLER license ≤ 0) và AC-17 (AF-C → End 2). |
 | 1.2 | 10/07/2026 | Claude (AI) | Bổ sung sửa **Cấu hình sản phẩm (scope)** per-sub do Product Module khai báo (`scope_schema`, PRD §5.3.7): thêm **BR-10**; §2.1 bước 4 chỉnh scope; §3.1 wireframe + §3.2/§3.3 mô tả mục "Cấu hình sản phẩm" (EDR: Kiểu tổ chức MULTI/SINGLE, 2 card ngang, pre-fill); §4 thêm AC-18 (pre-fill) và AC-19 (lưu scope). Đồng bộ demo `v2.4.0_subscriptions.html` (`subSubmitEditSub`) + PRD §5.3.4. |
+| 1.3 | 28/07/2026 | Claude (AI) | **Bổ sung sửa Tài khoản kích hoạt (activation account)**: thêm **BR-11**; §2.1 bước 4 chỉnh tài khoản; §2.3 EF-02 thêm điều kiện thiếu trường / email sai định dạng; §3.1 wireframe + §3.2 (4c/4d/4e) + §3.3 (3c/3d/3e) mô tả mục "Tài khoản kích hoạt" (pre-fill giá trị hiện tại: Họ tên \| Email, Tên đăng nhập); §4 thêm **AC-20** (pre-fill), **AC-21** (validate), **AC-22** (lưu). Chụp lại ảnh modal. Đồng bộ demo `v2.8.0_audit_notification.html` (`subOpenEditSub`/`subSubmitEditSub`) + PRD §5.3.4. |

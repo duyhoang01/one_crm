@@ -1,6 +1,6 @@
 # UC-SUB-03 — Chi tiết Subscription
 
-> Module: M-03 Subscription Management | Phiên bản: 1.3 | Ngày: 13/07/2026
+> Module: M-03 Subscription Management | Phiên bản: 1.4 | Ngày: 28/07/2026
 > Trạng thái: Draft for Review
 
 ---
@@ -259,6 +259,9 @@ Trang Chi tiết Subscription gồm 4 khu vực xếp dọc từ trên xuống:
 | 4 | Loại hợp đồng | `sub.contractType` | Badge DIRECT / RESELLER. |
 | 5 | Gói sản phẩm | `sub.packageName` | Text thường. |
 | 5b | Cấu hình sản phẩm — Kiểu tổ chức | `sub.scope.tenant_mode` | Chỉ hiện với sản phẩm có `scope_schema` (EDR): "Multi organization" (`MULTI`) / "Single organization" (`SINGLE`). Nằm trong card "Gói sản phẩm & License". Ẩn nếu sub không có scope. |
+| 5c | Tài khoản kích hoạt — Họ tên | `sub.activationAccount.fullName` | Họ tên người quản trị phía khách hàng. Nằm ở cuối card "Gói sản phẩm & kỳ hạn". Ẩn nếu sub chưa có `activation_account`. |
+| 5d | Tài khoản kích hoạt — Tên đăng nhập | `sub.activationAccount.username` | Tên đăng nhập quản trị. |
+| 5e | Tài khoản kích hoạt — Email | `sub.activationAccount.email` | Email quản trị. |
 | 6 | Số seats | `sub.seatQty` | Chỉ hiện với DIRECT. |
 | 7 | Số license | `sub.licenseQty` | Chỉ hiện với RESELLER. |
 | 8 | Đơn vị thụ hưởng | `sub.beneficiaryName` | Chỉ hiện với RESELLER. |
@@ -353,6 +356,7 @@ Trang Chi tiết Subscription gồm 4 khu vực xếp dọc từ trên xuống:
 |---|---|---|---|
 | AC-SUB-03-12 | Sub RESELLER, có `beneficiaryName = "Mekong Foods"`. | Mở tab Thông tin chung. | Trường "Đơn vị thụ hưởng" hiển thị "Mekong Foods". Trường "Số seats" không hiển thị. |
 | AC-SUB-03-13 | Sub sản phẩm EDR có `scope.tenant_mode = "SINGLE"`. | Mở tab Thông tin chung. | Trường "Kiểu tổ chức" hiển thị "Single organization". Sub không có scope → trường không hiển thị. |
+| AC-SUB-03-13a | Sub có `activation_account = {fullName:"Phạm Minh Tuấn", username:"admin.cmctelecom", email:"admin@cmctelecom.vn"}`. | Mở tab Thông tin chung. | Mục "Tài khoản kích hoạt" hiển thị Họ tên / Tên đăng nhập / Email ở cuối card "Gói sản phẩm & kỳ hạn". Sub không có `activation_account` → mục không hiển thị. |
 | AC-SUB-03-14 | Sub có `previousSubId = "SUB-2025-010"`. | Mở tab Thông tin chung. | Section Sub Chain hiển thị link đến "SUB-2025-010" (predecessor). |
 | AC-SUB-03-15 | Sub thuộc HĐ "HĐ-2024-001", KH "FPT Software". | Click link "HĐ-2024-001" trong tab Thông tin chung. | Hệ thống mở UC-CON-03 của hợp đồng đó (AF-04). Kết thúc tại **End 6**. |
 | AC-SUB-03-16 | Sub thuộc KH "FPT Software". | Click link "FPT Software" trong tab Thông tin chung. | Hệ thống mở UC-CUS-03 (Khách hàng 360°) của KH đó (AF-05). Kết thúc tại **End 7**. |
@@ -412,6 +416,7 @@ Trang Chi tiết Subscription gồm 4 khu vực xếp dọc từ trên xuống:
 | 1.1 | 09/07/2026 | Claude (AI) | Đồng bộ §2/§4 theo BPMN UC-SUB-03 (trang chi tiết hub): §2.1 đánh lại 6 bước khớp badge, gộp thao tác vào gateway "Loại thao tác" (bước 6) fan ra 9 End Event; AF-01/02/03 gộp thành AF-Tabs (ở lại trang), AF-04→End 6, AF-05→End 7; EF-01→End 9; thêm §2.4 với 9 End Events. §4: căn AC theo bước/End, thêm AC-13b, AC-25→31 cho các nhánh điều hướng. Đồng bộ mục tiêu điều hướng: ⏸ Tạm dừng → UC-SUB-09, ▶ Khôi phục → UC-SUB-10 (BR-09, BR-10, §1 Liên kết). |
 | 1.2 | 10/07/2026 | Claude (AI) | Bổ sung hiển thị **Cấu hình sản phẩm (scope)** trong tab Thông tin chung: §3.4 thêm trường "Kiểu tổ chức" (`sub.scope.tenant_mode`, chỉ hiện với sản phẩm EDR có `scope_schema`); §4 thêm AC-11b. Đồng bộ demo `v2.4.0_subscriptions.html` (`subScopeInfoRows`) + PRD §5.3.4. |
 | 1.3 | 13/07/2026 | Claude (AI) | **Đồng bộ theo demo `v2.6.0_license.html` (M-05).** (1) Tab "License" đổi tên thành **"License & Usage"**; §3.5 **viết lại**: tab dùng **chung component** với [UC-LIC-02](../licenses/UC-LIC-02_view_license_detail.md) → mục này chỉ mô tả **điểm khác biệt**, AC đầy đủ nằm ở UC-LIC-02 (chống trôi dạt tài liệu). (2) **§3.4 bỏ 2 trường trùng lặp**: "Trạng thái License Mirror" và "Lần đồng bộ cuối" — chúng thuộc tab License & Usage; thay bằng link "Xem trạng thái license & mức sử dụng →". (3) §4 Nhóm 4 viết lại theo điểm khác biệt + thêm AC-15b/17/18b/18c (không trùng lặp giữa 2 tab; hành động ngữ cảnh; không có thao tác vòng đời trong thân tab). |
+| 1.4 | 28/07/2026 | Claude (AI) | **Bổ sung hiển thị Tài khoản kích hoạt** trong tab Thông tin chung: §3.4 thêm 3 trường **5c/5d/5e** (`sub.activationAccount.fullName/username/email`, ở cuối card "Gói sản phẩm & kỳ hạn", ẩn nếu chưa có); §4 thêm **AC-SUB-03-13a**; chụp lại 2 ảnh tab Thông tin (DIRECT/RESELLER). Nguồn dữ liệu: `subscription.activation_account` (PRD §5.3.4), thu thập tại [UC-SUB-02](UC-SUB-02_create_subscription.md)/[UC-SUB-04](UC-SUB-04_edit_subscription.md). Chốt từ demo `v2.8.0_audit_notification.html`. |
 
 > Claude tự review — đánh dấu ✅/❌ trước khi submit cho BA review.
 
