@@ -4,8 +4,6 @@
 > Áp dụng 2 điểm sửa Critical (**A**, **B**) từ [Review kiến trúc — Event Catalog](_event_catalog_review.md); mọi nội dung khác giữ nguyên như v1.0.
 > **Đây là hợp đồng kỹ thuật giữa OneCRM và mọi Product Module.** Mục đích, phạm vi và đối tượng đọc: xem §0.
 
-**Ký hiệu:** ✅ đã chốt · 🆕 event mới đề xuất · ⚠️ suy luận của BA/AI, **cần xác nhận** · ❓ Open Question
-
 ---
 
 ## 0. Mục đích tài liệu & đối tượng đọc
@@ -100,7 +98,7 @@ Năm nguyên tắc dưới đây chi phối toàn bộ cách CRM trao đổi eve
 
 ## 2. Metadata dùng chung — bắt buộc cho MỌI event, cả 2 chiều
 
-> ⚠️ *Bộ metadata này là đề xuất của BA — chưa có trong tài liệu tích hợp gốc. **Đây là nội dung cần thống nhất chính thức với phía sản phẩm trước khi triển khai.***
+> *Bộ metadata này là đề xuất của BA — chưa có trong tài liệu tích hợp gốc. **Đây là nội dung cần thống nhất chính thức với phía sản phẩm trước khi triển khai.***
 
 Mỗi event gồm **hai lớp**: lớp **metadata** (7 trường cố định, đặc tả trong bảng dưới) và lớp **payload** (nội dung nghiệp vụ riêng theo từng loại event, đặc tả tại §3.2, §4.2 và §4.3). Bảng dưới đặc tả lớp metadata — bắt buộc và **giống hệt nhau** ở mọi event, cả chiều inbound lẫn outbound, cho mọi Product Module.
 
@@ -164,7 +162,7 @@ Sản phẩm báo **đã nhận yêu cầu và khởi tạo xong tenant** (chờ
 
 ## 3. Event INBOUND — Sản phẩm → CRM (chi tiết: CMC EDR)
 
-> ⚠️ **Toàn bộ §3 là mô hình ĐỀ XUẤT của BA, CHƯA xác nhận với đội EDR** — sẽ chốt trong buổi làm việc (xem OQ-INT-01/08/10, §6).
+> **Toàn bộ §3 là mô hình ĐỀ XUẤT của BA, CHƯA xác nhận với đội EDR** — sẽ chốt trong buổi làm việc (xem OQ-INT-01/08/10, §6).
 
 ### 3.1 Vòng đời license của EDR — mô hình đề xuất
 
@@ -183,7 +181,7 @@ PENDING→PROVISIONING→ ACTIVE ─license.expired→ GRACE ─license.grace_ex
                (mirror lần lượt: ACTIVE → GRACE → RESTRICTED → SUSPENDED)
 
   (CRM ra lệnh Thu hồi) ──subscription.terminated──► EDR ──license.revoked──► REVOKED
-     🆕 khai báo chính thức — EDR Phase 1 CHƯA gửi thật; UI/cảnh báo REVOKED tạm ẩn (§3.4).
+     khai báo chính thức — EDR Phase 1 CHƯA gửi thật; UI/cảnh báo REVOKED tạm ẩn (§3.4).
 ```
 
 > **Điểm cốt lõi của mô hình đề xuất:**
@@ -203,10 +201,10 @@ PENDING→PROVISIONING→ ACTIVE ─license.expired→ GRACE ─license.grace_ex
 | 5 | `license.grace_expired` | **Hết ân hạn** → khách chuyển sang **dùng hạn chế tính năng, trong 30 ngày** | `RESTRICTED` | **Hạn chế tính năng** | `sub` giữ **ACTIVE** *(sub chưa chết; mirror RESTRICTED thể hiện mức hạn chế)*. → **Cơ hội gia hạn KHẨN, xếp trên cả "Gia hạn gấp"** |
 | 6 | `license.suspended` | **Ngừng hoàn toàn — khách không dùng được bất kỳ tính năng nào.** Hai nguồn phân biệt bằng `correlation_id` (xem §3.3). | `SUSPENDED` | Đã ngừng | `sub.status = SUSPENDED`. *CÓ* `correlation_id` → do CRM ra lệnh **Tạm dừng** (UC-SUB-09). *KHÔNG* có → **tự nhiên** (khách hết ân hạn, không gia hạn). |
 | 7 | `license.reactivated` | **EDR đã khôi phục dịch vụ theo lệnh CRM** | `ACTIVE` | Đang hoạt động | `sub.status = ACTIVE`. **Luôn CÓ** `correlation_id` — phản hồi lệnh **Khôi phục** (UC-SUB-10). Khôi phục chỉ xảy ra do lệnh, không có đường tự nhiên. |
-| 8 | `license.revoked` 🆕 *(xem §3.4)* | **CRM đã ra lệnh Thu hồi** (chấm dứt hợp đồng) và EDR xác nhận đã thực thi | `REVOKED` | Đã thu hồi | `sub.status = REVOKED`. **Phase 1: EDR chưa gửi event này thật** — mọi UI/cảnh báo phản ứng với REVOKED tạm ẩn (§3.4) |
+| 8 | `license.revoked` *(xem §3.4)* | **CRM đã ra lệnh Thu hồi** (chấm dứt hợp đồng) và EDR xác nhận đã thực thi | `REVOKED` | Đã thu hồi | `sub.status = REVOKED`. **Phase 1: EDR chưa gửi event này thật** — mọi UI/cảnh báo phản ứng với REVOKED tạm ẩn (§3.4) |
 | 9 | `license.renewed` | Bản ghi license cũ được đánh dấu đã gia hạn | `RENEWED` | Đã gia hạn | Sub cũ → `RENEWED` (bàn giao cho bản kế tiếp) |
 | 10 | `license.usage_synced` | Báo mức sử dụng định kỳ | *(không đổi)* | — | Cập nhật `used_seats` + `last_synced_at`. **Chu kỳ: 3 giờ** |
-| 11 | `license.expiring_soon` | Sắp hết hạn | `EXPIRING_SOON` ✅ **Giữ** *(event + fallback)* | Sắp hết hạn | `sub` giữ **ACTIVE**. CRM **ưu tiên** nhận qua event này (đúng NT-2, không tự suy diễn). ⚠️ **Fallback đã chốt:** nếu chưa nhận được event mà vẫn còn cách hạn trong khoảng `renewal_notice_days`, M-05 **tạm giữ** cách tự tính hiện tại — không mất tính năng nhắc gia hạn cho tới khi EDR triển khai event này (ngoài phạm vi M-07, cần cập nhật ở FRS M-05) |
+| 11 | `license.expiring_soon` | Sắp hết hạn | `EXPIRING_SOON` **Giữ** *(event + fallback)* | Sắp hết hạn | `sub` giữ **ACTIVE**. CRM **ưu tiên** nhận qua event này (đúng NT-2, không tự suy diễn). **Fallback đã chốt:** nếu chưa nhận được event mà vẫn còn cách hạn trong khoảng `renewal_notice_days`, M-05 **tạm giữ** cách tự tính hiện tại — không mất tính năng nhắc gia hạn cho tới khi EDR triển khai event này (ngoài phạm vi M-07, cần cập nhật ở FRS M-05) |
 
 > **Lưu ý mô hình (đề xuất):** `sub.status` chỉ đi thẳng `ACTIVE → SUSPENDED` trong vòng đời tự nhiên của EDR — **không** dùng trạng thái `EXPIRED` ở cấp sub cho luồng này (ba giai đoạn ân hạn/hạn chế đều để `sub` ACTIVE, mức độ suy giảm phản ánh qua `license_mirror.status`).
 
@@ -229,9 +227,9 @@ EDR thực thi Tạm dừng/Khôi phục bên trong ở **cấp Tenant**, nhưng
 
 > **Vì sao mô hình này sạch hơn giả định `tenant.*` ngày 14/07:** CRM chỉ đọc event **trạng thái license** (`license.*`) — đúng vai trò quan sát YT-1, không phải diễn giải event hạ tầng tenant. `correlation_id` chỉ bổ sung **nguyên nhân** (do lệnh hay tự nhiên) cho audit/hiển thị, không quyết định có đổi mirror hay không.
 
-> ❓ **OQ-INT-01 (chưa chốt):** đề xuất Tạm dừng/Khôi phục xác nhận qua `license.suspended` / `license.reactivated` mang `correlation_id`, bỏ `tenant.*` khỏi danh mục.
+> **OQ-INT-01 (chưa chốt):** đề xuất Tạm dừng/Khôi phục xác nhận qua `license.suspended` / `license.reactivated` mang `correlation_id`, bỏ `tenant.*` khỏi danh mục.
 
-### 3.4 ✅ REVOKED — khai báo chính thức `license.revoked`, nhưng ẩn UI/cảnh báo ở Phase 1 *(rà lại 14/07)*
+### 3.4 REVOKED — khai báo chính thức `license.revoked`, nhưng ẩn UI/cảnh báo ở Phase 1 *(rà lại 14/07)*
 
 **Quyết định (rà lại 14/07):** khai báo **`license.revoked` → `REVOKED`** là event inbound chính thức trong danh mục — đây là phản hồi cho lệnh outbound `subscription.terminated` (Thu hồi, UC-SUB-08), **không** còn đi qua `tenant.terminated` như thiết kế trước (§3.3). Nhờ vậy `license_mirror.status` phân biệt được rõ **Tạm dừng** (`SUSPENDED`, có thể khôi phục) và **Thu hồi** (`REVOKED`, chấm dứt hợp đồng) — điều bản thiết kế cũ không làm được.
 
@@ -240,7 +238,7 @@ EDR thực thi Tạm dừng/Khôi phục bên trong ở **cấp Tenant**, nhưng
 - **Chưa thiết kế/triển khai** bất kỳ tính năng, cảnh báo, hay giao diện nào **phản ứng với trạng thái REVOKED** (vd mismatch detection UC-LIC-04 BR-09 "lệch kiểu A", banner "sản phẩm không thực thi lệnh") — **tạm ẩn/bỏ qua**, chưa thực hiện.
 - Lệnh outbound `subscription.terminated` (Thu hồi) vẫn được **gửi và ghi nhận đã gửi** ở UC-INT-01 như bình thường — chỉ là **CRM chưa mong đợi phản hồi `license.revoked` thật** từ EDR trong Phase 1, nên không dựng cơ chế phát hiện "chưa phản hồi" cho riêng trường hợp này.
 
-⚠️ **Kéo theo M-05** (ngoài phạm vi M-07, cần đối chiếu riêng khi làm/rà M-05): vì `REVOKED` giờ là trạng thái chính thức trong danh mục (khác với quyết định cũ "gỡ REVOKED khỏi M-05"), **có thể giữ nguyên `REVOKED` trong demo/FRS M-05 hiện có** — nhưng ẩn mọi cảnh báo/mismatch logic liên quan tới nó cho tới khi EDR triển khai event thật.
+**Kéo theo M-05** (ngoài phạm vi M-07, cần đối chiếu riêng khi làm/rà M-05): vì `REVOKED` giờ là trạng thái chính thức trong danh mục (khác với quyết định cũ "gỡ REVOKED khỏi M-05"), **có thể giữ nguyên `REVOKED` trong demo/FRS M-05 hiện có** — nhưng ẩn mọi cảnh báo/mismatch logic liên quan tới nó cho tới khi EDR triển khai event thật.
 
 ---
 
@@ -255,7 +253,7 @@ EDR thực thi Tạm dừng/Khôi phục bên trong ở **cấp Tenant**, nhưng
 | 3 | Khôi phục | `subscription.reactivated` | UC-SUB-10 | **Reactivate Tenant** (cấp tenant) | `license.reactivated` *(CÓ correlation_id)* → mirror = ACTIVE, §3.3 |
 | 4 | Thu hồi | `subscription.terminated` | UC-SUB-08 | *(Phase 1: EDR chưa có cơ chế revoke thật — §3.4)* | `license.revoked` → *(mirror = REVOKED — khai báo, chưa thực thi thật ở EDR Phase 1)* |
 | 5 | Gia hạn | `subscription.renewed` | UC-SUB-07 | Tạo Tenant/Org License mới; đánh dấu bản cũ Renewed | `license.renewed` *(bản cũ)* + `license.activated` *(bản mới)* |
-| 6 | **Yêu cầu cập nhật mức dùng** 🆕 | `usage.force_sync_requested` | UC-LIC-03 | Gửi lại số liệu mức sử dụng | `license.usage_synced` |
+| 6 | **Yêu cầu cập nhật mức dùng** | `usage.force_sync_requested` | UC-LIC-03 | Gửi lại số liệu mức sử dụng | `license.usage_synced` |
 
 > **#6 bị thiếu trong tài liệu cũ** dù PRD FR-LIC-04 BR-04.2 đã yêu cầu và demo đã hiển thị.
 
@@ -263,7 +261,7 @@ EDR thực thi Tạm dừng/Khôi phục bên trong ở **cấp Tenant**, nhưng
 
 Giữ nguyên schema hiện có *(customer · package · admin · license_qty · structure_mode)*, **kèm metadata §2**.
 
-### 4.3 Payload — `suspended` / `reactivated` / `terminated` ⚠️ *(tài liệu cũ không có)*
+### 4.3 Payload — `suspended` / `reactivated` / `terminated` *(tài liệu cũ không có)*
 
 ```json
 {
@@ -273,7 +271,7 @@ Giữ nguyên schema hiện có *(customer · package · admin · license_qty ·
 ```
 > `reason` lấy từ `subscription.suspend_reason` (đã có từ v2.4). `effective_at` = thời điểm lệnh có hiệu lực.
 
-### 4.4 🆕 `subscription.command_failed` — sản phẩm báo "tôi không làm được lệnh của anh"
+### 4.4 `subscription.command_failed` — sản phẩm báo "tôi không làm được lệnh của anh"
 
 **Chiều: sản phẩm → CRM.** Bắt buộc theo NT-4.
 
@@ -325,12 +323,12 @@ Idempotent theo **`event_id`**. Đã xử lý → bỏ qua, không áp dụng l�
 ### 5.3 Xác thực nguồn gửi
 HMAC-SHA256 theo `runtime_config.webhook_secret`. **Chữ ký sai → trả 4xx, TỪ CHỐI NGAY, KHÔNG ghi `WEBHOOK_INBOX`** — chỉ log ở hạ tầng (rate-limited + source IP) cho đội bảo mật *(SG-4, chốt 16/07)*. Không lưu để tránh kẻ lạ đổ rác vào inbox (DoS) và để mọi dòng trong inbox đều đã xác thực. Sự cố khoá sai được **cảnh báo im lặng** bắt (sản phẩm sai khoá → không tin nào hợp lệ → kênh im lặng); điều tra tấn công giả mạo thuộc **an ninh hạ tầng**, không phải dashboard CRM.
 
-✅ **Đổi khoá (rà lại 14/07 — BK-3/Q8):** BA để **Dev quyết định cơ chế cụ thể**. FRS chỉ nêu **ràng buộc nghiệp vụ bắt buộc**: *đổi khoá bảo mật KHÔNG được làm mất dữ liệu webhook hợp lệ* — vì nếu đổi khoá "cứng" (chỉ chấp nhận khoá mới ngay lập tức), mọi tin gửi trong lúc EDR chưa kịp cập nhật khoá sẽ bị đánh dấu "chữ ký không hợp lệ" và **không xử lý lại được** (BR-01) → mất dữ liệu license/usage thật. PRD §5.3.7 đã có sẵn field `secret_rotation_state` (ân hạn 7 ngày) mà Dev có thể dùng làm cơ sở — cách làm phổ biến là chấp nhận song song cả khoá cũ lẫn mới trong thời gian ân hạn (dual-secret rotation).
+**Đổi khoá (rà lại 14/07 — BK-3/Q8):** BA để **Dev quyết định cơ chế cụ thể**. FRS chỉ nêu **ràng buộc nghiệp vụ bắt buộc**: *đổi khoá bảo mật KHÔNG được làm mất dữ liệu webhook hợp lệ* — vì nếu đổi khoá "cứng" (chỉ chấp nhận khoá mới ngay lập tức), mọi tin gửi trong lúc EDR chưa kịp cập nhật khoá sẽ bị đánh dấu "chữ ký không hợp lệ" và **không xử lý lại được** (BR-01) → mất dữ liệu license/usage thật. PRD §5.3.7 đã có sẵn field `secret_rotation_state` (ân hạn 7 ngày) mà Dev có thể dùng làm cơ sở — cách làm phổ biến là chấp nhận song song cả khoá cũ lẫn mới trong thời gian ân hạn (dual-secret rotation).
 
 ### 5.4 Không chặn đường trả lời
 CRM trả **200 OK ngay** khi nhận, xử lý bất đồng bộ. Vòng đời: `RECEIVED → PROCESSED` / `FAILED_RETRYING → FAILED` *(tối đa 5 lần thử)*.
 
-### 5.5 ✅ Vòng đời dữ liệu *(chốt 14/07 — theo trả lời BK-2, thay cho đề xuất cũ)*
+### 5.5 Vòng đời dữ liệu *(chốt 14/07 — theo trả lời BK-2, thay cho đề xuất cũ)*
 `license.usage_synced` mỗi **3 giờ** × N sub = **8 tin/sub/ngày**. 500 sub → **4.000 tin/ngày**, **~1,5 triệu/năm**.
 
 - **Message Queue**: tin chỉ tồn tại tới khi xử lý **thành công** — đúng cơ chế hàng đợi thông thường, không phải việc của CRM lưu trữ.
@@ -345,11 +343,11 @@ CRM trả **200 OK ngay** khi nhận, xử lý bất đồng bộ. Vòng đời:
 
 | Mã | Nội dung | Mức |
 |---|---|---|
-| **OQ-INT-01** | ❓ **CHƯA chốt:** đề xuất Tạm dừng/Khôi phục xác nhận qua `license.suspended` / `license.reactivated` mang `correlation_id` (§3.3) — bỏ `tenant.*`; Thu hồi dùng `license.revoked` riêng (§3.4). | 🔴 Cần chốt với EDR |
-| ~~OQ-INT-04~~ | ✅ **Đã chốt:** metadata 7 trường (§2) là chuẩn bắt buộc. | — |
-| ~~OQ-INT-05~~ | ✅ **Đã chốt:** chặn event đến muộn theo `occurred_at` + cột `license_mirror.last_event_occurred_at` (§5.2). | — |
-| ~~OQ-INT-06~~ | ✅ **Đã chốt:** GIỮ `EXPIRING_SOON`, ưu tiên event `license.expiring_soon`, **fallback** tự tính `renewal_notice_days` khi chưa có event (§3.2 #11). | — |
-| ~~OQ-INT-07~~ | ✅ **Đã chốt (sửa lại theo BK-2 — bản trước dựa trên đề xuất cũ, sai):** **không** purge tự động, giữ nguyên DB, backup để sau; **bộ lọc mặc định theo thời gian** (vd 3 ngày) ở tab Tích hợp thay vì ẩn `usage_synced` thành công (§5.5). | — |
-| ~~OQ-INT-09~~ 🆕 | ✅ **Đã chốt:** REVOKED — khai báo `license.revoked` → `REVOKED` chính thức (không còn qua `tenant.terminated`); EDR chưa gửi thật ở Phase 1 nên mọi UI/cảnh báo liên quan tạm ẩn (§3.4). | — |
-| **OQ-INT-10** 🆕 | ❓ **CHƯA chốt:** đề xuất EDR gửi `license.expired` để báo **vào ân hạn** → mirror `GRACE`; không dùng `license.grace_started`; giả định **mọi gói EDR đều đi qua ân hạn** (§3.1, §3.2). | 🔴 Cần chốt với EDR |
-| **OQ-INT-08** | ❓ **CHƯA chốt:** đề xuất khi mirror = `RESTRICTED` (hạn chế tính năng), `sub.status` **giữ ACTIVE** (PA A) — mức hạn chế phản ánh qua `license_mirror.status`, không đổi trạng thái sub (§3.2 #5). | 🔴 Cần chốt với EDR |
+| **OQ-INT-01** | **CHƯA chốt:** đề xuất Tạm dừng/Khôi phục xác nhận qua `license.suspended` / `license.reactivated` mang `correlation_id` (§3.3) — bỏ `tenant.*`; Thu hồi dùng `license.revoked` riêng (§3.4). | 🔴 Cần chốt với EDR |
+| ~~OQ-INT-04~~ | **Đã chốt:** metadata 7 trường (§2) là chuẩn bắt buộc. | — |
+| ~~OQ-INT-05~~ | **Đã chốt:** chặn event đến muộn theo `occurred_at` + cột `license_mirror.last_event_occurred_at` (§5.2). | — |
+| ~~OQ-INT-06~~ | **Đã chốt:** GIỮ `EXPIRING_SOON`, ưu tiên event `license.expiring_soon`, **fallback** tự tính `renewal_notice_days` khi chưa có event (§3.2 #11). | — |
+| ~~OQ-INT-07~~ | **Đã chốt (sửa lại theo BK-2 — bản trước dựa trên đề xuất cũ, sai):** **không** purge tự động, giữ nguyên DB, backup để sau; **bộ lọc mặc định theo thời gian** (vd 3 ngày) ở tab Tích hợp thay vì ẩn `usage_synced` thành công (§5.5). | — |
+| ~~OQ-INT-09~~ | **Đã chốt:** REVOKED — khai báo `license.revoked` → `REVOKED` chính thức (không còn qua `tenant.terminated`); EDR chưa gửi thật ở Phase 1 nên mọi UI/cảnh báo liên quan tạm ẩn (§3.4). | — |
+| **OQ-INT-10** | **CHƯA chốt:** đề xuất EDR gửi `license.expired` để báo **vào ân hạn** → mirror `GRACE`; không dùng `license.grace_started`; giả định **mọi gói EDR đều đi qua ân hạn** (§3.1, §3.2). | 🔴 Cần chốt với EDR |
+| **OQ-INT-08** | **CHƯA chốt:** đề xuất khi mirror = `RESTRICTED` (hạn chế tính năng), `sub.status` **giữ ACTIVE** (PA A) — mức hạn chế phản ánh qua `license_mirror.status`, không đổi trạng thái sub (§3.2 #5). | 🔴 Cần chốt với EDR |
