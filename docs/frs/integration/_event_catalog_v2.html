@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event Catalog (M-07) — Integration Layer</title>
+<style>
+:root{
+  --bg:#ffffff; --fg:#1e1e1e; --muted:#6f7277; --border:#e6e6e6; --soft:#f7f7f7;
+  --accent:#0e7a45; --accent-bd:#3ecf8e; --th:#f4f4f4; --zebra:#fbfbfb;
+  --quote:#f5faf6; --code-bg:#eef0f1; --code-fg:#1e1e1e;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#1c1c1c; --fg:#e6e6e6; --muted:#9a9a9a; --border:#2c2c2c; --soft:#232323;
+    --accent:#3ecf8e; --accent-bd:#3ecf8e; --th:#242424; --zebra:#202020;
+    --quote:#18211c; --code-bg:#2a2a2a; --code-fg:#e6e6e6;
+  }
+}
+*{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font-family:"Inter","Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji",sans-serif;
+  font-size:15.5px; line-height:1.65;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+.wrap{ max-width:860px; margin:0 auto; padding:44px 28px 110px; }
+
+/* Tiêu đề — nhẹ nhàng, rõ cấp bậc, nhiều khoảng thở */
+h1,h2,h3,h4{ line-height:1.3; font-weight:600; margin:2.1em 0 .55em; letter-spacing:-.006em; }
+h1{ font-size:1.78em; font-weight:700; margin:0 0 .55em; letter-spacing:-.02em; }
+h2{ font-size:1.32em; padding-bottom:.32em; border-bottom:1px solid var(--border); margin-top:2.5em; }
+h3{ font-size:1.1em; }
+h4{ font-size:.97em; color:var(--muted); }
+h1+*, h2+*, h3+*{ margin-top:.4em; }
+
+p{ margin:.7em 0; }
+a{ color:var(--accent); text-decoration:none; }
+a:hover{ text-decoration:underline; }
+hr{ border:0; border-top:1px solid var(--border); margin:2.3em 0; }
+
+/* Nhấn mạnh nhẹ: đậm = semibold; nghiêng -> bỏ nghiêng + xám (dễ đọc tiếng Việt) */
+strong{ font-weight:600; color:inherit; }
+em{ font-style:normal; color:var(--muted); }
+
+/* Inline code theo theme; code block LUÔN nền tối (đặc trưng Supabase) */
+code{
+  background:var(--code-bg); color:var(--code-fg); padding:.1em .36em; border-radius:5px;
+  font-family:"Cascadia Code","SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  font-size:.85em; white-space:nowrap;
+}
+pre{
+  background:#1b1b1b; border:1px solid #2a2a2a; border-radius:9px;
+  padding:15px 17px; overflow-x:auto; line-height:1.5; margin:1.15em 0;
+}
+pre code{ background:none; color:#e8e8e8; padding:0; font-size:.82em; white-space:pre; word-break:normal; }
+
+blockquote{
+  margin:1.15em 0; padding:.7em 1.1em; background:var(--quote);
+  border-left:3px solid var(--accent-bd); border-radius:0 7px 7px 0; color:var(--fg);
+}
+blockquote > :first-child{ margin-top:0; } blockquote > :last-child{ margin-bottom:0; }
+
+table{ border-collapse:collapse; width:100%; margin:1.25em 0; font-size:.9em; }
+th,td{ border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top; }
+th{ background:var(--th); font-weight:600; }
+tbody tr:nth-child(even){ background:var(--zebra); }
+
+ul,ol{ padding-left:1.45em; margin:.7em 0; } li{ margin:.28em 0; }
+li > ul, li > ol{ margin:.28em 0; }
+img{ max-width:100%; }
+
+/* Layout + menu trái (mục lục auto-sinh bằng JS) */
+.layout{ display:flex; align-items:flex-start; }
+.toc{ position:sticky; top:0; align-self:flex-start; flex:0 0 248px; width:248px;
+  height:100vh; overflow-y:auto; padding:30px 14px 48px 22px;
+  border-right:1px solid var(--border); background:var(--soft); font-size:.82em; }
+.toc-h{ font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;
+  font-size:.8em; margin:0 0 12px 8px; }
+.toc ul{ list-style:none; margin:0; padding:0; }
+.toc a{ display:block; padding:5px 10px; margin:1px 0; border-radius:6px; color:var(--muted);
+  text-decoration:none; line-height:1.4; }
+.toc a:hover{ background:var(--bg); color:var(--fg); }
+.toc a.active{ background:var(--quote); color:var(--accent); font-weight:600; }
+.toc .lvl-3 a{ padding-left:22px; font-size:.95em; }
+.toc .lvl-3 a.active{ color:var(--accent); }
+.layout > .wrap{ flex:1 1 auto; min-width:0; }
+@media (max-width:920px){ .toc{ display:none; } }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" id="toc"><div class="toc-h">Mục lục</div></nav>
+<div class="wrap">
+<h1>Phụ lục A — Danh mục event tích hợp (Event Catalog)</h1>
+<blockquote>
+<p>Module: Integration Layer | Phiên bản: 2.0 | Ngày: 27/07/2026 <em>(v1.0: 14/07/2026)</em>
+Áp dụng 2 điểm sửa Critical (<strong>A</strong>, <strong>B</strong>) từ <a href="_event_catalog_review.md">Review kiến trúc — Event Catalog</a>; mọi nội dung khác giữ nguyên như v1.0.</p>
+</blockquote>
+<hr />
+<h2 data-toc="0 · Mục đích, đối tượng">0. Mục đích tài liệu &amp; đối tượng đọc</h2>
+<h3>Tài liệu này dùng để làm gì</h3>
+<p>Đây là <strong>danh mục event tích hợp (Event Catalog)</strong> — bản khai báo <strong>nội dung</strong> của mọi event trao đổi giữa OneCRM và Product Module CMC EDR. Nó là <strong>nguồn sự thật duy nhất</strong> trả lời 4 câu hỏi:</p>
+<ol>
+<li><strong>Có những event nào?</strong> — Sản phẩm gửi những event nào về CRM (inbound, §3), và CRM gửi những event nào sang sản phẩm (outbound, §4).</li>
+<li><strong>Mỗi event chứa những thông tin gì?</strong> — Mọi event đều có <strong>2 lớp</strong>:
+   - (a) <strong>metadata chung</strong> — 7 trường bắt buộc (<code>event_id</code>, <code>event_key</code>, <code>occurred_at</code>, <code>subscription_id</code>, <code>product_id</code>, <code>correlation_id</code>, <code>schema_version</code>) <strong>giống hệt nhau ở mọi event, mọi sản phẩm</strong>, dùng để chống trùng, chống sai thứ tự và truy vết (§2).
+   - (b) <strong>payload</strong> — phần nội dung <strong>riêng theo từng loại event</strong> (vd <code>activation_date</code>, <code>usage_snapshot</code>…), được khai báo chi tiết ở §3/§4.</li>
+<li><strong>Nhận được event inbound rồi CRM xử lý thế nào?</strong> — Ánh xạ event → <code>license_mirror.status</code> + tác động lên subscription (§3.2); quy tắc xử lý bắt buộc: chống trùng, chống sai thứ tự, xác thực nguồn (§5).</li>
+<li><strong>Nhận được lệnh outbound rồi EDR phải làm gì?</strong> — Với mỗi lệnh CRM gửi sang, EDR thực hiện nghiệp vụ gì và gửi event nào về để xác nhận (§4).</li>
+</ol>
+<blockquote>
+<p><strong>Phân vai với FRS khác:</strong> <a href="UC-INT-01_publish_outbound_event.md">UC-INT-01</a>/<a href="UC-INT-02_receive_inbound_event.md">UC-INT-02</a> đặc tả <em>cơ chế</em> (làm sao publish/nhận, retry, outbox/inbox); tài liệu này khai báo <em>nội dung</em> (gửi/nhận <strong>cái gì</strong>, mang <strong>trường nào</strong>, nghĩa <strong>là gì</strong>). Đây là <strong>mô tả kỹ thuật</strong> hai bên phải cùng tuân thủ — không phải mô tả một chức năng có giao diện.</p>
+</blockquote>
+<p>Tài liệu <strong>thay thế</strong> <code>docs/prd/inbound_outbound_concept.md</code> v1.0 (bản cũ có lỗ hổng làm hỏng module License Mirror &amp; Usage).</p>
+<h3>Ai đọc, để làm gì</h3>
+<table>
+<thead>
+<tr>
+<th>Đối tượng</th>
+<th>Đọc để làm gì</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Dev Integration Layer</strong></td>
+<td>Nguồn chuẩn để build outbox publisher + webhook receiver: metadata (§2), danh sách event key (§3/§4), quy tắc idempotent / chống sai thứ tự / HMAC (§5)</td>
+</tr>
+<tr>
+<td><strong>Đội sản phẩm EDR</strong></td>
+<td>Biết CRM <strong>gửi lệnh gì</strong> và <strong>mong nhận phản hồi gì</strong>, đúng format nào — để hai bên <strong>thống nhất hợp đồng event</strong> trước khi tích hợp</td>
+</tr>
+<tr>
+<td><strong>Dev / BA License Mirror &amp; Usage</strong></td>
+<td>Bảng ánh xạ event → <code>license_mirror.status</code> (§3.2) <strong>trực tiếp</strong> quyết định trạng thái hiển thị của mỗi bản ghi License Mirror — ví dụ <em>Đang hoạt động · Trong ân hạn · Hạn chế tính năng · Đã ngừng · Đã thu hồi</em></td>
+</tr>
+<tr>
+<td><strong>QA</strong></td>
+<td>Cơ sở viết test: chống xử lý trùng — một event dù nhận về nhiều lần cũng chỉ xử lý một lần (§5.1), chống event đến muộn (§5.2), ánh xạ trạng thái đúng (§3.2), lệnh thất bại (§3.5)</td>
+</tr>
+<tr>
+<td><strong>BA / PO</strong></td>
+<td>Theo dõi Open Questions (§6), phê duyệt thay đổi nghiệp vụ (ân hạn / hạn chế tính năng — §3)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 data-toc="1 · Thuật ngữ">1. Thuật ngữ &amp; Chữ viết tắt</h2>
+<blockquote>
+<p>Mục này giải nghĩa các thuật ngữ và chữ viết tắt được dùng xuyên suốt tài liệu. Đọc trước khi đi vào các bảng đặc tả event ở §2 trở đi.</p>
+</blockquote>
+<h3>1.1 Thuật ngữ</h3>
+<table>
+<thead>
+<tr>
+<th>Thuật ngữ</th>
+<th>Giải nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>correlation_id</code></strong></td>
+<td>Mã dùng để <strong>nối một lệnh outbound của CRM với phản hồi inbound của sản phẩm</strong>, nhờ đó biết được một event đến là phản hồi cho lệnh nào (xem §2 và §3.3).</td>
+</tr>
+<tr>
+<td><strong>Idempotent (chống xử lý trùng)</strong></td>
+<td>Tính chất đảm bảo cùng một event dù nhận về nhiều lần cũng chỉ được áp dụng <strong>đúng một lần</strong>, dựa trên <code>event_id</code> (xem §5.1).</td>
+</tr>
+<tr>
+<td><strong>Webhook</strong></td>
+<td>Cơ chế trong đó sản phẩm chủ động gọi HTTP tới một endpoint của CRM để đẩy event inbound về.</td>
+</tr>
+<tr>
+<td><strong>Outbox</strong></td>
+<td>Bảng hàng chờ lưu các event outbound đã được ghi <em>cùng giao dịch với thay đổi nghiệp vụ</em> nhưng chưa gửi đi, giúp worker gửi lại và bảo đảm không mất lệnh (xem UC-INT-01).</td>
+</tr>
+<tr>
+<td><strong>Inbox (<code>WEBHOOK_INBOX</code>)</strong></td>
+<td>Bảng lưu mọi event inbound đã nhận, phục vụ chống trùng, xử lý lại (replay) và truy vết (xem UC-INT-05).</td>
+</tr>
+<tr>
+<td><strong>Replay</strong></td>
+<td>Việc xử lý lại các event inbound đã lưu, theo đúng thứ tự thời gian <code>occurred_at</code> (xem §5.2 và UC-INT-05).</td>
+</tr>
+<tr>
+<td><strong>HMAC-SHA256</strong></td>
+<td>Thuật toán ký và xác thực chữ ký số trên nội dung webhook, giúp CRM xác minh event thật sự đến từ một sản phẩm hợp lệ (xem §5.3).</td>
+</tr>
+<tr>
+<td><strong><code>license_mirror</code> (Mirror)</strong></td>
+<td>Bản sao <strong>chỉ-đọc</strong> tại CRM, phản ánh lại trạng thái và mức sử dụng của license thật bên sản phẩm. CRM không sở hữu license mà chỉ soi chiếu lại (thuộc module License Mirror &amp; Usage).</td>
+</tr>
+<tr>
+<td><strong>Tenant</strong></td>
+<td>Đơn vị quản lý khách hàng bên trong sản phẩm EDR (mỗi khách hàng tương ứng một tenant). EDR thực thi các hành động Tạm dừng/Khôi phục ở cấp tenant (xem §3.3).</td>
+</tr>
+<tr>
+<td><strong>Provisioning</strong></td>
+<td>Quá trình sản phẩm khởi tạo hạ tầng để khách hàng bắt đầu dùng được dịch vụ (tạo tenant, cấp license, tạo tài khoản quản trị…).</td>
+</tr>
+<tr>
+<td><strong>Ân hạn (<code>EXPIRED</code>)</strong></td>
+<td>Giai đoạn ngay sau khi license hết hạn nhưng khách hàng <strong>vẫn dùng đủ tính năng</strong> trong một khoảng thời gian, trước khi bị hạn chế (xem §3.1).</td>
+</tr>
+<tr>
+<td><strong>Hạn chế tính năng (<code>GRACE_EXPIRED</code>)</strong></td>
+<td>Giai đoạn sau ân hạn: khách hàng bị <strong>giảm hoặc khoá bớt tính năng</strong> nhưng dịch vụ chưa dừng hẳn (xem §3.2).</td>
+</tr>
+<tr>
+<td><strong>Product Module</strong></td>
+<td>Một sản phẩm trong hệ sinh thái tích hợp với OneCRM (EDR, C-Shield, AV, CA). Mỗi Product Module tự khai báo tập trạng thái và bảng ánh xạ event của riêng mình.</td>
+</tr>
+<tr>
+<td><strong><code>license_status_set</code></strong></td>
+<td>Tập tên trạng thái hiển thị cho người dùng, <strong>do từng Product Module khai báo</strong>, không cố định (hardcode) trong lõi CRM (xem nguyên tắc NT-5, §1.3).</td>
+</tr>
+</tbody>
+</table>
+<h3>1.2 Chữ viết tắt</h3>
+<table>
+<thead>
+<tr>
+<th>Viết tắt</th>
+<th>Nghĩa đầy đủ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>YT-1..YT-5</strong></td>
+<td>5 yếu tố cốt lõi (anchor) của OneCRM trong PRD; ví dụ YT-1 là vai trò passive-observer của CRM</td>
+</tr>
+<tr>
+<td><strong>NT</strong></td>
+<td>Nguyên tắc nền — quy tắc chi phối cách trao đổi event, đánh số trong tài liệu này (§1.3)</td>
+</tr>
+<tr>
+<td><strong>OQ</strong></td>
+<td>Open Question — câu hỏi mở chưa chốt (§6)</td>
+</tr>
+</tbody>
+</table>
+<h3>1.3 Nguyên tắc nền</h3>
+<p>Năm nguyên tắc dưới đây chi phối toàn bộ cách CRM trao đổi event với sản phẩm. Mọi quy tắc nghiệp vụ và bảng ánh xạ event ở các mục sau đều phải tuân thủ chúng.</p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Nguyên tắc</th>
+<th>Diễn giải đầy đủ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>NT-1</strong></td>
+<td><code>license_mirror</code> phản ánh <em>"khách hàng có dùng được dịch vụ hay không"</em>, chứ không phản ánh trạng thái kỹ thuật của bản ghi license.</td>
+<td>Mọi thay đổi của mirror <strong>chỉ</strong> đến từ <strong>event <code>license.*</code></strong> do EDR gửi — CRM đọc event <strong>trạng thái license</strong>, <strong>không</strong> đọc event hạ tầng (đúng NT-2).<br><br>Riêng Tạm dừng / Khôi phục: bên trong EDR thực thi ở <strong>cấp Tenant</strong>, nhưng event gửi về CRM <strong>vẫn mang tên <code>license.suspended</code> / <code>license.reactivated</code></strong> và <strong>echo lại <code>correlation_id</code></strong> của lệnh CRM đã gửi.<br><br>Nhờ <code>correlation_id</code>, cùng một event <code>license.suspended</code> phân biệt được <strong>hai nguồn</strong>:<br>• <strong>Có</strong> <code>correlation_id</code> → do CRM ra lệnh <strong>Tạm dừng</strong> (xác nhận lệnh — command-ack).<br>• <strong>Không</strong> có <code>correlation_id</code> → do <strong>EDR chủ động gửi về</strong>, xảy ra <strong>tự nhiên</strong> (khách hết ân hạn, không gia hạn).<br><br>→ Không cần event <code>tenant.*</code> riêng.</td>
+</tr>
+<tr>
+<td><strong>NT-2</strong></td>
+<td>CRM chỉ <strong>quan sát</strong>, tuyệt đối không tự suy diễn trạng thái.</td>
+<td>Trạng thái của một license tại CRM chỉ được thay đổi khi <strong>sản phẩm chủ động gửi event</strong> báo về. CRM không được tự tính toán theo kiểu "license này chắc đã hết hạn rồi" dựa trên ngày tháng, vì làm như vậy sẽ vi phạm vai trò passive-observer đã được chốt tại anchor YT-1.</td>
+</tr>
+<tr>
+<td><strong>NT-3</strong></td>
+<td>Mọi event, ở cả hai chiều, đều bắt buộc phải mang đủ bộ <strong>metadata dùng chung</strong>.</td>
+<td>Bộ metadata 7 trường (đặc tả tại §2) là bắt buộc. Thiếu <code>event_id</code> thì không thể chống xử lý trùng; thiếu <code>occurred_at</code> thì không thể chặn event đến sai thứ tự; thiếu <code>correlation_id</code> thì không thể truy vết một phản hồi thuộc về lệnh nào.</td>
+</tr>
+<tr>
+<td><strong>NT-4</strong></td>
+<td>Sản phẩm tự xử lý những lỗi mà nó có thể tự khắc phục; những lỗi không tự khắc phục được thì <strong>bắt buộc phải báo về</strong> cho CRM.</td>
+<td><strong>Lỗi tạm thời</strong> (timeout, nghẽn mạng, service nội bộ chưa sẵn sàng): sản phẩm <strong>tự thử lại có giới hạn số lần</strong>, <strong>không</strong> cần báo về CRM.<br><br><strong>Lỗi vĩnh viễn</strong> (tenant không tồn tại, gói không hợp lệ…) <strong>hoặc đã hết số lần thử lại</strong>: sản phẩm <strong>bắt buộc</strong> gửi event <code>subscription.command_failed</code> (xem §3.5).<br><br>Nếu không có cơ chế này, CRM phải chờ vô hạn rồi đoán mò lý do — trong khi sản phẩm đã biết chính xác nguyên nhân thất bại.</td>
+</tr>
+<tr>
+<td><strong>NT-5</strong></td>
+<td>Tên trạng thái hiển thị cho người dùng do <strong>từng Product Module khai báo</strong>, không cố định trong lõi CRM.</td>
+<td>Mã event kỹ thuật của sản phẩm không nhất thiết trùng nghĩa với dòng chữ mà người dùng đọc trên màn hình. Ví dụ: EDR gửi event <code>license.expired</code>, nhưng dòng chữ hiển thị đúng cho một khách hàng đang trong giai đoạn ân hạn lại phải là "Trong ân hạn" (xem §3.2). Vì vậy, lõi CRM tra tên hiển thị từ <code>license_status_set</code> do Product Module khai báo, thay vì cố định danh sách trạng thái trong mã nguồn.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 data-toc="2 · Metadata chung">2. Metadata dùng chung — bắt buộc cho MỌI event, cả 2 chiều</h2>
+<blockquote>
+<p><em>Bộ metadata này là đề xuất của BA — chưa có trong tài liệu tích hợp gốc. </em><em>Đây là nội dung cần thống nhất chính thức với phía sản phẩm trước khi triển khai.</em>**</p>
+</blockquote>
+<p>Mỗi event gồm <strong>hai lớp</strong>: lớp <strong>metadata</strong> (7 trường cố định, đặc tả trong bảng dưới) và lớp <strong>payload</strong> (nội dung nghiệp vụ riêng theo từng loại event, đặc tả tại §3.2, §4.2 và §4.3). Bảng dưới đặc tả lớp metadata — bắt buộc và <strong>giống hệt nhau</strong> ở mọi event, cả chiều inbound lẫn outbound, cho mọi Product Module.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Trường</th>
+<th>Kiểu dữ liệu</th>
+<th>Bắt buộc</th>
+<th>Mô tả</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>event_id</code></td>
+<td>UUID</td>
+<td>Có</td>
+<td>Mã định danh <strong>duy nhất</strong> của từng event, do bên gửi sinh ra. Là khoá để chống xử lý trùng.</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>event_key</code></td>
+<td>string</td>
+<td>Có</td>
+<td>Mã định danh <strong>loại</strong> event, theo quy ước <code>nhóm.hành_động</code> (ví dụ: <code>license.activated</code>). Quyết định cách CRM diễn giải payload và ánh xạ trạng thái.</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>occurred_at</code></td>
+<td>timestamp (UTC, ISO-8601)</td>
+<td>Có</td>
+<td>Thời điểm sự việc <strong>thật sự xảy ra tại nguồn</strong> — không phải thời điểm gửi tin đi. Là mốc để sắp xếp thứ tự các event.</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>subscription_id</code></td>
+<td>string</td>
+<td>Có</td>
+<td>Mã subscription trong CRM mà event liên quan tới. Là khoá đối chiếu event về đúng đối tượng nghiệp vụ.</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>product_id</code></td>
+<td>string</td>
+<td>Có</td>
+<td>Mã Product Module gửi hoặc nhận event (ví dụ: <code>CMC_EDR</code>).</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>correlation_id</code></td>
+<td>UUID</td>
+<td>Có với event outbound; với event inbound chỉ bắt buộc khi đó là phản hồi cho một lệnh của CRM</td>
+<td>Mã liên kết một lệnh CRM gửi đi với phản hồi tương ứng của sản phẩm. Với một lệnh outbound, <code>correlation_id</code> chính bằng <code>event_id</code> của lệnh đó; sản phẩm phản hồi bằng cách đặt lại giá trị này vào event inbound.</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>schema_version</code></td>
+<td>string</td>
+<td>Có</td>
+<td>Phiên bản cấu trúc của <code>payload</code>, cho phép nâng cấp định dạng payload theo thời gian mà vẫn giữ tương thích ngược.</td>
+</tr>
+<tr>
+<td>—</td>
+<td><code>payload</code></td>
+<td>object</td>
+<td>Có</td>
+<td>Phần <strong>nội dung nghiệp vụ</strong> riêng của từng loại event; cấu trúc phụ thuộc <code>event_key</code> (chi tiết tại §3.2, §4.2, §4.3). <em>(Đây là lớp payload, liệt kê ở đây để thấy quan hệ với metadata.)</em></td>
+</tr>
+</tbody>
+</table>
+<h3>2.1 Ví dụ — event OUTBOUND <em>(CRM → sản phẩm)</em></h3>
+<p>Lệnh Tạm dừng subscription. <code>payload</code> đi kèm metadata; các trường metadata nằm ở cấp ngoài cùng.</p>
+<pre><code class="language-json">{
+  &quot;event_id&quot;: &quot;9f1c2e7a-4b8d-4e21-9c3f-1a2b3c4d5e6f&quot;,
+  &quot;event_key&quot;: &quot;subscription.suspended&quot;,
+  &quot;occurred_at&quot;: &quot;2026-07-14T03:12:45.000Z&quot;,
+  &quot;subscription_id&quot;: &quot;SUB-2026-021&quot;,
+  &quot;product_id&quot;: &quot;CMC_EDR&quot;,
+  &quot;correlation_id&quot;: &quot;9f1c2e7a-4b8d-4e21-9c3f-1a2b3c4d5e6f&quot;,
+  &quot;schema_version&quot;: &quot;1.0&quot;,
+  &quot;payload&quot;: {
+    &quot;reason&quot;: &quot;Khách hàng ngừng hợp đồng&quot;,
+    &quot;effective_at&quot;: &quot;2026-07-14T03:12:45.000Z&quot;
+  }
+}
+</code></pre>
+<blockquote>
+<p><code>correlation_id</code> của một lệnh outbound = chính <code>event_id</code> của nó. Sản phẩm <strong>phản hồi lại</strong> bằng cách đặt <code>correlation_id</code> này vào tin inbound → CRM nối được lệnh ↔ phản hồi.</p>
+</blockquote>
+<h3>2.2 Ví dụ — event INBOUND <em>(sản phẩm → CRM)</em></h3>
+<p>Sản phẩm báo <strong>đã nhận yêu cầu và khởi tạo xong tenant</strong> (chờ khởi tạo license), <strong>phản hồi cho</strong> lệnh <code>subscription.submitted</code> mà CRM gửi trước đó. Ở bước này <strong>chưa có</strong> <code>activation_date</code> / <code>expiration_date</code> — hai mốc này chỉ có khi license kích hoạt thành công (event <code>license.activated</code>, §3.2 <code>EVT-IN-03</code>).</p>
+<pre><code class="language-json">{
+  &quot;event_id&quot;: &quot;3d5f8a1b-9e2c-4f76-8a0d-6b7c8d9e0f1a&quot;,
+  &quot;event_key&quot;: &quot;license.pending&quot;,
+  &quot;occurred_at&quot;: &quot;2026-07-14T04:05:10.000Z&quot;,
+  &quot;subscription_id&quot;: &quot;SUB-2026-021&quot;,
+  &quot;product_id&quot;: &quot;CMC_EDR&quot;,
+  &quot;correlation_id&quot;: &quot;1a2b3c4d-0000-0000-0000-000000000000&quot;,
+  &quot;schema_version&quot;: &quot;1.0&quot;,
+  &quot;payload&quot;: {
+    &quot;external_ref&quot;: &quot;TENANT-EDR-8842&quot;
+  }
+}
+</code></pre>
+<blockquote>
+<p><strong>Chữ ký HMAC</strong> không nằm trong thân tin — nó ở <strong>HTTP header</strong> (<code>X-Signature: sha256=...</code>), ký trên toàn bộ body. Xem §5.3.</p>
+<p><strong><code>payload</code> khác nhau theo từng <code>event_key</code></strong> — chi tiết payload của từng loại: §4.2/4.3 (outbound), §3.2 (inbound). Bộ trường <strong>metadata</strong> (7 trường trên) thì <strong>giống nhau ở mọi event, mọi sản phẩm</strong>.</p>
+</blockquote>
+<hr />
+<h2 data-toc="3 · Event Inbound">3. Event INBOUND — Sản phẩm → CRM (chi tiết: CMC EDR)</h2>
+<blockquote>
+<p><strong>Toàn bộ §3 là mô hình ĐỀ XUẤT của BA, CHƯA xác nhận với đội EDR</strong> — sẽ chốt trong buổi làm việc (xem OQ-INT-01/08/10, §6).</p>
+</blockquote>
+<h3>3.1 Vòng đời license của EDR — mô hình đề xuất</h3>
+<p>Dòng trạng thái tự nhiên của license EDR khi khách <strong>không gia hạn</strong>: sau khi hết hạn, license đi lần lượt qua <strong>EXPIRED</strong> (còn dùng đủ tính năng — giai đoạn ân hạn) → <strong>GRACE_EXPIRED</strong> (hạn chế tính năng) → <strong>SUSPENDED</strong> (ngừng hẳn), <strong>không</strong> "chết ngay". Suốt các giai đoạn này <code>sub.status</code> <strong>giữ nguyên ACTIVE</strong>, chỉ <code>license_mirror.status</code> phản ánh mức suy giảm:</p>
+<pre><code>  (start)
+     │  License được gán cho tenant, chưa active
+     ▼
+  PENDING ──► PROVISIONING ──► ACTIVE
+                                 │  (nếu KHÔNG gia hạn — vòng đời tự nhiên)
+                                 │  trước hết hạn 60 ngày
+                                 ▼
+                          EXPIRING_SOON    (Sắp hết hạn — vẫn dùng bình thường)
+                                 │  hết hạn (cập nhật ngay)
+                                 ▼
+                          EXPIRED          (Trong ân hạn — vẫn dùng ĐỦ tính năng)
+                                 │  sau 30 ngày
+                                 ▼
+                          GRACE_EXPIRED    (Hạn chế tính năng)
+                                 │  sau 30 ngày
+                                 ▼
+                          SUSPENDED        (Ngừng dịch vụ)
+                                 │  gia hạn
+                                 ▼
+                          RENEWED ──► (end)
+
+  • sub.status = ACTIVE từ khi kích hoạt, giữ nguyên qua EXPIRING_SOON / EXPIRED /
+    GRACE_EXPIRED; chỉ chuyển SUSPENDED khi license SUSPENDED.
+  • Gia hạn license được ở BẤT KỲ trạng thái nào (không ràng buộc trạng thái
+    tenant): EDR tạo một license mới bắt đầu ở ACTIVE, đánh dấu license cũ là RENEWED.
+  • Ngoài vòng đời tự nhiên trên, CRM có thể chủ động ra lệnh Tạm dừng / Khôi
+    phục bất kỳ lúc nào. EDR thực thi ở cấp TENANT (Suspend Tenant / Reactivate
+    Tenant), rồi báo về bằng event trạng thái license → mirror license phía CRM
+    chuyển ACTIVE → SUSPENDED (Tạm dừng) hoặc SUSPENDED → ACTIVE (Khôi phục).
+    Đây là luồng do lệnh, tách khỏi vòng đời tự nhiên — chi tiết ở §3.3.
+</code></pre>
+<blockquote>
+<p><strong>Điểm cốt lõi của mô hình đề xuất:</strong></p>
+<ul>
+<li><strong><code>license.expired</code> → mirror <code>EXPIRED</code></strong> — hết hạn nhưng <strong>còn dùng đủ tính năng</strong> (giai đoạn ân hạn).<br>Hiển thị "Trong ân hạn", <code>sub</code> giữ <strong>ACTIVE</strong>. <em>(Ví dụ chuẩn NT-5: trạng thái raw <code>EXPIRED</code> ≠ chữ khách đọc "Trong ân hạn".)</em></li>
+<li><strong><code>license.grace_expired</code> → mirror <code>GRACE_EXPIRED</code></strong> — sau ân hạn 30 ngày, khách <strong>bị hạn chế tính năng</strong> (30 ngày).<br><code>sub</code> <strong>vẫn giữ ACTIVE</strong>, chỉ mirror phản ánh mức hạn chế.</li>
+<li><strong><code>license.suspended</code> → mirror <code>SUSPENDED</code></strong> — ngừng dịch vụ, không dùng được tính năng nào.<br><code>sub</code> → <strong>SUSPENDED</strong>.</li>
+<li><strong><code>license.expiring_soon</code> → mirror <code>EXPIRING_SOON</code></strong> — trước hết hạn 60 ngày, cảnh báo sớm.<br>Khách vẫn dùng bình thường, <code>sub</code> giữ <strong>ACTIVE</strong>.</li>
+<li><strong>Gia hạn license</strong> — thực hiện được ở bất kỳ trạng thái nào.<br>EDR tạo một license mới bắt đầu ở <code>ACTIVE</code>, đồng thời đánh dấu license cũ là <code>RENEWED</code> để bàn giao cho bản kế tiếp.</li>
+</ul>
+</blockquote>
+<h3>3.2 Bảng event inbound — EDR</h3>
+<table>
+<thead>
+<tr><th>ID</th><th><code>event_key</code></th><th>Nghĩa thật với khách hàng</th><th>CRM đặt <code>license_mirror.status</code></th><th>Tên hiển thị</th><th>Tác động lên subscription</th></tr>
+</thead>
+<tbody>
+<tr><td>EVT-IN-01</td><td><code>license.pending</code></td><td>EDR đã nhận yêu cầu, khởi tạo xong Tenant</td><td><code>PENDING</code></td><td>Chờ khởi tạo</td><td>—</td></tr>
+<tr><td>EVT-IN-02</td><td><code>license.provisioning</code></td><td>Khách <strong>đã dùng được đầy đủ tính năng</strong>; chỉ còn một số cấu hình chưa khớp vận hành nên vài dữ liệu chưa hợp lý</td><td><code>PROVISIONING</code></td><td>Đang triển khai</td><td>—</td></tr>
+<tr><td>EVT-IN-03</td><td><code>license.activated</code></td><td><strong>Kích hoạt chính thức</strong> — cấu hình đã khớp vận hành, dữ liệu chuẩn; bắt đầu tính thời gian sử dụng</td><td><code>ACTIVE</code></td><td>Đang hoạt động</td><td><code>sub.activation_date</code>, <code>sub.end_date</code> ← <code>expiration_date</code> của license; <code>sub.status = ACTIVE</code></td></tr>
+<tr><td>EVT-IN-04</td><td><code>license.expiring_soon</code></td><td>Sắp hết hạn</td><td><code>EXPIRING_SOON</code></td><td>Sắp hết hạn</td><td><code>sub</code> giữ <strong>ACTIVE</strong>. CRM <strong>ưu tiên</strong> nhận qua event này (đúng NT-2, không tự suy diễn). <strong>Fallback đã chốt:</strong> nếu chưa nhận được event mà vẫn còn cách hạn trong khoảng <code>renewal_notice_days</code>, License Mirror &amp; Usage <strong>tạm giữ</strong> cách tự tính hiện tại — không mất tính năng nhắc gia hạn cho tới khi EDR triển khai event này (ngoài phạm vi Integration Layer, cần cập nhật ở FRS License Mirror &amp; Usage)</td></tr>
+<tr><td>EVT-IN-05</td><td><code>license.expired</code></td><td><strong>Hết hạn nhưng vào ân hạn.</strong> Khách <strong>vẫn dùng đủ tính năng</strong>.</td><td><code>EXPIRED</code></td><td><strong>Trong ân hạn</strong></td><td><code>sub</code> giữ <strong>ACTIVE</strong>. → mở ra <strong>cơ hội bán "Gia hạn gấp"</strong></td></tr>
+<tr><td>EVT-IN-06</td><td><code>license.grace_expired</code></td><td><strong>Hết ân hạn</strong> → khách chuyển sang <strong>dùng hạn chế tính năng, trong 30 ngày</strong></td><td><code>GRACE_EXPIRED</code></td><td><strong>Hạn chế tính năng</strong></td><td><code>sub</code> giữ <strong>ACTIVE</strong> <em>(sub chưa chết; mirror <code>GRACE_EXPIRED</code> thể hiện mức hạn chế)</em>. → tạo <strong>cơ hội gia hạn KHẨN</strong>, ưu tiên xếp trên cả "Gia hạn gấp"</td></tr>
+<tr><td>EVT-IN-07</td><td><code>license.suspended</code></td><td><strong>Ngừng hoàn toàn — khách không dùng được bất kỳ tính năng nào.</strong> Hai nguồn phân biệt bằng <code>correlation_id</code> (xem §3.3).</td><td><code>SUSPENDED</code></td><td>Đã ngừng</td><td><code>sub.status = SUSPENDED</code>. <em>CÓ</em> <code>correlation_id</code> → do CRM ra lệnh <strong>Tạm dừng</strong> (UC-SUB-09). <em>KHÔNG</em> có → <strong>tự nhiên</strong> (khách hết ân hạn, không gia hạn).</td></tr>
+<tr><td>EVT-IN-08</td><td><code>license.reactivated</code></td><td><strong>EDR đã khôi phục dịch vụ theo lệnh CRM</strong></td><td><code>ACTIVE</code></td><td>Đang hoạt động</td><td><code>sub.status = ACTIVE</code>. <strong>Luôn CÓ</strong> <code>correlation_id</code> — phản hồi lệnh <strong>Khôi phục</strong> (UC-SUB-10). Khôi phục chỉ xảy ra do lệnh, không có đường tự nhiên.</td></tr>
+<tr><td>EVT-IN-09</td><td><code>license.renewed</code></td><td>Bản ghi license cũ được đánh dấu đã gia hạn</td><td><code>RENEWED</code></td><td>Đã gia hạn</td><td>Sub cũ → <code>RENEWED</code> (bàn giao cho bản kế tiếp)</td></tr>
+<tr><td>EVT-IN-10</td><td><code>license.usage_synced</code></td><td>Báo mức sử dụng định kỳ</td><td><em>(không đổi)</em></td><td>—</td><td>Cập nhật <code>used_seats</code> + <code>last_synced_at</code>. <strong>Chu kỳ: 3 giờ</strong></td></tr>
+<tr><td>EVT-IN-11</td><td><code>subscription.command_failed</code></td><td>Sản phẩm báo <strong>KHÔNG thực thi được một lệnh của CRM</strong> (vd Tạm dừng / Khôi phục thất bại) — bắt buộc theo NT-4</td><td>— <em>(không đổi status)</em></td><td>—</td><td>Đánh dấu lệnh trong outbox là <strong>"Sản phẩm từ chối"</strong> và đưa vào hàng đợi xử lý. <strong>Chi tiết trường dữ liệu + ranh giới lỗi: xem §3.5</strong></td></tr>
+</tbody>
+</table>
+
+<blockquote>
+<p><strong>Lưu ý:</strong> <code>sub.status</code> chỉ đi thẳng <code>ACTIVE → SUSPENDED</code> — ở cấp <strong>sub</strong> <strong>không</strong> có trạng thái <code>EXPIRED</code>/<code>GRACE_EXPIRED</code> (các giai đoạn ân hạn/hạn chế đều để <code>sub</code> ACTIVE; mức suy giảm chỉ phản ánh qua <code>license_mirror.status</code>).</p>
+<p>🔴 <strong>A — <code>license_mirror.status</code> là chuỗi raw, KHÔNG phải <code>ENUM</code>:</strong> giá trị ở cột này là <strong>mã trạng thái thô do EDR khai báo</strong> (đúng schema PRD §5.3.8: <em>"string — Raw từ product"</em>), nên đây là vocabulary <strong>riêng của EDR</strong> — sản phẩm khác có thể dùng tập khác (cơ chế khai báo: NT-5).</p>
+<p><strong>Hệ quả thiết kế License Mirror &amp; Usage:</strong> <strong>không</strong> tạo <code>ENUM</code>/<code>CHECK constraint</code> cố định cho cột này; mọi logic đọc trạng thái xuyên sản phẩm phải tra theo <code>license_status_set</code> của đúng Product Module, không hardcode tên trạng thái EDR.</p>
+</blockquote>
+<h3>3.3 Xác nhận lệnh Tạm dừng/Khôi phục — event <code>license.*</code> mang <code>correlation_id</code> (command-ack) <em>(đề xuất)</em></h3>
+<p>EDR thực thi Tạm dừng/Khôi phục bên trong ở <strong>cấp Tenant</strong>, nhưng <strong>event xác nhận gửi về CRM đặt tên <code>license.suspended</code> / <code>license.reactivated</code></strong> và <strong>echo <code>correlation_id</code></strong> của lệnh CRM đã gửi. Vì vậy CRM cập nhật <code>license_mirror.status</code> từ chính event <strong>trạng thái license</strong> (đúng NT-2 — không đọc event hạ tầng tenant), còn <code>correlation_id</code> cho biết thay đổi này <strong>do CRM ra lệnh</strong> hay <strong>tự nhiên</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Event EDR gửi về</th>
+<th>Là phản hồi cho lệnh</th>
+<th><code>correlation_id</code></th>
+<th>CRM đặt mirror</th>
+<th>Nguyên nhân ghi lại</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>license.suspended</code></td>
+<td><code>subscription.suspended</code> (UC-SUB-09)</td>
+<td><strong>có</strong></td>
+<td><code>SUSPENDED</code></td>
+<td>Do CRM ra lệnh <strong>Tạm dừng</strong> — <code>last_change_source = command_ack</code></td>
+</tr>
+<tr>
+<td><code>license.reactivated</code></td>
+<td><code>subscription.reactivated</code> (UC-SUB-10)</td>
+<td><strong>có</strong></td>
+<td><code>ACTIVE</code></td>
+<td>Do CRM ra lệnh <strong>Khôi phục</strong> — <code>last_change_source = command_ack</code></td>
+</tr>
+<tr>
+<td><code>license.suspended</code></td>
+<td><em>(không phải phản hồi lệnh nào)</em></td>
+<td><strong>không</strong></td>
+<td><code>SUSPENDED</code></td>
+<td><strong>Tự nhiên</strong> — khách hết ân hạn, không gia hạn — <code>last_change_source = product_event</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Vai trò của <code>correlation_id</code></strong> <em>(nên nó nằm trong metadata bắt buộc, §2)</em>:</p>
+<ul>
+<li><code>license.suspended</code> <strong>có</strong> <code>correlation_id</code> khớp lệnh CRM → <strong>xác nhận lệnh Tạm dừng đã có hiệu lực</strong> → mirror SUSPENDED + ghi audit <em>"lệnh Tạm dừng có hiệu lực lúc {occurred_at}"</em>; lưu <code>last_change_source = "command_ack"</code> + <code>source_command_event_id</code>.</li>
+<li><code>license.suspended</code> <strong>không</strong> có <code>correlation_id</code> → đường <strong>tự nhiên</strong> (khách không gia hạn, hết 30 ngày hạn chế) → mirror SUSPENDED; lưu <code>last_change_source = "product_event"</code>. <strong>Đây là hợp lệ, KHÔNG phải bất thường.</strong></li>
+<li><code>license.reactivated</code> <strong>luôn</strong> phải có <code>correlation_id</code> (Khôi phục chỉ xảy ra do lệnh CRM) → nếu về mà <strong>không khớp</strong> lệnh nào → ghi nhận + <strong>cảnh báo</strong> <em>(EDR khôi phục dịch vụ mà CRM không yêu cầu — bất thường)</em>.</li>
+</ul>
+<h3>3.4 Payload từng event inbound</h3>
+<p>Mọi event đều có bộ <strong>metadata 7 trường (§2)</strong> bọc ngoài. Bảng dưới liệt kê phần <strong>payload</strong> riêng của từng event inbound và <strong>hướng dẫn cách điền</strong> từng trường. <em>(Toàn bộ §3 là mô hình đề xuất — xem banner đầu §3; trường nào EDR có cách khác sẽ điều chỉnh khi chốt.)</em></p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Payload (ngoài metadata §2)</th>
+<th>Mô tả — cách điền từng trường</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>license.pending</code></td>
+<td><code>external_ref</code></td>
+<td><code>external_ref</code>: mã định danh tenant EDR vừa khởi tạo — để CRM đối chiếu về đúng đối tượng bên sản phẩm.</td>
+</tr>
+<tr>
+<td><code>license.provisioning</code></td>
+<td><code>external_ref</code></td>
+<td><code>external_ref</code>: mã tenant đang triển khai (như trên).</td>
+</tr>
+<tr>
+<td><code>license.activated</code></td>
+<td><code>external_ref</code>, <code>activation_date</code>, <code>expiration_date</code>, <code>usage_snapshot</code></td>
+<td><code>activation_date</code>: ngày kích hoạt chính thức (bắt đầu tính hạn). <code>expiration_date</code>: ngày hết hạn → CRM gán vào <code>sub.end_date</code>. <code>usage_snapshot</code>: <code>{ used_seats, total_seats }</code> tại thời điểm kích hoạt.</td>
+</tr>
+<tr>
+<td><code>license.expiring_soon</code></td>
+<td><code>expiration_date</code></td>
+<td><code>expiration_date</code>: ngày sẽ hết hạn — để CRM tính số ngày còn lại và nhắc gia hạn.</td>
+</tr>
+<tr>
+<td><code>license.expired</code></td>
+<td><code>expiration_date</code></td>
+<td><code>expiration_date</code>: ngày đã hết hạn (đầu giai đoạn ân hạn) — để CRM tính mức khẩn nhắc gia hạn.</td>
+</tr>
+<tr>
+<td><code>license.grace_expired</code></td>
+<td><em>(chỉ metadata)</em></td>
+<td>Không có trường payload riêng — mốc vào giai đoạn hạn chế lấy từ <code>occurred_at</code> (metadata §2).</td>
+</tr>
+<tr>
+<td><code>license.suspended</code></td>
+<td><code>reason</code> <em>(tùy chọn)</em></td>
+<td><code>reason</code>: lý do ngừng (để hiển thị/audit), nếu sản phẩm gửi kèm. <strong>Thời điểm ngừng có hiệu lực = <code>occurred_at</code> (metadata §2)</strong> — không cần trường riêng.</td>
+</tr>
+<tr>
+<td><code>license.reactivated</code></td>
+<td><em>(chỉ metadata)</em></td>
+<td>Không có trường payload riêng — thời điểm khôi phục có hiệu lực lấy từ <code>occurred_at</code> (metadata §2).</td>
+</tr>
+<tr>
+<td><code>license.renewed</code></td>
+<td><code>external_ref</code> <em>(bản mới)</em></td>
+<td>Tham chiếu tới license/subscription kế tiếp — để CRM nối chuỗi gia hạn (bản cũ → bản mới).</td>
+</tr>
+<tr>
+<td><code>license.usage_synced</code></td>
+<td><code>usage_snapshot</code></td>
+<td><code>usage_snapshot</code>: <code>{ used_seats, total_seats }</code> hiện tại → CRM cập nhật <code>used_seats</code> + <code>last_synced_at</code>.</td>
+</tr>
+<tr>
+<td><code>subscription.command_failed</code></td>
+<td><code>original_event_key</code>, <code>reason_code</code>, <code>reason</code>, <code>attempts</code>, <code>failed_at</code></td>
+<td>Ý nghĩa từng trường: xem bảng chi tiết ở §3.5.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Lưu ý về <code>correlation_id</code>:</strong> đây là trường <strong>metadata (§2)</strong>, không phải payload. Nó bắt buộc với các event <strong>phản hồi lệnh CRM</strong> (<code>license.suspended</code> / <code>license.reactivated</code> — §3.3; <code>subscription.command_failed</code> — §3.5); các event <strong>tự nhiên</strong> (<code>expired</code>, <code>grace_expired</code>, <code>usage_synced</code>…) không mang <code>correlation_id</code>.</p>
+</blockquote>
+<h3>3.5 <code>subscription.command_failed</code> — sản phẩm báo "tôi không làm được lệnh của anh"</h3>
+<p><strong>Chiều: sản phẩm → CRM (inbound).</strong> Bắt buộc theo NT-4. Đây là phản hồi báo <strong>thất bại</strong> cho một lệnh outbound (§4) mà sản phẩm không thực thi được.</p>
+<table>
+<thead>
+<tr>
+<th>Trường</th>
+<th>Ý nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>original_event_key</code></td>
+<td>Lệnh nào của CRM bị fail (<code>subscription.suspended</code>…)</td>
+</tr>
+<tr>
+<td><code>correlation_id</code></td>
+<td>Nối về đúng lệnh gốc trong outbox</td>
+</tr>
+<tr>
+<td><code>reason_code</code></td>
+<td>Mã lỗi máy đọc được. Bộ mã đã biết từ EDR: <code>TENANT_CODE_EXISTS</code> (tenant_code trùng), <code>ACCOUNT_OWNER_EXISTS</code> (username/email chủ tài khoản trùng), <code>INVALID_PACKAGE</code>, <code>TENANT_NOT_FOUND</code>, <code>ACCESS_DENIED</code> (không đủ quyền), <code>SYSTEM_ERROR</code> (lỗi hệ thống nội bộ EDR)…</td>
+</tr>
+<tr>
+<td><code>reason</code></td>
+<td>Câu tiếng Việt cho người vận hành đọc</td>
+</tr>
+<tr>
+<td><code>attempts</code></td>
+<td>Sản phẩm đã tự thử mấy lần trước khi bỏ cuộc</td>
+</tr>
+<tr>
+<td><code>failed_at</code></td>
+<td>Thời điểm sản phẩm kết luận thất bại</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Ranh giới trách nhiệm</strong> <em>(trả lời câu hỏi của BA ngày 14/07)</em>:</p>
+<table>
+<thead>
+<tr>
+<th>Loại lỗi</th>
+<th>Ví dụ</th>
+<th>Ai xử lý</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tạm thời</strong></td>
+<td>Timeout · DB nghẽn · service nội bộ chưa sẵn sàng</td>
+<td><strong>Sản phẩm tự thử lại, có giới hạn số lần</strong> <em>(đề xuất: 5 lần / 30 phút)</em>. CRM không cần biết — lỗi tự khỏi; nếu báo về chỉ tạo báo động giả rồi tự tắt</td>
+</tr>
+<tr>
+<td><strong>Vĩnh viễn</strong></td>
+<td>Tenant không tồn tại · gói không hợp lệ · sai cấu hình · vượt hạn mức</td>
+<td><strong>Bắt buộc gửi <code>subscription.command_failed</code></strong></td>
+</tr>
+<tr>
+<td><strong>Hết trần retry</strong></td>
+<td>Thử 5 lần vẫn timeout</td>
+<td><strong>Coi là vĩnh viễn</strong> → gửi <code>command_failed</code>. <em>Không có trần thì lỗi tạm thời hoá thành im lặng vĩnh viễn, và CRM lại phải đoán mò</em></td>
+</tr>
+</tbody>
+</table>
+<p><strong>CRM làm gì khi nhận:</strong> đánh dấu lệnh trong outbox là <strong>"Sản phẩm từ chối"</strong> <em>(khác "chưa tới nơi")</em> · hiện lý do thật ở màn Sự kiện gửi đi · đưa vào hàng đợi License Mirror &amp; Usage. Nhờ vậy Integration Layer nói được <em>"CMC EDR </em><em>từ chối</em><em> lệnh Tạm dừng: tenant không tồn tại"</em> thay vì <em>"nghi ngờ sản phẩm không thực thi lệnh"</em>.</p>
+<hr />
+<h2 data-toc="4 · Event Outbound">4. Event OUTBOUND — CRM → Sản phẩm</h2>
+<h3>4.1 Danh sách <em>(6 event — tài liệu cũ thiếu EVT-OUT-06)</em></h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Nghiệp vụ</th>
+<th><code>event_key</code></th>
+<th>Kích hoạt bởi</th>
+<th>EDR làm gì</th>
+<th>EDR gửi lại</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>EVT-OUT-01</td>
+<td>Xác nhận subscription</td>
+<td><code>subscription.submitted</code></td>
+<td>UC-SUB-05</td>
+<td>Create Tenant → Tenant License → Tenant Admin → Org (nếu SINGLE_ORG) → Org License → Org Admin</td>
+<td><code>license.pending</code></td>
+</tr>
+<tr>
+<td>EVT-OUT-02</td>
+<td>Tạm dừng</td>
+<td><code>subscription.suspended</code></td>
+<td>UC-SUB-09</td>
+<td><strong>Suspend Tenant</strong> (cấp tenant)</td>
+<td><code>license.suspended</code> <em>(CÓ correlation_id)</em> → mirror = SUSPENDED, §3.3</td>
+</tr>
+<tr>
+<td>EVT-OUT-03</td>
+<td>Khôi phục</td>
+<td><code>subscription.reactivated</code></td>
+<td>UC-SUB-10</td>
+<td><strong>Reactivate Tenant</strong> (cấp tenant)</td>
+<td><code>license.reactivated</code> <em>(CÓ correlation_id)</em> → mirror = ACTIVE, §3.3</td>
+</tr>
+<tr>
+<td>EVT-OUT-04</td>
+<td>Thu hồi</td>
+<td><code>subscription.terminated</code></td>
+<td>UC-SUB-08</td>
+<td><em>(EDR chưa có cơ chế revoke license)</em></td>
+<td>— <em>(EDR không phát event xác nhận — luồng Thu hồi cần chốt với EDR)</em></td>
+</tr>
+<tr>
+<td>EVT-OUT-05</td>
+<td>Gia hạn</td>
+<td><code>subscription.renewed</code></td>
+<td>UC-SUB-07</td>
+<td>Tạo Tenant/Org License mới; đánh dấu bản cũ Renewed</td>
+<td><code>license.renewed</code> <em>(bản cũ)</em> + <code>license.activated</code> <em>(bản mới)</em></td>
+</tr>
+<tr>
+<td>EVT-OUT-06</td>
+<td><strong>Yêu cầu cập nhật mức dùng</strong></td>
+<td><code>usage.force_sync_requested</code></td>
+<td>UC-LIC-03</td>
+<td>Gửi lại số liệu mức sử dụng</td>
+<td><code>license.usage_synced</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>EVT-OUT-06 bị thiếu trong tài liệu cũ</strong> dù PRD FR-LIC-04 BR-04.2 đã yêu cầu và demo đã hiển thị.</p>
+</blockquote>
+<h3>4.2 Payload từng event outbound</h3>
+<p>Mọi lệnh đều có bộ <strong>metadata 7 trường (§2)</strong> bọc ngoài. Bảng dưới liệt kê phần <strong>payload</strong> riêng của từng lệnh outbound và hướng dẫn cách điền từng trường.</p>
+<table>
+<thead>
+<tr><th><code>event_key</code></th><th>Payload (ngoài metadata §2)</th><th>Mô tả — cách điền từng trường</th></tr>
+</thead>
+<tbody>
+<tr><td><code>subscription.submitted</code></td><td>Bộ trường tạo tenant — <strong>xem chi tiết §4.2.1</strong></td><td>EDR cần đủ thông tin để tạo tenant + license + tài khoản kích hoạt. Danh sách trường cụ thể (theo form <em>Create Tenant</em> của EDR) ở bảng §4.2.1.</td></tr>
+<tr><td><code>subscription.renewed</code></td><td>cùng schema <code>subscription.submitted</code></td><td>Cùng bộ trường như submitted — EDR tạo license mới cho kỳ kế tiếp.</td></tr>
+<tr><td><code>subscription.suspended</code></td><td><code>reason</code>, <code>effective_at</code></td><td><code>reason</code>: lấy từ <code>subscription.suspend_reason</code> (đã có từ v2.4). <code>effective_at</code>: thời điểm lệnh có hiệu lực.</td></tr>
+<tr><td><code>subscription.reactivated</code></td><td><code>effective_at</code></td><td><code>effective_at</code>: thời điểm khôi phục có hiệu lực.</td></tr>
+<tr><td><code>subscription.terminated</code></td><td><code>reason</code>, <code>effective_at</code></td><td><code>reason</code>: lý do thu hồi. <code>effective_at</code>: thời điểm có hiệu lực.</td></tr>
+<tr><td><code>usage.force_sync_requested</code></td><td><em>(chỉ metadata)</em></td><td>Không có trường payload riêng — chỉ yêu cầu sản phẩm gửi lại usage (phản hồi bằng <code>license.usage_synced</code>).</td></tr>
+</tbody>
+</table>
+<h3>4.2.1 Payload chi tiết — <code>subscription.submitted</code> (tạo tenant)</h3>
+<p>Danh sách trường theo đúng yêu cầu tạo tenant của EDR (đối chiếu form <em>Create Tenant</em>). <code>tenant_code</code> do EDR tự sinh; các trường còn lại CRM gửi thẳng — <strong>kể cả product/add-on theo đúng key kỹ thuật của EDR</strong>. Các key kỹ thuật này được <strong>khai báo trong cấu hình gói (M-04) của Product Module EDR</strong> (đúng tinh thần NT-5), <strong>không hardcode trong lõi CRM</strong> — nên vẫn giữ vai trò passive-observer, đồng thời bỏ được khâu EDR map lại.</p>
+<table>
+<thead>
+<tr><th>Trường</th><th>Bắt buộc</th><th>Nguồn (bảng CRM)</th><th>Mô tả</th></tr>
+</thead>
+<tbody>
+<tr><td><code>structure_mode</code></td><td>Có</td><td><strong>Subscription</strong> · <code>scope.tenant_mode</code></td><td>Giá trị <code>MULTI</code> / <code>SINGLE</code> (UC-SUB-02, mục "Cấu hình sản phẩm" per-sub).</td></tr>
+<tr><td><code>tenant_name</code></td><td>Có</td><td><strong>Customer</strong></td><td>EDR tự sinh <code>tenant_code</code> từ đây rồi trả về qua <code>external_ref</code> — CRM KHÔNG gửi tenant_code.</td></tr>
+<tr><td><code>contract_phone_number</code></td><td>—</td><td><strong>Customer / Contract</strong> <em>(cần chốt field)</em></td><td>SĐT liên hệ hợp đồng.</td></tr>
+<tr><td><code>contract_email</code></td><td>—</td><td><strong>Customer / Contract</strong> <em>(cần chốt field)</em></td><td>Email liên hệ hợp đồng.</td></tr>
+<tr><td><code>product</code></td><td>Có</td><td><strong>Package</strong> · <code>product_id</code></td><td>Key kỹ thuật EDR: <code>EDR</code> / <code>EPP</code> / <code>EPR</code> — khai trong cấu hình gói M-04.</td></tr>
+<tr><td><code>package_code</code></td><td>Có</td><td><strong>Package</strong> · <code>code</code></td><td>Mã gói CRM — để truy vết/đối soát commercial.</td></tr>
+<tr><td><code>features[]</code></td><td>—</td><td><strong>Package</strong> · <code>features[]</code></td><td>Add-on theo key kỹ thuật EDR (vd <code>vulnerability-detection</code>…); đã ràng buộc theo <code>featureCatalog</code> của EDR (UC-CAT BR-01.5). CRM gửi trực tiếp, không hardcode ở lõi.</td></tr>
+<tr><td><code>seat_count</code></td><td>Có</td><td><strong>Subscription</strong> · <code>license_qty</code></td><td>Số ghế.</td></tr>
+<tr><td><code>subscription_plan</code></td><td>Có</td><td><strong>Package</strong> · <code>duration_months</code></td><td>🔴 <strong>Lệch enum</strong>: CRM đang {12, 24, 36} = 1/2/3 năm; EDR cần 1/3/5 năm — xem ghi chú dưới.</td></tr>
+<tr><td><code>activation.full_name</code></td><td>Có</td><td><strong>Subscription</strong> <em>— sẽ bổ sung</em></td><td>Họ tên chủ tài khoản kích hoạt.</td></tr>
+<tr><td><code>activation.username</code></td><td>Có</td><td><strong>Subscription</strong> <em>— sẽ bổ sung</em></td><td>Tên đăng nhập — duy nhất, không dấu cách (trùng → EDR báo <code>ACCOUNT_OWNER_EXISTS</code>).</td></tr>
+<tr><td><code>activation.email</code></td><td>Có</td><td><strong>Subscription</strong> <em>— sẽ bổ sung</em></td><td>Email chủ tài khoản — duy nhất.</td></tr>
+</tbody>
+</table>
+<blockquote>
+<p>🔴 <strong>Hai điểm CRM cần xử lý (đã đối chiếu PRD/FRS):</strong></p>
+<ul>
+<li><strong>Kỳ hạn lệch enum:</strong> CRM dùng <code>duration_months</code> ∈ {12, 24, 36} = <strong>1/2/3 năm</strong> (UC-CAT BR-01.3), còn EDR chỉ nhận <strong>1/3/5 năm</strong> → CRM thiếu 5 năm, thừa 2 năm. Cần chốt: EDR mở thêm giá trị, hay CRM đổi enum kỳ hạn cho gói EDR.</li>
+<li><strong>Tài khoản kích hoạt chưa được thu thập:</strong> UC-SUB-02 (tạo subscription) hiện chưa capture <code>full_name</code> / <code>username</code> / <code>email</code>. Ba trường này <strong>định nghĩa trước ở đây</strong>, sẽ <strong>bổ sung mục "Tài khoản kích hoạt" vào subscription</strong> (UC-SUB-02/05) sau.</li>
+</ul>
+</blockquote>
+<hr />
+<h2 data-toc="5 · Quy tắc xử lý">5. Quy tắc xử lý bắt buộc (mọi sản phẩm)</h2>
+<h3>5.1 Chống xử lý trùng (idempotent)</h3>
+<p><strong>Quy tắc:</strong> mỗi event chỉ được áp dụng <strong>đúng một lần</strong>, nhận diện bằng <code>event_id</code>. Event đã xử lý rồi thì bỏ qua, không áp dụng lần hai.</p>
+<p><strong>Vì sao:</strong> cơ chế giao nhận là <em>at-least-once</em> (ít nhất một lần) — một event chắc chắn sẽ có lúc bị gửi lặp (retry sau timeout, hoặc broker gửi lại). Không chống trùng thì một event đổi trạng thái/trừ pool có thể bị áp hai lần.</p>
+<h3>5.2 🔴 Chống event đến sai thứ tự</h3>
+<pre><code>license.suspended  — xảy ra 10:00, gửi lỗi → retry lúc 10:05
+license.activated  — xảy ra 10:02, tới ngay lúc 10:02
+
+CRM xử lý theo thứ tự NHẬN ĐƯỢC:
+   10:02  → ACTIVE
+   10:05  → SUSPENDED   (nhưng thực ra là chuyện của 10:00)
+
+Kết quả: license SAI trạng thái, và sai vĩnh viễn.</code></pre>
+<p><strong>Quy tắc:</strong> chỉ áp dụng event khi <code>occurred_at</code> của nó <strong>mới hơn</strong> <code>license_mirror.last_event_occurred_at</code>. Event cũ hơn → <strong>ghi nhận nhưng KHÔNG áp dụng</strong>, đánh dấu "đến muộn".</p>
+<p><strong>Kéo theo:</strong> cần thêm cột <code>license_mirror.last_event_occurred_at</code>. Đây cũng là nền của <strong>replay theo chuỗi</strong> — xử lý lại phải chạy tuần tự theo <code>occurred_at</code>, không xử lý lẻ tin cũ.</p>
+<blockquote>
+<p>🔴 <strong>B — Phạm vi watermark:</strong> quy tắc trên <strong>chỉ áp dụng cho event làm ĐỔI <code>license_mirror.status</code></strong> — tức tất cả, trừ <code>usage_synced</code> (<code>EVT-IN-10</code>) và <code>command_failed</code> (<code>EVT-IN-11</code>).</p>
+<p><code>license.usage_synced</code> chạy mỗi 3 giờ (tần suất cao) và <strong>không đổi status</strong>. Nếu cho nó tính chung vào watermark, nó sẽ liên tục đẩy mốc thời gian lên và <strong>loại nhầm</strong> event trạng thái đến muộn (hiếm nhưng quan trọng):</p>
+<pre><code>10:00  usage_synced (occurred_at=10:00)  → đẩy watermark chung = 10:00
+09:58  license.suspended tới muộn lúc 10:01
+       → 09:58 &lt; 10:00 → BỊ LOẠI OAN → mirror KHÔNG chuyển SUSPENDED (sai vĩnh viễn)</code></pre>
+<p><strong>Giải pháp:</strong> <code>usage_synced</code> dùng mốc riêng <code>license_mirror.last_synced_at</code>, không đụng tới <code>last_event_occurred_at</code>. Watermark <code>last_event_occurred_at</code> chỉ được cập nhật bởi event <strong>đổi status</strong>.</p>
+</blockquote>
+<h3>5.3 Xác thực nguồn gửi (HMAC)</h3>
+<p><strong>Quy tắc:</strong> mỗi webhook phải ký <strong>HMAC-SHA256</strong> bằng <code>runtime_config.webhook_secret</code>. Chữ ký sai → trả <strong>4xx, từ chối ngay</strong> và <strong>KHÔNG ghi</strong> vào <code>WEBHOOK_INBOX</code> (chỉ log ở hạ tầng, rate-limited + source IP, cho đội bảo mật).</p>
+<p><strong>Vì sao không lưu tin sai chữ ký:</strong> tránh kẻ lạ đổ rác vào inbox (DoS), và giữ cho mọi dòng trong inbox đều đã xác thực. Nếu sản phẩm cấu hình sai khoá → không tin nào hợp lệ → kênh "im lặng" (được cơ chế cảnh báo im lặng bắt). Điều tra tấn công giả mạo thuộc an ninh hạ tầng, không phải dashboard CRM.</p>
+<p><strong>Đổi khoá — ràng buộc bắt buộc:</strong> <em>đổi khoá KHÔNG được làm mất dữ liệu webhook hợp lệ.</em> Nếu đổi "cứng" (chỉ nhận khoá mới ngay lập tức), mọi tin gửi trong lúc EDR chưa kịp cập nhật khoá sẽ bị coi là "chữ ký sai" và không xử lý lại được → mất dữ liệu thật. PRD §5.3.7 đã có sẵn <code>secret_rotation_state</code> (ân hạn 7 ngày); cách phổ biến là chấp nhận <strong>song song cả khoá cũ lẫn mới</strong> trong thời gian ân hạn (dual-secret rotation). Cơ chế cụ thể để Dev quyết.</p>
+<h3>5.4 Không chặn đường trả lời</h3>
+<p><strong>Quy tắc:</strong> CRM trả <strong>200 OK ngay</strong> khi nhận webhook, rồi xử lý bất đồng bộ (không bắt sản phẩm chờ). Vòng đời xử lý một tin: <code>RECEIVED → PROCESSED</code>, hoặc khi lỗi <code>FAILED_RETRYING → FAILED</code> (tối đa 5 lần thử).</p>
+<h3>5.5 Vòng đời dữ liệu</h3>
+<p><strong>Khối lượng:</strong> <code>license.usage_synced</code> mỗi 3 giờ × N sub = 8 tin/sub/ngày. Với 500 sub → ~4.000 tin/ngày, ~1,5 triệu/năm. Ba nơi xử lý khác nhau:</p>
+<ul>
+<li><strong>Hàng đợi (Message Queue):</strong> tin chỉ tồn tại tới khi xử lý <strong>thành công</strong> — cơ chế hàng đợi thông thường, không phải việc CRM lưu trữ.</li>
+<li><strong>Cơ sở dữ liệu (<code>WEBHOOK_INBOX</code>):</strong> giai đoạn này <strong>KHÔNG purge tự động</strong> — mọi tin (kể cả <code>usage_synced</code> đã xử lý xong) giữ nguyên trong DB. Backup/lưu trữ dài hạn để phân tích sau.</li>
+<li><strong>Giao diện</strong> (tab Tích hợp): thay vì ẩn mặc định <code>usage_synced</code> thành công, dùng <strong>bộ lọc mặc định theo thời gian</strong> (vd 3 ngày gần nhất) để màn không bị 4.000 tin/ngày làm ngợp; người dùng tự nới khoảng khi cần tra cứu xa hơn.</li>
+</ul>
+<hr />
+<h2 data-toc="6 · Open Questions">6. Open Questions</h2>
+<blockquote>
+<p>Đối chiếu với <code>docs/plans/M-07_event_catalog_questions.md</code>. <strong>Toàn bộ Open Question dưới đây đang ở trạng thái CHƯA chốt.</strong> (Một số nội dung ở §3 đã được sửa theo thiết kế đúng, nhưng chưa xem là đã chốt.)</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Nội dung</th>
+<th>Mức</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OQ-INT-01</strong></td>
+<td><strong>CHƯA chốt:</strong> đề xuất Tạm dừng/Khôi phục xác nhận qua <code>license.suspended</code> / <code>license.reactivated</code> mang <code>correlation_id</code> (§3.3) — bỏ <code>tenant.*</code>.</td>
+<td>🔴 Cần chốt với EDR</td>
+</tr>
+<tr>
+<td><strong>OQ-INT-04</strong></td>
+<td><strong>CHƯA chốt:</strong> đề xuất metadata 7 trường (§2) là chuẩn bắt buộc — cần thống nhất với sản phẩm.</td>
+<td>🔴 Cần chốt với EDR</td>
+</tr>
+<tr>
+<td><strong>OQ-INT-05</strong></td>
+<td><strong>CHƯA chốt:</strong> đề xuất chặn event đến muộn theo <code>occurred_at</code> + cột <code>license_mirror.last_event_occurred_at</code> (§5.2).</td>
+<td>🔴 Cần chốt với EDR</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<script>
+(function(){
+  var main=document.querySelector('.wrap');
+  var toc=document.getElementById('toc');
+  var heads=main.querySelectorAll('h2');
+  var ul=document.createElement('ul');
+  var map={};
+  heads.forEach(function(h,i){
+    if(!h.id) h.id='sec-'+i;
+    var li=document.createElement('li');
+    li.className='lvl-'+h.tagName.substring(1);
+    var a=document.createElement('a');
+    a.href='#'+h.id; a.textContent=h.getAttribute('data-toc')||h.textContent;
+    li.appendChild(a); ul.appendChild(li); map[h.id]=a;
+  });
+  toc.appendChild(ul);
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        for(var k in map) map[k].classList.remove('active');
+        if(map[e.target.id]) map[e.target.id].classList.add('active');
+      }
+    });
+  },{rootMargin:'0px 0px -78% 0px', threshold:0});
+  heads.forEach(function(h){ obs.observe(h); });
+})();
+</script>
+</body>
+</html>
