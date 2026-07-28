@@ -1128,591 +1128,6 @@ mark{background:#FEF9C3;border-radius:2px;padding:0 1px;}
 
 <!-- ════════════ MODALS: SUBSCRIPTION ════════════ -->
 
-<!-- MODAL TẠO SUBSCRIPTION -->
-<div class="overlay" id="subModalCreate">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <div class="modal-title">➕ Thêm Subscription mới</div>
-      <button class="close-btn" onclick="subCloseModal('subModalCreate')">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="subCrtDuration" value="">
-      <input type="hidden" id="subCrtId">
-      <div class="form-row full">
-        <div class="field">
-          <label class="field-label">Hợp đồng <span class="required">*</span></label>
-          <div class="csearch-wrap" id="subCrtContractWrap">
-            <input class="field-input" id="subCrtContractSearch" placeholder="🔍 Tìm theo mã hoặc tên khách hàng..." oninput="subFilterCrtContracts()" onfocus="subShowCrtContracts()" onblur="setTimeout(()=>{const d=document.getElementById('subCrtContractDropdown');if(d)d.style.display='none';},200)" autocomplete="off">
-            <input type="hidden" id="subCrtContract">
-            <div class="csearch-dropdown" id="subCrtContractDropdown" style="display:none;"></div>
-          </div>
-          <div class="field-error" id="subErrCrtContract" style="display:none;">Vui lòng chọn hợp đồng</div>
-        </div>
-      </div>
-      <div class="form-row" id="subCrtContextRow" style="display:none;">
-        <div class="field">
-          <label class="field-label">Khách hàng</label>
-          <input class="field-input" id="subCrtCustomerName" readonly style="background:var(--gray-50);">
-        </div>
-        <div class="field">
-          <label class="field-label">Loại hợp đồng</label>
-          <input class="field-input" id="subCrtContractType" readonly style="background:var(--gray-50);">
-        </div>
-      </div>
-      <div id="subCrtProductSection" style="display:none;">
-        <div class="form-row">
-          <div class="field">
-            <label class="field-label">Gói sản phẩm <span class="required">*</span></label>
-            <select class="field-select" id="subCrtPackage" onchange="subCrtOnPackageChange()">
-              <option value="">▾ Chọn gói sản phẩm...</option>
-            </select>
-            <div class="field-error" id="subErrCrtPackage" style="display:none;">Vui lòng chọn gói sản phẩm</div>
-          </div>
-          <div class="field">
-            <label class="field-label">Thời hạn</label>
-            <input class="field-input" id="subCrtDurationDisplay" readonly style="background:var(--gray-50);">
-          </div>
-        </div>
-        <div class="form-row" id="subCrtSeatsRow" style="display:none;">
-          <div class="field">
-            <label class="field-label">Số seats <span class="required">*</span></label>
-            <input class="field-input" id="subCrtSeats" type="text" inputmode="numeric" placeholder="VD: 100" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-            <div class="field-error" id="subErrCrtSeats" style="display:none;">Số seats là bắt buộc và phải > 0</div>
-          </div>
-          <div class="field"></div>
-        </div>
-        <div class="form-row" id="subCrtBeneficiaryRow" style="display:none;">
-          <div class="field">
-            <label class="field-label">Đơn vị thụ hưởng <span class="required">*</span></label>
-            <select class="field-select" id="subCrtBeneficiary">
-              <option value="">▾ Chọn đơn vị thụ hưởng...</option>
-            </select>
-            <div class="field-error" id="subErrCrtBeneficiary" style="display:none;">Vui lòng chọn đơn vị thụ hưởng</div>
-          </div>
-          <div class="field">
-            <label class="field-label">Số license <span class="required">*</span></label>
-            <input class="field-input" id="subCrtLic" type="text" inputmode="numeric" placeholder="VD: 50" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-            <div class="field-hint" id="subCrtLicHint" style="display:none;color:var(--green);"></div>
-            <div class="field-error" id="subErrCrtLic" style="display:none;">Số license là bắt buộc và phải > 0</div>
-          </div>
-        </div>
-        <div id="subCrtScopeWrap"></div>
-      </div>
-      <div class="form-row">
-        <div class="field">
-          <label class="field-label">Ngày bắt đầu (dự kiến)</label>
-          <input class="field-input" id="subCrtStartDate" type="date" oninput="subCrtCalcEndDate()">
-        </div>
-        <div class="field">
-          <label class="field-label">Ngày hết hạn (dự kiến)</label>
-          <input class="field-input" id="subCrtEndDate" type="date" readonly style="background:var(--gray-50);cursor:default;">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="field">
-          <label class="field-label">Deal Code</label>
-          <input class="field-input" id="subCrtDealCode" type="text" placeholder="DEAL-2026-XXX-001">
-        </div>
-        <div class="field"></div>
-      </div>
-      <div class="form-row full">
-        <div class="field">
-          <label class="field-label">Ghi chú</label>
-          <textarea class="field-input" id="subCrtNote" rows="2" placeholder="Ghi chú thêm về subscription này..." style="resize:vertical;"></textarea>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="subCloseModal('subModalCreate')">Hủy</button>
-      <button class="btn btn-primary" onclick="subSubmitCreate()">💾 Tạo</button>
-    </div>
-  </div>
-</div>
-
-
-<!-- MODAL THU HỒI SUBSCRIPTION -->
-<div class="overlay" id="subModalRevoke">
-  <div class="modal" style="max-width:480px;">
-    <div class="modal-header">
-      <div class="modal-title">Thu hồi Subscription</div>
-      <button class="close-btn" onclick="subCloseModal('subModalRevoke')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div id="subRevokeInfoBox" style="background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;line-height:2;margin-bottom:14px;"></div>
-      <div class="alert alert-warn" style="margin-bottom:14px;align-items:flex-start;">
-        <div class="alert-icon">⚠️</div>
-        <div class="alert-body"><div class="alert-text">Subscription sẽ bị thu hồi. Trạng thái license trên hệ thống sẽ được cập nhật qua webhook.</div></div>
-      </div>
-      <div class="field">
-        <label class="field-label">Lý do thu hồi <span class="required">*</span></label>
-        <textarea class="field-input" id="subRevokeReason" rows="3" placeholder="Nhập lý do thu hồi subscription này..." oninput="subOnRevokeReasonChange()" style="resize:vertical;"></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="subCloseModal('subModalRevoke')">Hủy</button>
-      <button class="btn btn-danger" id="subBtnConfirmRevoke" disabled onclick="subConfirmRevoke()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        Thu hồi
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL GỬI ĐI (APPROVE DRAFT) -->
-<div class="overlay" id="subModalApprove">
-  <div class="modal" style="max-width:480px;">
-    <div class="modal-header">
-      <div class="modal-title">📤 Gửi Subscription đi</div>
-      <button class="close-btn" onclick="subCloseModal('subModalApprove')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div id="subApproveInfoBox" style="background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;line-height:2;margin-bottom:14px;"></div>
-      <div style="background:#EFF6FF;border:1px solid #93C5FD;border-radius:8px;padding:12px 16px;display:flex;gap:10px;font-size:13px;color:#1D4ED8;">
-        <div>📤</div>
-        <div>Subscription sẽ được gửi tới hệ thống Product để kích hoạt. Trạng thái chuyển sang <strong>Provisioning</strong>.</div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="subCloseModal('subModalApprove')">Hủy</button>
-      <button class="btn btn-primary" onclick="subConfirmApproveDraft()">📤 Xác nhận gửi</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL XÓA DRAFT -->
-<div class="overlay" id="subModalDeleteDraft">
-  <div class="modal" style="max-width:480px;">
-    <div class="modal-header">
-      <div class="modal-title">Xóa Subscription</div>
-      <button class="close-btn" onclick="subCloseModal('subModalDeleteDraft')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div style="font-size:15px;font-weight:700;color:var(--navy);text-align:center;margin-bottom:18px;line-height:1.4;">Bạn có chắc chắn muốn xóa subscription này?</div>
-      <div id="subDeleteDraftInfoBox" style="background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;line-height:2;margin-bottom:14px;"></div>
-      <div class="alert alert-warn" style="margin-bottom:0;align-items:center;"><div class="alert-icon" style="margin-top:0;">⚠️</div><div class="alert-body"><div class="alert-text" style="margin-top:0;">Subscription sẽ bị xóa vĩnh viễn và không thể khôi phục.</div></div></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="subCloseModal('subModalDeleteDraft')">Hủy</button>
-      <button class="btn btn-danger" onclick="subConfirmDeleteDraft()">🗑️ Xóa</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL TẠM DỪNG SUBSCRIPTION -->
-<div class="overlay" id="subModalSuspend">
-  <div class="modal" style="max-width:480px;">
-    <div class="modal-header">
-      <div class="modal-title">⏸ Tạm dừng Subscription</div>
-      <button class="close-btn" onclick="subCloseModal('subModalSuspend')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div id="subSuspendInfoBox" style="background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;line-height:2;margin-bottom:14px;"></div>
-      <div class="alert alert-warn" style="margin-bottom:14px;align-items:flex-start;">
-        <div class="alert-icon">⚠️</div>
-        <div class="alert-body"><div class="alert-text">Subscription sẽ bị <strong>tạm dừng</strong> và yêu cầu ngừng dịch vụ được gửi sang sản phẩm.</div></div>
-      </div>
-      <div class="field">
-        <label class="field-label">Lý do tạm dừng <span class="required">*</span></label>
-        <textarea class="field-input" id="subSuspendReason" rows="3" placeholder="VD: KH chưa thanh toán · vi phạm điều khoản sử dụng..." oninput="subOnSuspendReasonChange()" style="resize:vertical;"></textarea>
-        <div class="field-error" id="subErrSuspendReason" style="display:none;">Vui lòng nhập lý do</div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="subCloseModal('subModalSuspend')">Hủy</button>
-      <button class="btn" id="subBtnConfirmSuspend" disabled onclick="subConfirmSuspend()" style="background:#F59E0B;color:white;border-color:#F59E0B;">⏸ Tạm dừng</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL KHÔI PHỤC SUBSCRIPTION -->
-<div class="overlay" id="subModalResume">
-  <div class="modal" style="max-width:480px;">
-    <div class="modal-header">
-      <div class="modal-title">▶ Khôi phục Subscription</div>
-      <button class="close-btn" onclick="subCloseModal('subModalResume')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div id="subResumeInfoBox" style="background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;line-height:2;margin-bottom:14px;"></div>
-      <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:8px;padding:12px 16px;display:flex;gap:10px;font-size:13px;color:#065F46;">
-        <div>✅</div>
-        <div>Subscription sẽ được <strong>khôi phục về ACTIVE</strong>. Webhook <code>subscription.resumed</code> sẽ được publish.</div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="subCloseModal('subModalResume')">Hủy</button>
-      <button class="btn btn-primary" onclick="subConfirmResume()">▶ Khôi phục</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL GIA HẠN / TẠO SUCCESSOR -->
-<div class="overlay" id="subModalRenew">
-  <div class="modal" style="max-width:520px;">
-    <div class="modal-header">
-      <div class="modal-title">🔄 Gia hạn Subscription</div>
-      <button class="close-btn" onclick="subCloseModal('subModalRenew')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div id="subRenewInfoBox" style="background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;line-height:2;margin-bottom:14px;"></div>
-      <div class="alert alert-info" style="margin-bottom:16px;">
-        <span class="alert-icon">ℹ️</span>
-        <div class="alert-body"><div class="alert-title">Về Gia hạn</div><div class="alert-text">Gia hạn tạo <strong>Subscription mới (DRAFT)</strong> kế tiếp với <code>previous_subscription_id</code> trỏ về sub hiện tại. Sub hiện tại sẽ chuyển trạng thái <strong>RENEWED</strong>.</div></div>
-      </div>
-      <div class="form-row">
-        <div class="field">
-          <label class="field-label">Ngày hết hạn mới <span class="required">*</span></label>
-          <input class="field-input" id="subRenewEndDate" type="date">
-          <div class="field-error" id="subErrRenewEndDate" style="display:none;">Ngày hết hạn là bắt buộc và phải sau hôm nay</div>
-        </div>
-        <div class="field">
-          <label class="field-label">Deal Code</label>
-          <input class="field-input" id="subRenewDealCode" type="text" placeholder="VD: DEAL-2027-001">
-        </div>
-      </div>
-      <div class="form-row full">
-        <div class="field">
-          <label class="field-label">Ghi chú</label>
-          <textarea class="field-input" id="subRenewNote" rows="2" placeholder="Ghi chú cho subscription gia hạn..." style="resize:vertical;"></textarea>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="subCloseModal('subModalRenew')">Hủy</button>
-      <button class="btn btn-primary" onclick="subConfirmRenew()">🔄 Gia hạn</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL CHỈNH SỬA SUBSCRIPTION (chỉ DRAFT) -->
-<div class="overlay" id="subModalEditSub">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <div class="modal-title">✏️ Chỉnh sửa Draft Subscription</div>
-      <button class="close-btn" onclick="subCloseModal('subModalEditSub')">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="subEditSubDuration" value="12">
-      <div class="form-row">
-        <div class="field">
-          <label class="field-label">Mã Subscription</label>
-          <input class="field-input" id="subEditSubId" readonly style="background:var(--gray-50);">
-        </div>
-        <div class="field"></div>
-      </div>
-      <div class="form-row full">
-        <div class="field">
-          <label class="field-label">Hợp đồng <span class="required">*</span></label>
-          <div class="csearch-wrap" id="subEditContractWrap">
-            <input class="field-input" id="subEditContractSearch" placeholder="🔍 Tìm theo mã hoặc tên khách hàng..." oninput="subFilterEditContracts()" onfocus="subShowEditContracts()" onblur="setTimeout(()=>{const d=document.getElementById('subEditContractDropdown');if(d)d.style.display='none';},200)" autocomplete="off">
-            <input type="hidden" id="subEditSubContract">
-            <div class="csearch-dropdown" id="subEditContractDropdown" style="display:none;"></div>
-          </div>
-          <div class="field-error" id="subErrEditSubContract" style="display:none;">Vui lòng chọn hợp đồng</div>
-        </div>
-      </div>
-      <div class="form-row" id="subEditSubContextRow" style="display:none;">
-        <div class="field">
-          <label class="field-label">Khách hàng</label>
-          <input class="field-input" id="subEditSubCustomerName" readonly style="background:var(--gray-50);">
-        </div>
-        <div class="field">
-          <label class="field-label">Loại hợp đồng</label>
-          <input class="field-input" id="subEditSubContractType" readonly style="background:var(--gray-50);">
-        </div>
-      </div>
-      <div class="form-row" id="subEditSubPackageRow" style="display:none;">
-        <div class="field">
-          <label class="field-label">Gói sản phẩm</label>
-          <input class="field-input" id="subEditSubPackage" readonly style="background:var(--gray-50);">
-        </div>
-        <div class="field">
-          <label class="field-label">Thời hạn</label>
-          <input class="field-input" id="subEditSubDurationDisplay" readonly style="background:var(--gray-50);">
-        </div>
-      </div>
-      <div class="form-row" id="subEditSubDirectRow" style="display:none;">
-        <div class="field">
-          <label class="field-label">Số seats <span class="required">*</span></label>
-          <input class="field-input" id="subEditSubSeats" type="text" inputmode="numeric" placeholder="VD: 100" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-          <div class="field-error" id="subErrEditSubSeats" style="display:none;">Số seats phải > 0</div>
-        </div>
-        <div class="field"></div>
-      </div>
-      <div class="form-row" id="subEditSubResellerRow" style="display:none;">
-        <div class="field">
-          <label class="field-label">Đơn vị thụ hưởng <span class="required">*</span></label>
-          <select class="field-select" id="subEditSubBeneficiary"></select>
-          <div class="field-error" id="subErrEditSubBeneficiary" style="display:none;">Vui lòng chọn đơn vị thụ hưởng</div>
-        </div>
-        <div class="field">
-          <label class="field-label">Số license <span class="required">*</span></label>
-          <input class="field-input" id="subEditSubLic" type="text" inputmode="numeric" placeholder="VD: 50" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-          <div class="field-hint" id="subEditSubLicHint" style="display:none;color:var(--green);"></div>
-          <div class="field-error" id="subErrEditSubLic" style="display:none;">Số license phải > 0</div>
-        </div>
-      </div>
-      <div id="subEditScopeWrap"></div>
-      <div class="form-row">
-        <div class="field">
-          <label class="field-label">Ngày bắt đầu (dự kiến)</label>
-          <input class="field-input" id="subEditSubStartDate" type="date" oninput="subEditSubCalcEndDate()">
-        </div>
-        <div class="field">
-          <label class="field-label">Ngày hết hạn (dự kiến)</label>
-          <input class="field-input" id="subEditSubEndDate" type="date" readonly style="background:var(--gray-50);cursor:default;">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="field">
-          <label class="field-label">Deal Code</label>
-          <input class="field-input" id="subEditSubDealCode" type="text" placeholder="VD: DEAL-2026-001">
-        </div>
-        <div class="field"></div>
-      </div>
-      <div class="form-row full">
-        <div class="field">
-          <label class="field-label">Ghi chú</label>
-          <textarea class="field-input" id="subEditSubNote" rows="3" placeholder="Ghi chú về subscription..." style="resize:vertical;"></textarea>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="subCloseModal('subModalEditSub')">Hủy</button>
-      <button class="btn btn-primary" onclick="subSubmitEditSub()">💾 Lưu</button>
-    </div>
-  </div>
-</div>
-
-<!-- ════════════ MODALS: HỢP ĐỒNG ════════════ -->
-
-<!-- MODAL TẠO HỢP ĐỒNG (1 bước, lightweight) -->
-<div class="overlay" id="conModalCreate">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <div class="modal-title">➕ Thêm Hợp đồng mới</div>
-      <button class="close-btn" onclick="conCloseModal('conModalCreate')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="section-hdr">Thông tin hợp đồng</div>
-      <div class="form-row">
-        <div class="field">
-          <label class="field-label">Mã hợp đồng <span class="required">*</span></label>
-          <input class="field-input" id="conCrtCode" type="text" placeholder="VD: HD-CMC-2025-001" oninput="conCheckCodeDup()">
-          <div class="field-hint">Nhập mã theo quy ước công ty, không trùng với hợp đồng khác</div>
-          <div class="field-error" id="conErrCrtCode">Mã hợp đồng là bắt buộc / đã tồn tại</div>
-        </div>
-        <div class="field">
-          <label class="field-label">Khách hàng <span class="required">*</span></label>
-          <select class="field-select" id="conCrtCustomer">
-            <option value="">▾ Chọn khách hàng...</option>
-          </select>
-          <div class="field-error" id="conErrCrtCustomer">Vui lòng chọn khách hàng</div>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="field">
-          <label class="field-label">Loại hợp đồng <span class="required">*</span></label>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
-            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);transition:.15s;" id="conTypeDirect" onclick="conSelectType('DIRECT',this)">
-              <input type="radio" name="conCrtType" value="DIRECT" style="margin-top:2px;accent-color:var(--primary)">
-              <div>
-                <div style="font-weight:600;font-size:13px;color:var(--navy)">Direct</div>
-                <div style="font-size:12px;color:var(--text-secondary);margin-top:1px">Khách hàng sử dụng trực tiếp sản phẩm</div>
-              </div>
-            </label>
-            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);transition:.15s;" id="conTypeReseller" onclick="conSelectType('RESELLER',this)">
-              <input type="radio" name="conCrtType" value="RESELLER" style="margin-top:2px;accent-color:var(--primary)">
-              <div>
-                <div style="font-weight:600;font-size:13px;color:var(--navy)">Reseller</div>
-                <div style="font-size:12px;color:var(--text-secondary);margin-top:1px">Đại lý phân phối lại cho nhiều khách hàng cuối</div>
-              </div>
-            </label>
-          </div>
-          <div class="field-error" id="conErrCrtType">Vui lòng chọn loại hợp đồng</div>
-        </div>
-        <div class="field">
-          <label class="field-label">Ngày ký</label>
-          <input class="field-input" id="conCrtSignDate" type="date">
-        </div>
-      </div>
-      <div class="form-row full">
-        <div class="field">
-          <label class="field-label">Mô tả</label>
-          <textarea class="field-textarea" id="conCrtDesc" rows="2" placeholder="VD: Cung cấp EDR cho 500 thiết bị, thanh toán một lần"></textarea>
-        </div>
-      </div>
-
-      <!-- Gói sản phẩm — chỉ hiện khi DIRECT -->
-      <div id="conDirectSection" class="hidden">
-        <div class="section-hdr">Gói sản phẩm</div>
-        <div class="form-row full">
-          <div class="field">
-            <label class="field-label">Gói bán theo hợp đồng <span class="required">*</span></label>
-            <select class="field-select" id="conCrtDirectPkg">
-              <option value="">▾ Chọn gói...</option>
-            </select>
-            <div class="field-error" id="conErrCrtDirectPkg">Vui lòng chọn gói sản phẩm</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pool Items — chỉ hiện khi RESELLER -->
-      <div id="conPoolSection" class="hidden">
-        <div class="section-hdr">Phân bổ số lượng bản quyền theo gói</div>
-        <p style="font-size:13px;color:var(--text-secondary);margin:0 0 12px">Mỗi gói có một nhóm bản quyền riêng. Số lượng bản quyền đã nhập <strong>không thể thay đổi sau khi lưu</strong>, hãy xác nhận kỹ với đại lý trước khi tạo.</p>
-        <div id="conPoolRows"></div>
-        <button class="btn btn-secondary btn-sm" onclick="conAddPoolRow()" style="margin-top:8px">＋ Thêm gói vào Pool</button>
-      </div>
-
-      <!-- FR-CONT-05: Upload Attachment -->
-      <div class="section-hdr" style="margin-top:4px">Đính kèm file hợp đồng</div>
-      <div id="conCrtAttachDropzone" class="con-attach-dropzone" onclick="document.getElementById('conCrtFileInput').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="conHandleDrop(event)">
-        <div style="font-size:28px;margin-bottom:6px">📎</div>
-        <div style="font-weight:600;color:var(--navy);font-size:14px">Kéo thả file hoặc click để chọn</div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Định dạng: PDF, DOCX, XLSX, JPG, PNG · Mỗi file tối đa 10MB · Tối đa 15 file</div>
-      </div>
-      <input type="file" id="conCrtFileInput" style="display:none" accept=".pdf,.docx,.xlsx,.jpg,.jpeg,.png" multiple onchange="conHandleFileSelect(this.files)">
-      <div id="conCrtAttachList" style="margin-top:10px"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="conCloseModal('conModalCreate')">Hủy</button>
-      <button class="btn btn-primary" onclick="conSubmitCreate()">💾 Tạo</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL CHỈNH SỬA HỢP ĐỒNG -->
-<div class="overlay" id="conModalEdit">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">✏️ Cập nhật Hợp đồng</div>
-      <button class="close-btn" onclick="conCloseModal('conModalEdit')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="field"><label class="field-label">Mã Hợp đồng</label><input class="field-input" id="conEditCode" readonly></div>
-        <div class="field"><label class="field-label">Khách hàng</label><input class="field-input" id="conEditCustomer" readonly></div>
-      </div>
-      <div class="form-row">
-        <div class="field"><label class="field-label">Loại HĐ</label><input class="field-input" id="conEditType" readonly></div>
-        <div class="field"><label class="field-label">Ngày ký</label><input class="field-input" id="conEditSignDate" type="date"><div class="field-hint">Chỉnh sửa được khi có phụ lục đính chính</div></div>
-      </div>
-      <div class="form-row full">
-        <div class="field"><label class="field-label">Mô tả</label><textarea class="field-textarea" id="conEditDesc" rows="3"></textarea></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="conCloseModal('conModalEdit')">Hủy</button>
-      <button class="btn btn-primary" onclick="conSubmitEdit()">💾 Lưu</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL XÓA HỢP ĐỒNG (đồng bộ pattern Customer) -->
-<div class="overlay" id="conModalDelete">
-  <div class="modal" style="max-width:440px;">
-    <div class="modal-header"><div class="modal-title">Xóa Hợp đồng</div><button class="close-btn" onclick="conCloseModal('conModalDelete')">✕</button></div>
-    <div class="modal-body">
-      <div style="font-size:15px;font-weight:700;color:var(--navy);text-align:center;margin-bottom:18px;line-height:1.4;">Bạn có chắc chắn muốn xóa hợp đồng này?</div>
-      <div id="conDeleteInfoBox" style="background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;line-height:2;margin-bottom:14px;"></div>
-      <div class="alert alert-warn" style="margin-bottom:14px;align-items:center;"><div class="alert-icon" style="margin-top:0;">⚠️</div><div class="alert-body"><div class="alert-text" style="margin-top:0;">Hợp đồng sẽ bị xóa vĩnh viễn và không thể khôi phục.</div></div></div>
-      <div class="field">
-        <label class="field-label">Lý do xóa <span class="required">*</span></label>
-        <textarea class="field-textarea" id="conDeleteReason" rows="3" oninput="conToggleDeleteBtn()" placeholder="Nhập lý do xóa hợp đồng..."></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-danger" id="conBtnConfirmDelete" disabled onclick="conConfirmDelete()">Xóa</button>
-      <button class="btn btn-ghost" onclick="conCloseModal('conModalDelete')">Hủy</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL TẠO SUBSCRIPTION -->
-<div class="overlay" id="conModalCreateSub">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <div class="modal-title">🔑 Thêm Subscription</div>
-      <button class="close-btn" onclick="conCloseModal('conModalCreateSub')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="alert alert-info" style="margin-bottom:16px"><span class="alert-icon">ℹ️</span><div class="alert-body"><div class="alert-title">Về ngày hết hạn</div><div class="alert-text">Ngày bắt đầu & hết hạn nhập vào là <strong>dự kiến</strong>. Sau khi sản phẩm kích hoạt license, hệ thống sẽ cập nhật lại ngày hết hạn thật theo sản phẩm.</div></div></div>
-      <div class="form-row">
-        <div class="field">
-          <label class="field-label">Hợp đồng</label>
-          <input class="field-input" id="conSubContractCode" readonly>
-        </div>
-        <div class="field" id="conSubBeneficiaryField">
-          <label class="field-label">Đơn vị thụ hưởng (beneficiary)</label>
-          <select class="field-select" id="conSubBeneficiary">
-            <option value="">▾ Chọn khách hàng thụ hưởng...</option>
-          </select>
-          <div class="field-hint">Bắt buộc với HĐ Reseller — KH cuối mua từ đại lý</div>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="field">
-          <label class="field-label">Sản phẩm</label>
-          <select class="field-select" id="conSubProduct" onchange="conSubOnProductChange()">
-            <option value="">▾ Chọn sản phẩm...</option>
-            <option value="EPP">EPP</option>
-            <option value="EDR">EDR</option>
-            <option value="EPR">EPR</option>
-          </select>
-          <div class="field-error" id="conErrSubProduct">Vui lòng chọn sản phẩm</div>
-        </div>
-        <div class="field">
-          <label class="field-label">Gói sản phẩm <span class="required">*</span></label>
-          <select class="field-select" id="conSubPackage">
-            <option value="">▾ Chọn gói...</option>
-          </select>
-          <div class="field-error" id="conErrSubPackage">Vui lòng chọn gói</div>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="field">
-          <label class="field-label">Ngày bắt đầu dự kiến <span class="required">*</span></label>
-          <input class="field-input" id="conSubStartDate" type="date" oninput="conSubCalcEndDate()">
-          <div class="field-error" id="conErrSubStartDate">Vui lòng chọn ngày bắt đầu</div>
-        </div>
-        <div class="field">
-          <label class="field-label">Ngày hết hạn dự kiến <span class="required">*</span></label>
-          <input class="field-input" id="conSubEndDate" type="date">
-          <div class="field-hint" id="conSubEndDateHint">Tự tính theo gói · có thể sửa</div>
-          <div class="field-error" id="conErrSubEndDate">Ngày hết hạn phải sau ngày bắt đầu</div>
-        </div>
-      </div>
-      <div class="form-row" id="conSubLicQtyRow">
-        <div class="field">
-          <label class="field-label">Số lượng license rút từ pool</label>
-          <input class="field-input" id="conSubLicQty" type="text" inputmode="numeric" placeholder="VD: 50" oninput="conFmtInputNum(this);conSubCheckPool()">
-          <div class="field-hint" id="conSubPoolHint"></div>
-          <div class="field-error" id="conErrSubLicQty">Số lượng không hợp lệ</div>
-        </div>
-        <div class="field">
-          <label class="field-label">Số seat</label>
-          <input class="field-input" id="conSubSeatCount" type="text" inputmode="numeric" placeholder="VD: 100" oninput="conFmtInputNum(this)">
-          <div class="field-hint">Theo cấu hình gói sản phẩm</div>
-        </div>
-      </div>
-      <div class="alert alert-warn hidden" id="conSubPoolWarn" style="margin-top:-8px;margin-bottom:12px">
-        <span class="alert-icon">⚠️</span>
-        <div class="alert-body"><div class="alert-title">Vượt quá pool khả dụng</div><div class="alert-text" id="conSubPoolWarnText"></div></div>
-      </div>
-      <div class="form-row full">
-        <div class="field">
-          <label class="field-label">Ghi chú (Sales note)</label>
-          <textarea class="field-textarea" id="conSubNote" rows="2" placeholder="Thông tin bổ sung, điều kiện đặc biệt..."></textarea>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="conCloseModal('conModalCreateSub')">Hủy</button>
-      <button class="btn btn-primary" onclick="conSubmitCreateSub()">💾 Tạo Subscription</button>
-    </div>
-  </div>
-</div>
-
 <!-- MODAL THÊM POOL ITEM (sau khi tạo contract) -->
 <div class="overlay" id="conModalAddPool">
   <div class="modal" style="max-width:440px;">
@@ -3200,7 +2615,7 @@ function conRenderSubsPanel(){
           <div style="font-size:15px;font-weight:700;color:var(--navy)">Subscriptions</div>
           <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">${c.subs.length} sub · <span style="color:#059669">${activeCnt} active</span></div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="conOpenCreateSub('${c.id}')">＋ Thêm Subscription</button>
+        <button class="btn btn-primary btn-sm" onclick="subOpenCreateForContract('${c.id}')">＋ Thêm Subscription</button>
       </div>
       ${c.subs.length===0
         ?`<div style="padding:40px;text-align:center;color:var(--text-secondary)"><div style="font-size:36px;margin-bottom:10px">🔑</div><div>Chưa có Subscription nào</div></div>`
@@ -3574,107 +2989,6 @@ function conSubmitAddPool(){
   toast('success','Đã thêm Pool',`${pkgName}: ${qty.toLocaleString('vi-VN')} seats`);
 }
 
-// ── CREATE SUBSCRIPTION
-function conOpenCreateSub(contractId){
-  conCurrentContractId=contractId;
-  const c=conContracts.find(x=>x.id===contractId);if(!c)return;
-  const isReseller=c.type==='RESELLER';
-  document.getElementById('conSubContractCode').value=c.code;
-  document.getElementById('conSubBeneficiaryField').style.display=isReseller?'':'none';
-  const benSel=document.getElementById('conSubBeneficiary');
-  benSel.innerHTML='<option value="">▾ Chọn...</option>'+CON_BENEFICIARIES.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
-  const prdSel=document.getElementById('conSubProduct');
-  prdSel.innerHTML='<option value="">▾ Chọn sản phẩm...</option>';
-  // Sản phẩm khả dụng = suy ra từ GÓI ĐÃ GHIM trong HĐ (RESELLER: pool · DIRECT: c.packages)
-  const srcPkgIds=isReseller?c.poolItems.map(p=>p.packageId):(c.packages||[]);
-  const prdIds=[...new Set(srcPkgIds.map(id=>conPkgAny(id)?.product_id).filter(Boolean))];
-  prdIds.forEach(pid=>{const p=CON_PRODUCTS.find(x=>x.id===pid);if(p)prdSel.innerHTML+=`<option value="${p.id}">${p.name}</option>`;});
-  document.getElementById('conSubPackage').innerHTML='<option value="">▾ Chọn gói...</option>';
-  document.getElementById('conSubLicQtyRow').style.display=isReseller?'':'none';
-  ['conSubLicQty','conSubSeatCount','conSubNote'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('conSubStartDate').value=new Date().toISOString().slice(0,10);
-  document.getElementById('conSubEndDate').value='';
-  document.getElementById('conSubEndDateHint').textContent='Tự tính theo gói · có thể sửa';
-  document.getElementById('conSubPoolWarn').classList.add('hidden');
-  ['conErrSubProduct','conErrSubPackage','conErrSubStartDate','conErrSubEndDate','conErrSubLicQty'].forEach(id=>{document.getElementById(id).style.display='none';});
-  conOpenModal('conModalCreateSub');
-}
-
-function conSubOnProductChange(){
-  const c=conContracts.find(x=>x.id===conCurrentContractId);
-  const isReseller=!!c&&c.type==='RESELLER';
-  const prd=document.getElementById('conSubProduct').value;
-  const sel=document.getElementById('conSubPackage');
-  // Gói KẾ THỪA TỪ HĐ (đã ghim version) — KHÔNG lấy bản ACTIVE hiện hành của catalog
-  let opts=[];
-  if(isReseller&&c){
-    opts=c.poolItems.filter(p=>p.productId===prd).map(p=>{
-      const k=conPkgAny(p.packageId)||{};const avail=p.poolTotal-p.allocatedQty;
-      return {id:p.packageId,label:`${p.packageName||conPkgLabel(p.packageId)} (còn ${avail.toLocaleString('vi-VN')} seats)`,duration_months:k.duration_months||12,default_seat_count:k.default_seat_count};
-    });
-  } else if(c){
-    opts=(c.packages||[]).map(id=>conPkgAny(id)).filter(k=>k&&k.product_id===prd)
-      .map(k=>({id:k.id,label:`${k.name} v${k.version} (${k.duration_months} tháng)`,duration_months:k.duration_months,default_seat_count:k.default_seat_count}));
-  }
-  sel.innerHTML='<option value="">▾ Chọn gói...</option>'+opts.map(p=>`<option value="${p.id}" data-duration="${p.duration_months}" data-seat="${p.default_seat_count||''}">${p.label}</option>`).join('');
-  sel.onchange=()=>{
-    const opt=sel.selectedOptions[0];if(!opt)return;
-    const dur=parseInt(opt.getAttribute('data-duration')||'12');
-    const seat=opt.getAttribute('data-seat');
-    const start=document.getElementById('conSubStartDate').value;
-    if(start){const d=new Date(start);d.setMonth(d.getMonth()+dur);document.getElementById('conSubEndDate').value=d.toISOString().slice(0,10);document.getElementById('conSubEndDateHint').textContent=`Tự tính: +${dur} tháng · có thể sửa`;}
-    if(seat)document.getElementById('conSubSeatCount').value=seat;
-    conSubCheckPool();
-  };
-  conSubCheckPool();
-}
-
-function conSubCalcEndDate(){
-  const sel=document.getElementById('conSubPackage');
-  const opt=sel.selectedOptions[0];if(!opt||!opt.value)return;
-  const dur=parseInt(opt.getAttribute('data-duration')||'12');
-  const start=document.getElementById('conSubStartDate').value;
-  if(start){const d=new Date(start);d.setMonth(d.getMonth()+dur);document.getElementById('conSubEndDate').value=d.toISOString().slice(0,10);}
-}
-
-function conSubCheckPool(){
-  const c=conContracts.find(x=>x.id===conCurrentContractId);if(!c||c.type!=='RESELLER')return;
-  const pkgId=document.getElementById('conSubPackage').value;if(!pkgId)return;
-  const pool=c.poolItems.find(p=>p.packageId===pkgId);if(!pool)return;   // pool ghim theo GÓI
-  const avail=pool.poolTotal-pool.allocatedQty;
-  const qty=conParseNum(document.getElementById('conSubLicQty').value)||0;
-  document.getElementById('conSubPoolHint').textContent=`License Pool ${pool.packageName||pool.productName} — Total: ${pool.poolTotal.toLocaleString('vi-VN')} · Used: ${pool.allocatedQty.toLocaleString('vi-VN')} · Available: ${avail.toLocaleString('vi-VN')}`;
-  const warn=document.getElementById('conSubPoolWarn');
-  if(qty>avail){warn.classList.remove('hidden');document.getElementById('conSubPoolWarnText').textContent=`Yêu cầu ${qty.toLocaleString('vi-VN')} license nhưng Available chỉ còn ${avail.toLocaleString('vi-VN')}. Vẫn cho phép lưu — hãy xác nhận lại với đại lý.`;}
-  else warn.classList.add('hidden');
-}
-
-function conSubmitCreateSub(){
-  const c=conContracts.find(x=>x.id===conCurrentContractId);if(!c)return;
-  const isReseller=c.type==='RESELLER';
-  let ok=true;
-  const prd=document.getElementById('conSubProduct').value;
-  const pkg=document.getElementById('conSubPackage').value;
-  const start=document.getElementById('conSubStartDate').value;
-  const end=document.getElementById('conSubEndDate').value;
-  if(!prd){document.getElementById('conErrSubProduct').style.display='block';ok=false;}else document.getElementById('conErrSubProduct').style.display='none';
-  if(!pkg){document.getElementById('conErrSubPackage').style.display='block';ok=false;}else document.getElementById('conErrSubPackage').style.display='none';
-  if(!start){document.getElementById('conErrSubStartDate').style.display='block';ok=false;}else document.getElementById('conErrSubStartDate').style.display='none';
-  if(!end||new Date(end)<=new Date(start)){document.getElementById('conErrSubEndDate').style.display='block';ok=false;}else document.getElementById('conErrSubEndDate').style.display='none';
-  if(!ok)return;
-  const licQty=isReseller?conParseNum(document.getElementById('conSubLicQty').value)||null:null;
-  const seatCount=conParseNum(document.getElementById('conSubSeatCount').value)||null;
-  const benSel=document.getElementById('conSubBeneficiary');
-  const benId=isReseller?benSel.value||null:null;
-  const benName=isReseller?(benSel.selectedOptions[0]?.textContent||null):null;
-  const pkgName=conPkgLabel(pkg);   // tên gói CHUẨN theo catalog (kèm version), không lấy text option
-  const newSub={id:subGenId(),contractId:c.id,beneficiaryId:benId,beneficiaryName:benName,productId:prd,packageId:pkg,packageName:pkgName,startDate:start,endDate:end,licenseQty:licQty,seatCount,status:'DRAFT',note:document.getElementById('conSubNote').value.trim(),licMirrorStatus:null,licMirrorExpiry:null,lastSync:'Chưa đồng bộ',createdBy:currentUser?.name||'Sales A',createdAt:new Date().toISOString()};
-  c.subs.push(newSub);
-  if(isReseller&&licQty){const pool=c.poolItems.find(p=>p.packageId===pkg);if(pool)pool.allocatedQty+=licQty;}
-  conCloseModal('conModalCreateSub');conRenderSubsPanel();
-  toast('success','Subscription đã tạo',`${newSub.id} — status: DRAFT`);
-}
-
 // ── MODALS
 function conOpenModal(id){
   if(id==='conModalCreate')conInitCreateModal();
@@ -3682,7 +2996,7 @@ function conOpenModal(id){
 }
 function conCloseModal(id){document.getElementById(id).classList.remove('open');}
 document.addEventListener('DOMContentLoaded',()=>{
-  ['conModalCreate','conModalEdit','conModalDelete','conModalCreateSub','conModalAddPool'].forEach(id=>{
+  ['conModalCreate','conModalEdit','conModalDelete','conModalAddPool'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
   });
@@ -4141,6 +3455,9 @@ function subOpenCreate(){
   document.getElementById('subCrtDealCode').value='';
   document.getElementById('subCrtSeats').value='';
   document.getElementById('subCrtLic').value='';
+  document.getElementById('subCrtActName').value='';
+  document.getElementById('subCrtActUsername').value='';
+  document.getElementById('subCrtActEmail').value='';
   document.getElementById('subCrtStartDate').value='';
   document.getElementById('subCrtEndDate').value='';
   document.getElementById('subCrtDuration').value='';
@@ -4151,16 +3468,24 @@ function subOpenCreate(){
   document.getElementById('subCrtProductSection').style.display='none';
   document.getElementById('subCrtSeatsRow').style.display='none';
   document.getElementById('subCrtBeneficiaryRow').style.display='none';
-  ['subErrCrtContract','subErrCrtPackage','subErrCrtSeats','subErrCrtLic','subErrCrtBeneficiary'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  ['subErrCrtContract','subErrCrtPackage','subErrCrtSeats','subErrCrtLic','subErrCrtBeneficiary','subErrCrtActName','subErrCrtActUsername','subErrCrtActEmail'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   const hintEl=document.getElementById('subCrtLicHint');if(hintEl)hintEl.style.display='none';
   const sw=document.getElementById('subCrtScopeWrap');if(sw)sw.innerHTML='';
   document.getElementById('subCrtContractSearch').value='';
   document.getElementById('subCrtContract').value='';
   document.getElementById('subCrtContractDropdown').style.display='none';
+  const cs=document.getElementById('subCrtContractSearch');cs.readOnly=false;cs.style.background='';cs.style.cursor='';cs.onfocus=function(){subShowCrtContracts();};
   const pkgSel=document.getElementById('subCrtPackage');
   pkgSel.innerHTML='<option value="">▾ Chọn gói sản phẩm...</option>';
   pkgSel.disabled=false;
   subOpenModal('subModalCreate');
+}
+function subOpenCreateForContract(contractId){
+  subOpenCreate();
+  subSelectCrtContract(contractId);
+  const cs=document.getElementById('subCrtContractSearch');
+  if(cs){cs.readOnly=true;cs.style.background='var(--gray-50)';cs.style.cursor='default';cs.onfocus=null;}
+  const dd=document.getElementById('subCrtContractDropdown');if(dd)dd.style.display='none';
 }
 // Gói khả dụng của 1 HĐ = ĐÚNG CÁC GÓI ĐÃ GHIM (RESELLER: package_id của pool · DIRECT: c.packages).
 // KHÔNG lấy bản ACTIVE hiện hành của catalog — HĐ ghim version tại thời điểm ký (D3).
@@ -4420,6 +3745,14 @@ function subSubmitCreate(){
     if(!benId)show('subErrCrtBeneficiary','Vui lòng chọn đơn vị thụ hưởng');
     else{hide('subErrCrtBeneficiary');benName=(CON_BENEFICIARIES.find(b=>b.id===benId)||{}).name||'';}
   }
+  const actName=(document.getElementById('subCrtActName')?.value||'').trim();
+  const actUser=(document.getElementById('subCrtActUsername')?.value||'').trim();
+  const actEmail=(document.getElementById('subCrtActEmail')?.value||'').trim();
+  if(c){
+    if(!actName)show('subErrCrtActName','Vui lòng nhập họ tên');else hide('subErrCrtActName');
+    if(!actUser)show('subErrCrtActUsername','Tên đăng nhập là bắt buộc');else hide('subErrCrtActUsername');
+    if(!actEmail||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(actEmail))show('subErrCrtActEmail','Vui lòng nhập email hợp lệ');else hide('subErrCrtActEmail');
+  }
   if(!ok)return;
   const pkg=conPkgLite(pkgId);
   const productId=pkg?.product_id||'';
@@ -4437,7 +3770,7 @@ function subSubmitCreate(){
     productId,packageId:pkgId,packageName,
     startDate,endDate,
     licenseQty:isReseller?lic:null,seatCount:isReseller?null:seats,
-    status:'DRAFT',note,dealCode,scope,previousSubId:null,
+    status:'DRAFT',note,dealCode,scope,activationAccount:{fullName:actName,username:actUser,email:actEmail},previousSubId:null,
     licMirrorStatus:null,licMirrorExpiry:null,lastSync:'—',
     createdBy:currentUser?.name||'Sales A',createdAt:now,
     timeline:[{icon:'📝',cls:'tl-dot-gray',source:'UI',actor:currentUser?.name||'Sales A',title:'Subscription được tạo (Draft)',time:now.replace('T',' ').slice(0,16),detail:`HĐ: ${c.code} · ${packageName}${isReseller?' · '+benName:' · '+seats+' seat'} · Chờ phê duyệt`}],
@@ -4596,6 +3929,7 @@ function subRenderInfo(sub){
       <div></div>
     </div>
     ${subScopeInfoRows(sub)}
+    ${sub.activationAccount?`<div class="sub-field-row">${cell('Tài khoản kích hoạt · Họ tên',sub.activationAccount.fullName)}${cell('Tên đăng nhập',sub.activationAccount.username)}${cell('Email',sub.activationAccount.email)}</div>`:''}
   </div>`;
 }
 function subRenderTimeline(sub){
